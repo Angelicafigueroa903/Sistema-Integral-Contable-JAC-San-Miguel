@@ -526,15 +526,22 @@
             </table>
         </section>
 
-        <section id="view-caja" class="view-section" style="display:none;">
-    <h2>🏦 Control de Caja Mensual</h2>
+        <section id="view-caja" class="view-section">
     <div class="form-container">
-        <label>Seleccione el mes a consultar:</label>
-        <input type="month" id="caja-mes-filtro" onchange="procesarCaja()">
-        <button class="btn btn-primary" onclick="descargarCajaExcel()">📥 Descargar Excel Mensual</button>
+        <div class="form-title"> 🏦 Filtro de Arqueo de Caja Mensual</div>
+        <div class="form-grid">
+            <div class="form-group">
+                <label>Seleccione el mes a consultar:</label>
+                <input type="month" id="caja-mes-filtro" onchange="procesarCaja()">
+            </div>
+            <div class="form-group" style="justify-content: flex-end;">
+                <button class="btn btn-success" onclick="descargarCajaExcel()"> 📥 Descargar Reporte Consolidado (Excel)</button>
+            </div>
+        </div>
     </div>
-    <div id="resultado-caja" style="margin-top: 20px;">
-        <p>Seleccione un mes para generar el arqueo.</p>
+    
+    <div id="resultado-caja">
+        <p style="text-align:center; color:#7f8c8d; margin-top:20px;">Seleccione un mes para visualizar el arqueo detallado.</p>
     </div>
 </section>
         <section id="view-financiero" class="view-section"><h2>📈 Estado Financiero General</h2><p style="margin-top:15px;">Sección para balances e informes consolidados.</p></section>
@@ -1317,6 +1324,80 @@ function descargarCajaExcel() {
         }
     });
     XLSX.writeFile(wb, `Caja_${mes}.xlsx`);
+}
+        function procesarCaja() {
+    const mes = document.getElementById('caja-mes-filtro').value;
+    if (!mes) return;
+
+    const contenedores = [
+        { nombre: 'Aportes', datos: obtenerAportes() },
+        { nombre: 'Multas', datos: obtenerMultas() },
+        { nombre: 'Deportes', datos: obtenerDeportes() },
+        { nombre: 'Salud', datos: obtenerSalud() },
+        { nombre: 'Gastos J.A.C.', datos: obtenerGastos() }
+    ];
+
+    let html = `<table class="data-table"><thead><tr>
+                <th>Módulo</th><th>Ingresos (+)</th><th>Egresos (-)</th><th>Saldo</th>
+                </tr></thead><tbody>`;
+    
+    let totalIngresosGeneral = 0;
+    let totalEgresosGeneral = 0;
+
+    contenedores.forEach(mod => {
+        const filtrados = mod.datos.filter(item => item.fecha && item.fecha.startsWith(mes));
+        let ingresos = 0, egresos = 0;
+        
+        filtrados.forEach(item => {
+            const valor = parseFloat(item.valor || 0);
+            // Clasificación basada en tus funciones de guardado
+            if (item.tipo === 'ingreso' || mod.nombre === 'Aportes' || mod.nombre === 'Multas') {
+                ingresos += valor;
+            } else {
+                egresos += valor;
+            }
+        });
+
+        html += `<tr><td>${mod.nombre}</td>
+                 <td>$${ingresos.toLocaleString()}</td>
+                 <td>$${egresos.toLocaleString()}</td>
+                 <td>$${(ingresos - egresos).toLocaleString()}</td></tr>`;
+        
+        totalIngresosGeneral += ingresos;
+        totalEgresosGeneral += egresos;
+    });
+
+    html += `<tr class="total-row"><td>TOTAL MENSUAL</td>
+             <td>$${totalIngresosGeneral.toLocaleString()}</td>
+             <td>$${totalEgresosGeneral.toLocaleString()}</td>
+             <td>$${(totalIngresosGeneral - totalEgresosGeneral).toLocaleString()}</td></tr>`;
+    
+    html += `</tbody></table>`;
+    document.getElementById('resultado-caja').innerHTML = html;
+}
+
+function descargarCajaExcel() {
+    const mes = document.getElementById('caja-mes-filtro').value;
+    if (!mes) return alert("Por favor seleccione un mes primero.");
+
+    const wb = XLSX.utils.book_new();
+    const módulos = [
+        { nombre: 'Aportes', datos: obtenerAportes() },
+        { nombre: 'Multas', datos: obtenerMultas() },
+        { nombre: 'Deportes', datos: obtenerDeportes() },
+        { nombre: 'Salud', datos: obtenerSalud() },
+        { nombre: 'Gastos', datos: obtenerGastos() }
+    ];
+
+    módulos.forEach(mod => {
+        const filtrados = mod.datos.filter(item => item.fecha && item.fecha.startsWith(mes));
+        if (filtrados.length > 0) {
+            const ws = XLSX.utils.json_to_sheet(filtrados);
+            XLSX.utils.book_append_sheet(wb, ws, mod.nombre);
+        }
+    });
+
+    XLSX.writeFile(wb, `Reporte_Caja_${mes}.xlsx`);
 }
         // CIERRE POPUPS EXTERNOS
         window.onclick = function(e) {
