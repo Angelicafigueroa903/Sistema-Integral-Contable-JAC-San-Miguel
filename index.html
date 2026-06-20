@@ -41,6 +41,9 @@
         .form-container.multas-mode { border-top-color: #e74c3c; }
         .form-container.deportes-mode { border-top-color: #2980b9; }
         .form-container.deportes-salida-mode { border-top-color: #c0392b; }
+        .form-container.salud-mode { border-top-color: #9b59b6; }
+        .form-container.salud-salida-mode { border-top-color: #d35400; }
+        
         .form-title { font-size: 1.1rem; color: var(--primary-color); margin-bottom: 15px; font-weight: 600; }
         .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
         .form-group { display: flex; flex-direction: column; margin-bottom: 5px; }
@@ -53,6 +56,9 @@
         .balance-card { background: #ebf5fb; border: 1px solid #a9ccee; padding: 15px 20px; border-radius: 8px; margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center; }
         .balance-card h3 { color: #2980b9; font-size: 1.1rem; }
         .balance-value { font-size: 1.6rem; font-weight: bold; color: #2471a3; }
+        .balance-card.salud-card { background: #f5eef8; border-color: #d7bde2; }
+        .balance-card.salud-card h3 { color: #8e44ad; }
+        .balance-card.salud-card .balance-value { color: #6c3483; }
 
         /* BOTONES */
         .btn { background-color: var(--secondary-color); color: white; border: none; padding: 12px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.95rem; transition: background 0.2s; margin-top: 15px; }
@@ -80,8 +86,7 @@
 
         /* VENTANA MODAL (POP-UP) */
         .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); align-items: center; justify-content: center; }
-        .modal-content { background-color: white; padding: 25px; border-radius: 8px; width: 80%; max-width: 700px; max-height: 85vh; overflow-y: auto; box-shadow: 0 5px 15px rgba(0,0,0,0.3); border-top: 5px solid #8e44ad; }
-        .modal-content.modal-multas { border-top-color: #e74c3c; }
+        .modal-content { background-color: white; padding: 25px; border-radius: 8px; width: 85%; max-width: 850px; max-height: 85vh; overflow-y: auto; box-shadow: 0 5px 15px rgba(0,0,0,0.3); border-top: 5px solid #8e44ad; }
         .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 2px solid #eee; padding-bottom: 10px; }
         .modal-title { font-size: 1.25rem; color: var(--primary-color); font-weight: bold; }
         .close-modal { font-size: 1.5rem; font-weight: bold; color: #999; cursor: pointer; transition: color 0.2s; }
@@ -128,6 +133,7 @@
                 <form id="socio-form" onsubmit="procesarFormularioSocio(event)">
                     <input type="hidden" id="edit-index" value="-1">
                     <div class="form-grid">
+                        <div class="form-grid">
                         <div class="form-group">
                             <label for="nombre">Nombre Completo del Socio</label>
                             <input type="text" id="nombre" required placeholder="Ej: Juan Carlos Pérez">
@@ -136,6 +142,7 @@
                             <label for="documento">Número de Documento (Único)</label>
                             <input type="text" id="documento" required placeholder="Ej: 1075123456">
                         </div>
+                    </div>
                     </div>
                     <button type="submit" class="btn" id="btn-submit-form">💾 Guardar Socio</button>
                     <button type="button" class="btn btn-danger btn-actions" id="btn-cancel-edit" style="display:none; margin-top:15px; height:43px;" onclick="cancelarEdicion()">Cancelar Edición</button>
@@ -201,18 +208,6 @@
                 </form>
             </div>
 
-            <h3>📊 Resumen de Saldos y Totales por Socio</h3>
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th>Nombre del Socio</th>
-                        <th>Número de Documento</th>
-                        <th>Total Aportado Acumulado</th>
-                    </tr>
-                </thead>
-                <tbody id="tabla-resumen-aportes-body"></tbody>
-            </table>
-
             <div class="section-header-flex">
                 <h3>📋 Historial Resumido de Aportes por Socio</h3>
                 <button class="btn btn-success" style="margin-top:0;" onclick="exportarHistorialAportesExcel()">📊 Descargar Consolidado de Conceptos a Excel</button>
@@ -261,18 +256,6 @@
                 </form>
             </div>
 
-            <h3>📊 Resumen de Saldos de Multas (Solo Socios con Multas)</h3>
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th>Nombre del Socio</th>
-                        <th>Número de Documento</th>
-                        <th>Total Multas Canceladas</th>
-                    </tr>
-                </thead>
-                <tbody id="tabla-resumen-multas-body"></tbody>
-            </table>
-
             <div class="section-header-flex">
                 <h3>📋 Historial Resumido de Multas por Socio</h3>
                 <button class="btn btn-success" style="margin-top:0;" onclick="exportarHistorialMultasExcel()">📊 Descargar Consolidado de Multas a Excel</button>
@@ -292,7 +275,6 @@
 
         <!-- VISTA: COMITÉ DE DEPORTES -->
         <section id="view-deportes" class="view-section">
-            <!-- Balance General del Comité -->
             <div class="balance-card">
                 <div>
                     <h3>Estado del Fondo del Comité de Deportes</h3>
@@ -301,7 +283,6 @@
                 <div class="balance-value" id="deportes-saldo-disponible">$0</div>
             </div>
 
-            <!-- Formulario 1: Ingresos / Aportes Recibidos -->
             <div class="form-container deportes-mode">
                 <div class="form-title" id="deporte-ingreso-title">📥 Registrar INGRESO / Aporte al Comité</div>
                 <form id="deporte-ingreso-form" onsubmit="procesarDeporteMovimiento(event, 'ingreso')">
@@ -331,7 +312,6 @@
                 </form>
             </div>
 
-            <!-- Formulario 2: Salidas / Gastos Realizados -->
             <div class="form-container deportes-salida-mode">
                 <div class="form-title" id="deporte-salida-title">📤 Registrar SALIDA / Gasto del Comité</div>
                 <form id="deporte-salida-form" onsubmit="procesarDeporteMovimiento(event, 'salida')">
@@ -361,30 +341,113 @@
                 </form>
             </div>
 
-            <!-- Libro de Movimientos y Descarga -->
             <div class="section-header-flex">
-                <h3>📋 Libro de Movimientos de Deporte (Ingresos y Salidas)</h3>
+                <h3>📋 Resumen de Balances en Deportes por Socio</h3>
                 <button class="btn btn-success" style="margin-top:0;" onclick="exportarDeportesExcel()">📊 Descargar Movimientos a Excel</button>
             </div>
             <table class="data-table">
                 <thead>
                     <tr>
-                        <th>Fecha</th>
-                        <th>Tipo</th>
-                        <th>Socio Responsable</th>
+                        <th>Socio</th>
                         <th>Documento</th>
-                        <th>Concepto</th>
-                        <th>Ingreso (+)</th>
-                        <th>Salida (-)</th>
-                        <th style="width: 120px;">Acciones</th>
+                        <th>Total Ingresos (+)</th>
+                        <th>Total Salidas (-)</th>
+                        <th>Saldo Disponible</th>
+                        <th style="width: 150px;">Acciones</th>
                     </tr>
                 </thead>
-                <tbody id="tabla-deportes-movimientos-body"></tbody>
+                <tbody id="tabla-deportes-resumen-body"></tbody>
             </table>
         </section>
 
-        <!-- VISTAS ADICIONALES -->
-        <section id="view-salud" class="view-section"><h2>❤️ Comité Salud</h2><p style="margin-top:15px;">Sección para fondos destinados a salud.</p></section>
+        <!-- VISTA: COMITÉ DE SALUD (NUEVO) -->
+        <section id="view-salud" class="view-section">
+            <div class="balance-card salud-card">
+                <div>
+                    <h3>Estado del Fondo del Comité de Salud</h3>
+                    <p style="font-size:0.85rem; color:#7f8c8d; margin-top:3px;">Cálculo automático de Ingresos menos Salidas</p>
+                </div>
+                <div class="balance-value" id="salud-saldo-disponible">$0</div>
+            </div>
+
+            <div class="form-container salud-mode">
+                <div class="form-title" id="salud-ingreso-title">📥 Registrar INGRESO / Aporte al Comité de Salud</div>
+                <form id="salud-ingreso-form" onsubmit="procesarSaludMovimiento(event, 'ingreso')">
+                    <input type="hidden" id="salud-ingreso-edit-index" value="-1">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="sal-ingreso-socio">Nombre del Socio (Quien aporta)</label>
+                            <select id="sal-ingreso-socio" required>
+                                <option value="">-- Seleccione un socio --</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="sal-ingreso-fecha">Fecha del Aporte</label>
+                            <input type="date" id="sal-ingreso-fecha" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="sal-ingreso-valor">Valor del Aporte ($)</label>
+                            <input type="number" id="sal-ingreso-valor" required min="0" placeholder="Ej: 25000">
+                        </div>
+                        <div class="form-group">
+                            <label for="sal-ingreso-concepto">Concepto del Aporte</label>
+                            <input type="text" id="sal-ingreso-concepto" required placeholder="Ej: Donación Actividad Salud">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-view" style="background-color: #9b59b6;" id="btn-submit-sal-ingreso">💾 Guardar Ingreso</button>
+                    <button type="button" class="btn btn-danger btn-actions" id="btn-cancel-sal-ingreso" style="display:none; margin-top:15px; height:43px;" onclick="cancelarEdicionSalud('ingreso')">Cancelar Edición</button>
+                </form>
+            </div>
+
+            <div class="form-container salud-salida-mode">
+                <div class="form-title" id="salud-salida-title">📤 Registrar SALIDA / Gasto del Comité de Salud</div>
+                <form id="salud-salida-form" onsubmit="procesarSaludMovimiento(event, 'salida')">
+                    <input type="hidden" id="salud-salida-edit-index" value="-1">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="sal-salida-socio">Nombre del Socio (Quien solicita/retira)</label>
+                            <select id="sal-salida-socio" required>
+                                <option value="">-- Seleccione un socio --</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="sal-salida-fecha">Fecha de la Salida</label>
+                            <input type="date" id="sal-salida-fecha" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="sal-salida-valor">Valor Retirado / Gastado ($)</label>
+                            <input type="number" id="sal-salida-valor" required min="0" placeholder="Ej: 50000">
+                        </div>
+                        <div class="form-group">
+                            <label for="sal-salida-concepto">Concepto de la Salida</label>
+                            <input type="text" id="sal-salida-concepto" required placeholder="Ej: Auxilio de Medicamentos">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn" style="background-color: #d35400;" id="btn-submit-sal-salida">💾 Guardar Salida</button>
+                    <button type="button" class="btn btn-danger btn-actions" id="btn-cancel-sal-salida" style="display:none; margin-top:15px; height:43px;" onclick="cancelarEdicionSalud('salida')">Cancelar Edición</button>
+                </form>
+            </div>
+
+            <div class="section-header-flex">
+                <h3>📋 Resumen de Balances en Salud por Socio</h3>
+                <button class="btn btn-success" style="margin-top:0;" onclick="exportarSaludExcel()">📊 Descargar Movimientos a Excel</button>
+            </div>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Socio</th>
+                        <th>Documento</th>
+                        <th>Total Ingresos (+)</th>
+                        <th>Total Salidas (-)</th>
+                        <th>Saldo Disponible</th>
+                        <th style="width: 150px;">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="tabla-salud-resumen-body"></tbody>
+            </table>
+        </section>
+
+        <!-- RESTO DE VISTAS (PROCESOS FUTUROS) -->
         <section id="view-gastos" class="view-section"><h2>💸 Control de Gastos</h2><p style="margin-top:15px;">Sección para salidas de dinero de la junta.</p></section>
         <section id="view-caja" class="view-section"><h2>🏦 Control de Caja</h2><p style="margin-top:15px;">Sección para arqueos y saldos en efectivo.</p></section>
         <section id="view-financiero" class="view-section"><h2>📈 Estado Financiero General</h2><p style="margin-top:15px;">Sección para balances e informes consolidados.</p></section>
@@ -392,7 +455,7 @@
         <section id="view-configuracion" class="view-section"><h2>⚙ Configuración del Sistema</h2><p style="margin-top:15px;">Sección para parámetros generales de la JAC.</p></section>
     </main>
 
-    <!-- VENTANA POP-UP (MODAL) APORTES -->
+    <!-- POP-UP MODAL MULTIUSOS (SOCIOS APORTES/MULTAS) -->
     <div id="historial-modal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -404,11 +467,11 @@
             </div>
             <table class="data-table" style="margin-top: 10px; margin-bottom: 5px;">
                 <thead>
-                    <tr>
+                    <tr id="modal-tabla-headers">
                         <th>Fecha</th>
                         <th>Concepto / Descripción</th>
                         <th>Valor Pagado</th>
-                        <th>Acciones de Boleta</th>
+                        <th>Acciones</th>
                     </tr>
                 </thead>
                 <tbody id="modal-tabla-body"></tbody>
@@ -419,35 +482,37 @@
         </div>
     </div>
 
-    <!-- VENTANA POP-UP (MODAL) MULTAS -->
-    <div id="multas-modal" class="modal">
-        <div class="modal-content modal-content.modal-multas">
+    <!-- POP-UP MODAL EXCLUSIVO PARA DEPORTES Y SALUD (INGRESOS Y SALIDAS JUNTOS) -->
+    <div id="comite-modal" class="modal">
+        <div class="modal-content" style="border-top-color: #2980b9;" id="comite-modal-container">
             <div class="modal-header">
-                <div class="modal-title" id="modal-multa-titulo">Historial de Multas del Socio</div>
-                <span class="close-modal" onclick="cerrarModalMultas()">&times;</span>
+                <div class="modal-title" id="comite-modal-titulo">Historial Detallado del Comité</div>
+                <span class="close-modal" onclick="cerrarModalComite()">&times;</span>
             </div>
             <div style="margin-bottom: 15px; font-size: 0.95rem; color: #555;">
-                <p><strong>Documento de Identidad:</strong> <span id="modal-multa-doc"></span></p>
+                <p><strong>Socio:</strong> <span id="comite-modal-socio"></span> | <strong>Documento:</strong> <span id="comite-modal-doc"></span></p>
             </div>
             <table class="data-table" style="margin-top: 10px; margin-bottom: 5px;">
                 <thead>
                     <tr>
-                        <th>Fecha Pago</th>
-                        <th>Motivo / Concepto</th>
-                        <th>Valor Multa</th>
-                        <th>Acciones de Boleta</th>
+                        <th>Fecha</th>
+                        <th>Tipo</th>
+                        <th>Concepto</th>
+                        <th>Ingreso (+)</th>
+                        <th>Salida (-)</th>
+                        <th>Acciones</th>
                     </tr>
                 </thead>
-                <tbody id="modal-multas-tabla-body"></tbody>
+                <tbody id="comite-modal-tabla-body"></tbody>
             </table>
             <div style="text-align: right; margin-top: 15px;">
-                <button class="btn" style="margin-top:0; background-color: #7f8c8d;" onclick="cerrarModalMultas()">Cerrar Ventana</button>
+                <button class="btn" style="margin-top:0; background-color: #7f8c8d;" onclick="cerrarModalComite()">Cerrar Ventana</button>
             </div>
         </div>
     </div>
 
     <script>
-        // CONTROL DE VISTAS Y NAVEGACIÓN
+        // CONTROL DE VISTAS
         function switchView(viewId) {
             document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
             document.querySelectorAll('.sidebar-menu li a').forEach(l => l.classList.remove('active'));
@@ -487,18 +552,22 @@
                 mostrarDeportesEnTabla();
                 establecerFechaHoy('dep-ingreso-fecha');
                 establecerFechaHoy('dep-salida-fecha');
+            } else if(viewId === 'salud') {
+                actualizarSelectoresSalud();
+                mostrarSaludEnTabla();
+                establecerFechaHoy('sal-ingreso-fecha');
+                establecerFechaHoy('sal-salida-fecha');
             }
         }
 
         function establecerFechaHoy(idInput) {
             const inputFecha = document.getElementById(idInput);
             if(inputFecha && !inputFecha.value) {
-                const hoy = new Date().toISOString().split('T')[0];
-                inputFecha.value = hoy;
+                inputFecha.value = new Date().toISOString().split('T')[0];
             }
         }
 
-        // --- ALMACENAMIENTO (LOCALSTORAGE) ---
+        // BASE DE DATOS LOCAL
         function obtenerSocios() { return JSON.parse(localStorage.getItem('jac_db_socios')) || []; }
         function guardarSocios(arr) { 
             localStorage.setItem('jac_db_socios', JSON.stringify(arr)); 
@@ -506,6 +575,7 @@
             actualizarSelectorSocios(); 
             actualizarSelectorSociosMultas();
             actualizarSelectoresDeportes();
+            actualizarSelectoresSalud();
         }
         
         function obtenerAportes() { return JSON.parse(localStorage.getItem('jac_db_aportes')) || []; }
@@ -517,28 +587,25 @@
         function obtenerDeportes() { return JSON.parse(localStorage.getItem('jac_db_deportes')) || []; }
         function guardarDeportes(arr) { localStorage.setItem('jac_db_deportes', JSON.stringify(arr)); mostrarDeportesEnTabla(); }
 
-        // --- GESTIÓN DE SOCIOS ---
+        function obtenerSalud() { return JSON.parse(localStorage.getItem('jac_db_salud')) || []; }
+        function guardarSalud(arr) { localStorage.setItem('jac_db_salud', JSON.stringify(arr)); mostrarSaludEnTabla(); }
+
+        // MÓDULO SOCIOS
         function mostrarSociosEnTabla() {
             const socios = obtenerSocios();
             const tbody = document.getElementById('tabla-socios-body');
-            if(!tbody) return;
-            tbody.innerHTML = '';
-
+            if(!tbody) return; tbody.innerHTML = '';
             if(socios.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#999; padding:20px;">No hay socios creados.</td></tr>`;
                 return;
             }
-
             socios.forEach((socio, idx) => {
                 const fila = document.createElement('tr');
-                fila.innerHTML = `
-                    <td><strong>${socio.nombre}</strong></td>
-                    <td>${socio.documento}</td>
+                fila.innerHTML = `<td><strong>${socio.nombre}</strong></td><td>${socio.documento}</td>
                     <td>
                         <button class="btn btn-actions btn-edit" onclick="prepararEdicionSocio(${idx})">✏️</button>
                         <button class="btn btn-actions btn-danger" onclick="eliminarSocio(${idx})">❌</button>
-                    </td>
-                `;
+                    </td>`;
                 tbody.appendChild(fila);
             });
         }
@@ -550,35 +617,21 @@
             const documento = document.getElementById('documento').value.trim();
             let socios = obtenerSocios();
 
-            const existeDuplicado = socios.some((s, i) => s.documento === documento && i !== idx);
-            if(existeDuplicado) {
-                alert(`🚨 ERROR: Ya existe un socio registrado con el número de documento: ${documento}.`);
-                return;
+            if(socios.some((s, i) => s.documento === documento && i !== idx)) {
+                alert(`🚨 ERROR: Ya existe un socio con el documento: ${documento}.`); return;
             }
 
-            if(idx === -1) {
-                socios.push({ nombre, documento });
-            } else {
+            if(idx === -1) { socios.push({ nombre, documento }); } 
+            else {
                 const docAnterior = socios[idx].documento;
-                
-                let aportes = obtenerAportes();
-                aportes.forEach(ap => { if(ap.documento === docAnterior) ap.documento = documento; });
-                localStorage.setItem('jac_db_aportes', JSON.stringify(aportes));
-
-                let multas = obtenerMultas();
-                multas.forEach(mu => { if(mu.documento === docAnterior) mu.documento = documento; });
-                localStorage.setItem('jac_db_multas', JSON.stringify(multas));
-
-                let deportes = obtenerDeportes();
-                deportes.forEach(dp => { if(dp.documento === docAnterior) dp.documento = documento; });
-                localStorage.setItem('jac_db_deportes', JSON.stringify(deportes));
-
-                socios[idx] = { nombre, documento };
-                cancelarEdicion();
+                ['jac_db_aportes', 'jac_db_multas', 'jac_db_deportes', 'jac_db_salud'].forEach(db => {
+                    let data = JSON.parse(localStorage.getItem(db)) || [];
+                    data.forEach(x => { if(x.documento === docAnterior) x.documento = documento; });
+                    localStorage.setItem(db, JSON.stringify(data));
+                });
+                socios[idx] = { nombre, documento }; cancelarEdicion();
             }
-
-            guardarSocios(socios);
-            document.getElementById('socio-form').reset();
+            guardarSocios(socios); document.getElementById('socio-form').reset();
         }
 
         function prepararEdicionSocio(idx) {
@@ -590,760 +643,423 @@
             document.getElementById('btn-submit-form').innerText = "🔄 Actualizar";
             document.getElementById('btn-cancel-edit').style.display = "inline-block";
         }
-
         function cancelarEdicion() {
-            document.getElementById('edit-index').value = "-1";
-            document.getElementById('socio-form').reset();
+            document.getElementById('edit-index').value = "-1"; document.getElementById('socio-form').reset();
             document.getElementById('form-action-title').innerText = "Forma 1: Registro Individual de Socio";
             document.getElementById('btn-submit-form').innerText = "💾 Guardar Socio";
             document.getElementById('btn-cancel-edit').style.display = "none";
         }
+        function eliminarSocio(idx) { if(confirm('¿Desea eliminar este socio?')) { let socios = obtenerSocios(); socios.splice(idx, 1); guardarSocios(socios); } }
+        function borrarTodosLosSocios() { if(confirm('🚨 ¿Vaciar por completo el maestro de socios?')) { localStorage.removeItem('jac_db_socios'); guardarSocios([]); } }
 
-        function eliminarSocio(idx) {
-            if(confirm('¿Desea eliminar este socio? No borrará sus datos históricos contables pero ya no aparecerá en el listado maestro.')) {
-                let socios = obtenerSocios();
-                socios.splice(idx, 1);
-                guardarSocios(socios);
-            }
-        }
-
-        function borrarTodosLosSocios() {
-            if(confirm('🚨 ¿Seguro que desea vaciar por completo el maestro de socios?')) {
-                localStorage.removeItem('jac_db_socios');
-                guardarSocios([]);
-            }
-        }
-
-        // --- GESTIÓN DE APORTES ---
-        function actualizarSelectorSocios() {
-            const select = document.getElementById('aporte-socio-select');
-            if(!select) return;
-            const socios = obtenerSocios();
-            const valorSeleccionado = select.value;
-            select.innerHTML = '<option value="">-- Seleccione un socio registrado --</option>';
-            socios.forEach(socio => {
-                const opt = document.createElement('option');
-                opt.value = socio.documento;
-                opt.innerText = `${socio.nombre} (${socio.documento})`;
-                select.appendChild(opt);
+        // LOGICA SELECTORES
+        function rellenarSelector(idSelect) {
+            const select = document.getElementById(idSelect); if(!select) return;
+            const socios = obtenerSocios(); const val = select.value;
+            select.innerHTML = '<option value="">-- Seleccione un socio --</option>';
+            socios.forEach(s => {
+                const opt = document.createElement('option'); opt.value = s.documento;
+                opt.innerText = `${s.nombre} (${s.documento})`; select.appendChild(opt);
             });
-            select.value = valorSeleccionado;
+            select.value = val;
         }
+        function actualizarSelectorSocios() { rellenarSelector('aporte-socio-select'); }
+        function actualizarSelectorSociosMultas() { rellenarSelector('multa-socio-select'); }
+        function actualizarSelectoresDeportes() { rellenarSelector('dep-ingreso-socio'); rellenarSelector('dep-salida-socio'); }
+        function actualizarSelectoresSalud() { rellenarSelector('sal-ingreso-socio'); rellenarSelector('sal-salida-socio'); }
 
+        // APORTES
         function mostrarAportesEnTablas() {
-            const aportes = obtenerAportes();
-            const socios = obtenerSocios();
-            const tbodyDetalle = document.getElementById('tabla-aportes-detallado-body');
-            const tbodyResumen = document.getElementById('tabla-resumen-aportes-body');
-            if(!tbodyDetalle || !tbodyResumen) return;
-            
-            let granTotal = 0;
-            tbodyDetalle.innerHTML = '';
-            
-            const sociosConAportes = socios.filter(s => aportes.some(ap => ap.documento === s.documento));
+            const aportes = obtenerAportes(); const socios = obtenerSocios();
+            const tbody = document.getElementById('tabla-aportes-detallado-body'); if(!tbody) return;
+            tbody.innerHTML = ''; let granTotal = 0;
 
-            if(sociosConAportes.length === 0) {
-                tbodyDetalle.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#999; padding:15px;">No se han registrado aportes contables.</td></tr>`;
-            } else {
-                sociosConAportes.forEach((socio) => {
-                    const sumaSocio = aportes
-                        .filter(ap => ap.documento === socio.documento)
-                        .reduce((sum, current) => sum + parseFloat(current.valor), 0);
-
-                    granTotal += sumaSocio;
-
-                    const fila = document.createElement('tr');
-                    fila.innerHTML = `
-                        <td><strong>${socio.nombre}</strong></td>
-                        <td>${socio.documento}</td>
-                        <td><strong style="color:#27ae60;">$${sumaSocio.toLocaleString()}</strong></td>
-                        <td>
-                            <button class="btn btn-actions btn-view" onclick="verHistorialSocio('${socio.documento}')">👁️ Ver Historial</button>
-                        </td>
-                    `;
-                    tbodyDetalle.appendChild(fila);
-                });
-                
-                const filaTotal = document.createElement('tr');
-                filaTotal.className = "total-row";
-                filaTotal.innerHTML = `<td colspan="2" style="text-align:right;">TOTAL RECAUDADO JAC:</td><td colspan="2" style="color:#27ae60;">$${granTotal.toLocaleString()}</td>`;
-                tbodyDetalle.appendChild(filaTotal);
-            }
-
-            tbodyResumen.innerHTML = '';
             if(socios.length === 0) {
-                tbodyResumen.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#999; padding:15px;">Registre socios para calcular acumulados.</td></tr>`;
-            } else {
-                socios.forEach(socio => {
-                    const sumaAcumulada = aportes
-                        .filter(ap => ap.documento === socio.documento)
-                        .reduce((sum, current) => sum + parseFloat(current.valor), 0);
-
-                    const filaRes = document.createElement('tr');
-                    filaRes.innerHTML = `
-                        <td><strong>${socio.nombre}</strong></td>
-                        <td>${socio.documento}</td>
-                        <td style="color:#2c3e50; font-weight:bold;">$${sumaAcumulada.toLocaleString()}</td>
-                    `;
-                    tbodyResumen.appendChild(filaRes);
-                });
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#999; padding:15px;">No hay socios registrados.</td></tr>`; return;
             }
+
+            socios.forEach(socio => {
+                const suma = aportes.filter(ap => ap.documento === socio.documento).reduce((s, c) => s + parseFloat(c.valor), 0);
+                granTotal += suma;
+                const fila = document.createElement('tr');
+                fila.innerHTML = `<td><strong>${socio.nombre}</strong></td><td>${socio.documento}</td>
+                    <td><strong style="color:#27ae60;">$${suma.toLocaleString()}</strong></td>
+                    <td><button class="btn btn-actions btn-view" onclick="verHistorialSocio('${socio.documento}', 'aportes')">👁️ Ver Historial</button></td>`;
+                tbody.appendChild(fila);
+            });
+            const ft = document.createElement('tr'); ft.className = "total-row";
+            ft.innerHTML = `<td colspan="2" style="text-align:right;">TOTAL RECAUDADO JAC:</td><td colspan="2" style="color:#27ae60;">$${granTotal.toLocaleString()}</td>`;
+            tbody.appendChild(ft);
         }
 
         function procesarFormularioAporte(e) {
-            e.preventDefault();
-            const idx = parseInt(document.getElementById('aporte-edit-index').value);
-            const selectSocio = document.getElementById('aporte-socio-select');
-            const fecha = document.getElementById('aporte-fecha').value;
-            const valor = parseFloat(document.getElementById('aporte-valor').value);
-            const concepto = document.getElementById('aporte-concepto').value.trim();
-            
+            e.preventDefault(); const idx = parseInt(document.getElementById('aporte-edit-index').value);
+            const selectSocio = document.getElementById('aporte-socio-select'); const fecha = document.getElementById('aporte-fecha').value;
+            const valor = parseFloat(document.getElementById('aporte-valor').value); const concepto = document.getElementById('aporte-concepto').value.trim();
             let aportes = obtenerAportes();
 
             if(idx === -1) {
-                const documento = selectSocio.value;
-                const nombreSocio = selectSocio.options[selectSocio.selectedIndex].text.split(' (')[0];
-                aportes.push({ nombre: nombreSocio, documento, fecha, valor, concepto });
-            } else {
-                aportes[idx].fecha = fecha;
-                aportes[idx].valor = valor;
-                aportes[idx].concepto = concepto;
-                cancelarEdicionAporte();
-            }
-
-            guardarAportes(aportes);
-            document.getElementById('aporte-form').reset();
-            establecerFechaHoy('aporte-fecha');
+                const documento = selectSocio.value; const nombre = selectSocio.options[selectSocio.selectedIndex].text.split(' (')[0];
+                aportes.push({ nombre, documento, fecha, valor, concepto });
+            } else { aportes[idx].fecha = fecha; aportes[idx].valor = valor; aportes[idx].concepto = concepto; cancelarEdicionAporte(); }
+            guardarAportes(aportes); document.getElementById('aporte-form').reset(); establecerFechaHoy('aporte-fecha');
         }
-
         function prepararEdicionAporte(idx) {
-            cerrarModal();
-            const aportes = obtenerAportes();
-            document.getElementById('aporte-edit-index').value = idx;
-            document.getElementById('aporte-fecha').value = aportes[idx].fecha || '';
-            document.getElementById('aporte-valor').value = aportes[idx].valor;
-            document.getElementById('aporte-concepto').value = aportes[idx].concepto;
-
-            const select = document.getElementById('aporte-socio-select');
-            select.value = aportes[idx].documento;
-            select.disabled = true;
-
-            document.getElementById('aporte-form-title').innerText = "✏️ Modificando Datos de la Transacción";
+            cerrarModal(); const aportes = obtenerAportes();
+            document.getElementById('aporte-edit-index').value = idx; document.getElementById('aporte-fecha').value = aportes[idx].fecha;
+            document.getElementById('aporte-valor').value = aportes[idx].valor; document.getElementById('aporte-concepto').value = aportes[idx].concepto;
+            const s = document.getElementById('aporte-socio-select'); s.value = aportes[idx].documento; s.disabled = true;
+            document.getElementById('aporte-form-title').innerText = "✏️ Modificando Transacción";
             document.getElementById('btn-submit-aporte').innerText = "🔄 Actualizar Aporte";
             document.getElementById('btn-cancel-aporte-edit').style.display = "inline-block";
-            document.querySelector('.main-content').scrollTop = 0;
         }
-
         function cancelarEdicionAporte() {
-            document.getElementById('aporte-edit-index').value = "-1";
-            document.getElementById('aporte-form').reset();
-            document.getElementById('aporte-socio-select').disabled = false;
-            document.getElementById('aporte-form-title').innerText = "💰 Registrar Aporte de Socio";
-            document.getElementById('btn-submit-aporte').innerText = "💾 Guardar Aporte";
-            document.getElementById('btn-cancel-aporte-edit').style.display = "none";
+            document.getElementById('aporte-edit-index').value = "-1"; document.getElementById('aporte-form').reset();
+            document.getElementById('aporte-socio-select').disabled = false; document.getElementById('aporte-form-title').innerText = "💰 Registrar Aporte de Socio";
+            document.getElementById('btn-submit-aporte').innerText = "💾 Guardar Aporte"; document.getElementById('btn-cancel-aporte-edit').style.display = "none";
             establecerFechaHoy('aporte-fecha');
         }
+        function eliminarAporte(idx) { if(confirm('¿Eliminar este aporte?')) { let arr = obtenerAportes(); arr.splice(idx, 1); guardarAportes(arr); cerrarModal(); } }
 
-        function eliminarAporte(idx) {
-            if(confirm('¿Eliminar esta boleta de aporte?')) {
-                let aportes = obtenerAportes();
-                aportes.splice(idx, 1);
-                guardarAportes(aportes);
-                cancelarEdicionAporte();
-                cerrarModal();
-            }
-        }
-
-        function verHistorialSocio(documentoSocio) {
-            const socios = obtenerSocios();
-            const aportes = obtenerAportes();
-            const socio = socios.find(s => s.documento === documentoSocio);
-            const nombreSocio = socio ? socio.nombre : "Socio no encontrado";
-            const tbodyModal = document.getElementById('modal-tabla-body');
-            tbodyModal.innerHTML = '';
-
-            let acumulado = 0;
-            let totalFilas = 0;
-
-            aportes.forEach((ap, indexOriginal) => {
-                if (ap.documento === documentoSocio) {
-                    acumulado += parseFloat(ap.valor);
-                    totalFilas++;
-                    const fila = document.createElement('tr');
-                    fila.innerHTML = `
-                        <td><span style="background-color:#e1e8ed; padding:3px 6px; border-radius:4px; font-size:0.85rem;">${ap.fecha || 'Sin fecha'}</span></td>
-                        <td>${ap.concepto}</td>
-                        <td><strong>$${parseFloat(ap.valor).toLocaleString()}</strong></td>
-                        <td>
-                            <button class="btn btn-actions btn-edit" onclick="prepararEdicionAporte(${indexOriginal})">✏️ Editar</button>
-                            <button class="btn btn-actions btn-danger" onclick="eliminarAporte(${indexOriginal})">❌ Borrar</button>
-                        </td>
-                    `;
-                    tbodyModal.appendChild(fila);
-                }
-            });
-
-            document.getElementById('modal-socio-titulo').innerText = `📊 Expediente Contable: ${nombreSocio}`;
-            document.getElementById('modal-socio-doc').innerText = documentoSocio;
-
-            if(totalFilas === 0) {
-                tbodyModal.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#999; padding:15px;">Este socio no registra ningún aporte contable.</td></tr>`;
-            } else {
-                const filaTotal = document.createElement('tr');
-                filaTotal.className = "total-row";
-                filaTotal.innerHTML = `<td colspan="2" style="text-align:right;">TOTAL ACUMULADO VIGENTE:</td><td colspan="2" style="color:#8e44ad;">$${acumulado.toLocaleString()}</td>`;
-                tbodyModal.appendChild(filaTotal);
-            }
-            document.getElementById('historial-modal').style.display = "flex";
-        }
-
-        function cerrarModal() { document.getElementById('historial-modal').style.display = "none"; }
-
-
-        // --- GESTIÓN DEL MÓDULO DE MULTAS ---
-        function actualizarSelectorSociosMultas() {
-            const select = document.getElementById('multa-socio-select');
-            if(!select) return;
-            const socios = obtenerSocios();
-            const valorSeleccionado = select.value;
-            select.innerHTML = '<option value="">-- Seleccione un socio registrado --</option>';
-            socios.forEach(socio => {
-                const opt = document.createElement('option');
-                opt.value = socio.documento;
-                opt.innerText = `${socio.nombre} (${socio.documento})`;
-                select.appendChild(opt);
-            });
-            select.value = valorSeleccionado;
-        }
-
+        // MULTAS
         function mostrarMultasEnTablas() {
-            const multas = obtenerMultas();
-            const socios = obtenerSocios();
-            const tbodyDetalle = document.getElementById('tabla-multas-detallado-body');
-            const tbodyResumen = document.getElementById('tabla-resumen-multas-body');
-            if(!tbodyDetalle || !tbodyResumen) return;
+            const multas = obtenerMultas(); const socios = obtenerSocios();
+            const tbody = document.getElementById('tabla-multas-detallado-body'); if(!tbody) return;
+            tbody.innerHTML = ''; let granTotal = 0;
 
-            let granTotalMultas = 0;
-            tbodyDetalle.innerHTML = '';
-
-            const sociosConMultas = socios.filter(s => multas.some(m => m.documento === s.documento));
-
-            if(sociosConMultas.length === 0) {
-                tbodyDetalle.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#999; padding:15px;">No se han recaudado pagos de multas.</td></tr>`;
-                tbodyResumen.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#999; padding:15px;">No hay saldos de multas para mostrar.</td></tr>`;
-                return;
-            } else {
-                sociosConMultas.forEach((socio) => {
-                    const sumaSocio = multas
-                        .filter(m => m.documento === socio.documento)
-                        .reduce((sum, current) => sum + parseFloat(current.valor), 0);
-
-                    granTotalMultas += sumaSocio;
-
-                    const fila = document.createElement('tr');
-                    fila.innerHTML = `
-                        <td><strong>${socio.nombre}</strong></td>
-                        <td>${socio.documento}</td>
-                        <td><strong style="color:#e74c3c;">$${sumaSocio.toLocaleString()}</strong></td>
-                        <td>
-                            <button class="btn btn-actions btn-view" style="background-color:#d35400;" onclick="verHistorialMultasSocio('${socio.documento}')">👁️ Ver Detalles</button>
-                        </td>
-                    `;
-                    tbodyDetalle.appendChild(fila);
-                });
-
-                const filaTotal = document.createElement('tr');
-                filaTotal.className = "total-row";
-                filaTotal.innerHTML = `<td colspan="2" style="text-align:right;">TOTAL RECAUDADO MULTAS:</td><td colspan="2" style="color:#e74c3c;">$${granTotalMultas.toLocaleString()}</td>`;
-                tbodyDetalle.appendChild(filaTotal);
-            }
-
-            tbodyResumen.innerHTML = '';
-            sociosConMultas.forEach(socio => {
-                const sumaAcumulada = multas
-                    .filter(m => m.documento === socio.documento)
-                    .reduce((sum, current) => sum + parseFloat(current.valor), 0);
-
-                const filaRes = document.createElement('tr');
-                filaRes.innerHTML = `
-                    <td><strong>${socio.nombre}</strong></td>
-                    <td>${socio.documento}</td>
-                    <td style="color:#c0392b; font-weight:bold;">$${sumaAcumulada.toLocaleString()}</td>
-                `;
-                tbodyResumen.appendChild(filaRes);
+            socios.forEach(socio => {
+                const suma = multas.filter(m => m.documento === socio.documento).reduce((s, c) => s + parseFloat(c.valor), 0);
+                granTotal += suma;
+                const fila = document.createElement('tr');
+                fila.innerHTML = `<td><strong>${socio.nombre}</strong></td><td>${socio.documento}</td>
+                    <td><strong style="color:#e74c3c;">$${suma.toLocaleString()}</strong></td>
+                    <td><button class="btn btn-actions btn-view" style="background-color:#d35400;" onclick="verHistorialSocio('${socio.documento}', 'multas')">👁️ Ver Historial</button></td>`;
+                tbody.appendChild(fila);
             });
+            const ft = document.createElement('tr'); ft.className = "total-row";
+            ft.innerHTML = `<td colspan="2" style="text-align:right;">TOTAL RECAUDADO MULTAS:</td><td colspan="2" style="color:#e74c3c;">$${granTotal.toLocaleString()}</td>`;
+            tbody.appendChild(ft);
         }
 
         function procesarFormularioMulta(e) {
-            e.preventDefault();
-            const idx = parseInt(document.getElementById('multa-edit-index').value);
-            const selectSocio = document.getElementById('multa-socio-select');
-            const fecha = document.getElementById('multa-fecha').value;
-            const valor = parseFloat(document.getElementById('multa-valor').value);
-            const concepto = document.getElementById('multa-concepto').value.trim();
-
+            e.preventDefault(); const idx = parseInt(document.getElementById('multa-edit-index').value);
+            const selectSocio = document.getElementById('multa-socio-select'); const fecha = document.getElementById('multa-fecha').value;
+            const valor = parseFloat(document.getElementById('multa-valor').value); const concepto = document.getElementById('multa-concepto').value.trim();
             let multas = obtenerMultas();
 
             if(idx === -1) {
-                const documento = selectSocio.value;
-                const nombreSocio = selectSocio.options[selectSocio.selectedIndex].text.split(' (')[0];
-                multas.push({ nombre: nombreSocio, documento, fecha, valor, concepto });
-            } else {
-                multas[idx].fecha = fecha;
-                multas[idx].valor = valor;
-                multas[idx].concepto = concepto;
-                cancelarEdicionMulta();
-            }
-
-            guardarMultas(multas);
-            document.getElementById('multa-form').reset();
-            establecerFechaHoy('multa-fecha');
+                const documento = selectSocio.value; const nombre = selectSocio.options[selectSocio.selectedIndex].text.split(' (')[0];
+                multas.push({ nombre, documento, fecha, valor, concepto });
+            } else { multas[idx].fecha = fecha; multas[idx].valor = valor; multas[idx].concepto = concepto; cancelarEdicionMulta(); }
+            guardarMultas(multas); document.getElementById('multa-form').reset(); establecerFechaHoy('multa-fecha');
         }
-
         function prepararEdicionMulta(idx) {
-            cerrarModalMultas();
-            const multas = obtenerMultas();
-            document.getElementById('multa-edit-index').value = idx;
-            document.getElementById('multa-fecha').value = multas[idx].fecha || '';
-            document.getElementById('multa-valor').value = multas[idx].valor;
-            document.getElementById('multa-concepto').value = multas[idx].concepto;
-
-            const select = document.getElementById('multa-socio-select');
-            select.value = multas[idx].documento;
-            select.disabled = true;
-
-            document.getElementById('multa-form-title').innerText = "✏️ Modificando Boleta de Multa";
+            cerrarModal(); const multas = obtenerMultas();
+            document.getElementById('multa-edit-index').value = idx; document.getElementById('multa-fecha').value = multas[idx].fecha;
+            document.getElementById('multa-valor').value = multas[idx].valor; document.getElementById('multa-concepto').value = multas[idx].concepto;
+            const s = document.getElementById('multa-socio-select'); s.value = multas[idx].documento; s.disabled = true;
+            document.getElementById('multa-form-title').innerText = "✏️ Modificando Multa";
             document.getElementById('btn-submit-multa').innerText = "🔄 Actualizar Recibo";
             document.getElementById('btn-cancel-multa-edit').style.display = "inline-block";
-            document.querySelector('.main-content').scrollTop = 0;
         }
-
         function cancelarEdicionMulta() {
-            document.getElementById('multa-edit-index').value = "-1";
-            document.getElementById('multa-form').reset();
-            document.getElementById('multa-socio-select').disabled = false;
-            document.getElementById('multa-form-title').innerText = "⚠ Registrar Pago de Multa de Socio";
-            document.getElementById('btn-submit-multa').innerText = "💾 Guardar Multa";
-            document.getElementById('btn-cancel-multa-edit').style.display = "none";
+            document.getElementById('multa-edit-index').value = "-1"; document.getElementById('multa-form').reset();
+            document.getElementById('multa-socio-select').disabled = false; document.getElementById('multa-form-title').innerText = "⚠ Registrar Pago de Multa de Socio";
+            document.getElementById('btn-submit-multa').innerText = "💾 Guardar Multa"; document.getElementById('btn-cancel-multa-edit').style.display = "none";
             establecerFechaHoy('multa-fecha');
         }
+        function eliminarMulta(idx) { if(confirm('¿Eliminar esta multa?')) { let arr = obtenerMultas(); arr.splice(idx, 1); guardarMultas(arr); cerrarModal(); } }
 
-        function eliminarMulta(idx) {
-            if(confirm('¿Eliminar de forma permanente este registro de multa?')) {
-                let multas = obtenerMultas();
-                multas.splice(idx, 1);
-                guardarMultas(multas);
-                cancelarEdicionMulta();
-                cerrarModalMultas();
-            }
-        }
+        // POP-UP MODAL CONTROL APORTES Y MULTAS
+        function verHistorialSocio(docSocio, tipo) {
+            const socios = obtenerSocios(); const socio = socios.find(s => s.documento === docSocio);
+            const data = tipo === 'aportes' ? obtenerAportes() : obtenerMultas();
+            const tbody = document.getElementById('modal-tabla-body'); tbody.innerHTML = '';
+            
+            document.getElementById('modal-socio-titulo').innerText = `📊 Expediente: ${socio ? socio.nombre : 'No Registrado'} (${tipo.toUpperCase()})`;
+            document.getElementById('modal-socio-doc').innerText = docSocio;
+            let total = 0;
 
-        function verHistorialMultasSocio(documentoSocio) {
-            const socios = obtenerSocios();
-            const multas = obtenerMultas();
-            const socio = socios.find(s => s.documento === documentoSocio);
-            const nombreSocio = socio ? socio.nombre : "Socio no encontrado";
-            const tbodyModal = document.getElementById('modal-multas-tabla-body');
-            tbodyModal.innerHTML = '';
-
-            let acumulado = 0;
-            let totalFilas = 0;
-
-            multas.forEach((m, indexOriginal) => {
-                if (m.documento === documentoSocio) {
-                    acumulado += parseFloat(m.valor);
-                    totalFilas++;
+            data.forEach((item, indexOriginal) => {
+                if(item.documento === docSocio) {
+                    total += parseFloat(item.valor);
                     const fila = document.createElement('tr');
-                    fila.innerHTML = `
-                        <td><span style="background-color:#fadbd8; padding:3px 6px; border-radius:4px; font-size:0.85rem; color:#c0392b;">${m.fecha || 'Sin fecha'}</span></td>
-                        <td><strong>${m.concepto}</strong></td>
-                        <td><strong>$${parseFloat(m.valor).toLocaleString()}</strong></td>
+                    fila.innerHTML = `<td>${item.fecha}</td><td>${item.concepto}</td><td><strong>$${parseFloat(item.valor).toLocaleString()}</strong></td>
                         <td>
-                            <button class="btn btn-actions btn-edit" onclick="prepararEdicionMulta(${indexOriginal})">✏️ Editar</button>
-                            <button class="btn btn-actions btn-danger" onclick="eliminarMulta(${indexOriginal})">❌ Borrar</button>
-                        </td>
-                    `;
-                    tbodyModal.appendChild(fila);
+                            <button class="btn btn-actions btn-edit" onclick="${tipo === 'aportes' ? 'prepararEdicionAporte':'prepararEdicionMulta'}(${indexOriginal})">✏️</button>
+                            <button class="btn btn-actions btn-danger" onclick="${tipo === 'aportes' ? 'eliminarAporte':'eliminarMulta'}(${indexOriginal})">❌</button>
+                        </td>`;
+                    tbody.appendChild(fila);
                 }
             });
-
-            document.getElementById('modal-multa-titulo').innerText = `📊 Historial de Multas: ${nombreSocio}`;
-            document.getElementById('modal-multa-doc').innerText = documentoSocio;
-
-            if(totalFilas === 0) {
-                tbodyModal.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#999; padding:15px;">Este socio no registra multas canceladas.</td></tr>`;
-            } else {
-                const filaTotal = document.createElement('tr');
-                filaTotal.className = "total-row";
-                filaTotal.innerHTML = `<td colspan="2" style="text-align:right;">TOTAL MULTAS PAGADAS:</td><td colspan="2" style="color:#c0392b;">$${acumulado.toLocaleString()}</td>`;
-                tbodyModal.appendChild(filaTotal);
-            }
-            document.getElementById('multas-modal').style.display = "flex";
+            const ft = document.createElement('tr'); ft.className = "total-row";
+            ft.innerHTML = `<td colspan="2" style="text-align:right;">TOTAL ACUMULADO:</td><td colspan="2">$${total.toLocaleString()}</td>`;
+            tbody.appendChild(ft);
+            document.getElementById('historial-modal').style.display = "flex";
         }
+        function cerrarModal() { document.getElementById('historial-modal').style.display = "none"; }
 
-        function cerrarModalMultas() { document.getElementById('multas-modal').style.display = "none"; }
 
-
-        // --- GESTIÓN DEL COMITÉ DE DEPORTES (NUEVO) ---
-        function actualizarSelectoresDeportes() {
-            const selectIngreso = document.getElementById('dep-ingreso-socio');
-            const selectSalida = document.getElementById('dep-salida-socio');
-            if(!selectIngreso || !selectSalida) return;
-            
-            const socios = obtenerSocios();
-            const valIngreso = selectIngreso.value;
-            const valSalida = selectSalida.value;
-
-            const plantillaHtml = '<option value="">-- Seleccione un socio --</option>';
-            selectIngreso.innerHTML = plantillaHtml;
-            selectSalida.innerHTML = plantillaHtml;
-
-            socios.forEach(socio => {
-                const opt1 = document.createElement('option');
-                opt1.value = socio.documento;
-                opt1.innerText = `${socio.nombre} (${socio.documento})`;
-                
-                const opt2 = opt1.cloneNode(true);
-                
-                selectIngreso.appendChild(opt1);
-                selectSalida.appendChild(opt2);
-            });
-
-            selectIngreso.value = valIngreso;
-            selectSalida.value = valSalida;
-        }
-
+        // --- GESTIÓN DEL COMITÉ DE DEPORTES ---
         function mostrarDeportesEnTabla() {
-            const deportes = obtenerDeportes();
-            const tbody = document.getElementById('tabla-deportes-movimientos-body');
-            if(!tbody) return;
+            const deportes = obtenerDeportes(); const socios = obtenerSocios();
+            const tbody = document.getElementById('tabla-deportes-resumen-body'); if(!tbody) return;
             tbody.innerHTML = '';
 
-            let totalIngresos = 0;
-            let totalSalidas = 0;
+            let totalIngresosGlobal = 0; let totalSalidasGlobal = 0;
 
-            if(deportes.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:#999; padding:20px;">No hay movimientos contables en el Comité de Deportes.</td></tr>`;
-                document.getElementById('deportes-saldo-disponible').innerText = "$0";
-                return;
-            }
+            socios.forEach(socio => {
+                const ingresos = deportes.filter(d => d.documento === socio.documento && d.tipo === 'ingreso').reduce((s, c) => s + parseFloat(c.valor), 0);
+                const salidas = deportes.filter(d => d.documento === socio.documento && d.tipo === 'salida').reduce((s, c) => s + parseFloat(c.valor), 0);
+                const saldo = ingresos - salidas;
 
-            deportes.forEach((mov, idx) => {
+                totalIngresosGlobal += ingresos; totalSalidasGlobal += salidas;
+
                 const fila = document.createElement('tr');
-                let celdaIngreso = "-";
-                let celdaSalida = "-";
-
-                if(mov.tipo === 'ingreso') {
-                    totalIngresos += parseFloat(mov.valor);
-                    celdaIngreso = `<strong style="color:#27ae60;">+$${parseFloat(mov.valor).toLocaleString()}</strong>`;
-                } else {
-                    totalSalidas += parseFloat(mov.valor);
-                    celdaSalida = `<strong style="color:#c0392b;">-$${parseFloat(mov.valor).toLocaleString()}</strong>`;
-                }
-
-                fila.innerHTML = `
-                    <td><span style="background-color:#e1e8ed; padding:3px 6px; border-radius:4px; font-size:0.85rem;">${mov.fecha}</span></td>
-                    <td><span style="text-transform: uppercase; font-size: 0.75rem; font-weight: bold; color: ${mov.tipo === 'ingreso' ? '#27ae60':'#c0392b'}">${mov.tipo}</span></td>
-                    <td><strong>${mov.nombre}</strong></td>
-                    <td>${mov.documento}</td>
-                    <td>${mov.concepto}</td>
-                    <td>${celdaIngreso}</td>
-                    <td>${celdaSalida}</td>
-                    <td>
-                        <button class="btn btn-actions btn-edit" onclick="prepararEdicionDeporte(${idx}, '${mov.tipo}')">✏️</button>
-                        <button class="btn btn-actions btn-danger" onclick="eliminarMovimientoDeporte(${idx})">❌</button>
-                    </td>
-                `;
+                fila.innerHTML = `<td><strong>${socio.nombre}</strong></td><td>${socio.documento}</td>
+                    <td style="color:#27ae60;">+$${ingresos.toLocaleString()}</td>
+                    <td style="color:#c0392b;">-$${salidas.toLocaleString()}</td>
+                    <td style="font-weight:bold; color:${saldo >= 0 ? '#196f3d':'#922b21'};">$${saldo.toLocaleString()}</td>
+                    <td><button class="btn btn-actions btn-view" onclick="verHistorialComite('${socio.documento}', 'deportes')">👁️ Ver Historial</button></td>`;
                 tbody.appendChild(fila);
             });
 
-            const saldoDisponible = totalIngresos - totalSalidas;
-            document.getElementById('deportes-saldo-disponible').innerText = `$${saldoDisponible.toLocaleString()}`;
+            const saldoDisponibleGlobal = totalIngresosGlobal - totalSalidasGlobal;
+            document.getElementById('deportes-saldo-disponible').innerText = `$${saldoDisponibleGlobal.toLocaleString()}`;
 
-            // Fila de resumen final
-            const filaResumen = document.createElement('tr');
-            filaResumen.className = "total-row";
-            filaResumen.innerHTML = `
-                <td colspan="5" style="text-align:right;">TOTALES GENERALES / SALDO DISPONIBLE:</td>
-                <td style="color:#27ae60;">$${totalIngresos.toLocaleString()}</td>
-                <td style="color:#c0392b;">$${totalSalidas.toLocaleString()}</td>
-                <td style="background-color: #d4efdf; color: #196f3d; font-weight: bold;">$${saldoDisponible.toLocaleString()}</td>
-            `;
-            tbody.appendChild(filaResumen);
+            const ft = document.createElement('tr'); ft.className = "total-row";
+            ft.innerHTML = `<td colspan="2" style="text-align:right;">TOTALES GENERALES:</td>
+                <td style="color:#27ae60;">$${totalIngresosGlobal.toLocaleString()}</td>
+                <td style="color:#c0392b;">$${totalSalidasGlobal.toLocaleString()}</td>
+                <td colspan="2" style="background-color:#d4efdf; color:#196f3d;">$${saldoDisponibleGlobal.toLocaleString()} (Saldo Disponible)</td>`;
+            tbody.appendChild(ft);
         }
 
         function procesarDeporteMovimiento(e, tipo) {
-            e.preventDefault();
-            const idx = parseInt(document.getElementById(`deporte-${tipo}-edit-index`).value);
-            const selectSocio = document.getElementById(`dep-${tipo}-socio`);
-            const fecha = document.getElementById(`dep-${tipo}-fecha`).value;
-            const valor = parseFloat(document.getElementById(`dep-${tipo}-valor`).value);
-            const concepto = document.getElementById(`dep-${tipo}-concepto`).value.trim();
-
+            e.preventDefault(); const idx = parseInt(document.getElementById(`deporte-${tipo}-edit-index`).value);
+            const selectSocio = document.getElementById(`dep-${tipo}-socio`); const fecha = document.getElementById(`dep-${tipo}-fecha`).value;
+            const valor = parseFloat(document.getElementById(`dep-${tipo}-valor`).value); const concepto = document.getElementById(`dep-${tipo}-concepto`).value.trim();
             let deportes = obtenerDeportes();
 
             if(idx === -1) {
-                const documento = selectSocio.value;
-                const nombreSocio = selectSocio.options[selectSocio.selectedIndex].text.split(' (')[0];
-                deportes.push({ tipo, nombre: nombreSocio, documento, fecha, valor, concepto });
-            } else {
-                deportes[idx].fecha = fecha;
-                deportes[idx].valor = valor;
-                deportes[idx].concepto = concepto;
-                cancelarEdicionDeporte(tipo);
-            }
-
-            guardarDeportes(deportes);
-            document.getElementById(`deporte-${tipo}-form`).reset();
-            establecerFechaHoy(`dep-${tipo}-fecha`);
+                const documento = selectSocio.value; const nombre = selectSocio.options[selectSocio.selectedIndex].text.split(' (')[0];
+                deportes.push({ tipo, nombre, documento, fecha, valor, concepto });
+            } else { deportes[idx].fecha = fecha; deportes[idx].valor = valor; deportes[idx].concepto = concepto; cancelarEdicionDeporte(tipo); }
+            guardarDeportes(deportes); document.getElementById(`deporte-${tipo}-form`).reset(); establecerFechaHoy(`dep-${tipo}-fecha`);
         }
-
         function prepararEdicionDeporte(idx, tipo) {
-            const deportes = obtenerDeportes();
-            document.getElementById(`deporte-${tipo}-edit-index`).value = idx;
-            document.getElementById(`dep-${tipo}-fecha`).value = deportes[idx].fecha;
-            document.getElementById(`dep-${tipo}-valor`).value = deportes[idx].valor;
-            document.getElementById(`dep-${tipo}-concepto`).value = deportes[idx].concepto;
-
-            const select = document.getElementById(`dep-${tipo}-socio`);
-            select.value = deportes[idx].documento;
-            select.disabled = true;
-
-            document.getElementById(`deporte-${tipo}-title`).innerText = `✏️ Modificando Registro de ${tipo.toUpperCase()}`;
-            document.getElementById(`btn-submit-dep-${tipo}`).innerText = "🔄 Actualizar Movimiento";
+            cerrarModalComite(); const deportes = obtenerDeportes();
+            document.getElementById(`deporte-${tipo}-edit-index`).value = idx; document.getElementById(`dep-${tipo}-fecha`).value = deportes[idx].fecha;
+            document.getElementById(`dep-${tipo}-valor`).value = deportes[idx].valor; document.getElementById(`dep-${tipo}-concepto`).value = deportes[idx].concepto;
+            const s = document.getElementById(`dep-${tipo}-socio`); s.value = deportes[idx].documento; s.disabled = true;
+            document.getElementById(`deporte-${tipo}-title`).innerText = `✏️ Modificando ${tipo.toUpperCase()}`;
+            document.getElementById(`btn-submit-dep-${tipo}`).innerText = "🔄 Actualizar";
             document.getElementById(`btn-cancel-dep-${tipo}`).style.display = "inline-block";
-            document.querySelector('.main-content').scrollTop = 0;
         }
-
         function cancelarEdicionDeporte(tipo) {
-            document.getElementById(`deporte-${tipo}-edit-index`).value = "-1";
-            document.getElementById(`deporte-${tipo}-form`).reset();
-            document.getElementById(`dep-${tipo}-socio`).disabled = false;
-            document.getElementById(`deporte-${tipo}-title`).innerText = tipo === 'ingreso' ? "📥 Registrar INGRESO / Aporte al Comité" : "📤 Registrar SALIDA / Gasto del Comité";
-            document.getElementById(`btn-submit-dep-${tipo}`).innerText = tipo === 'ingreso' ? "💾 Guardar Ingreso" : "💾 Guardar Salida";
-            document.getElementById(`btn-cancel-dep-${tipo}`).style.display = "none";
+            document.getElementById(`deporte-${tipo}-edit-index`).value = "-1"; document.getElementById(`deporte-${tipo}-form`).reset();
+            document.getElementById(`dep-${tipo}-socio`).disabled = false; document.getElementById(`deporte-${tipo}-title`).innerText = tipo === 'ingreso' ? "📥 Registrar INGRESO / Aporte al Comité":"📤 Registrar SALIDA / Gasto del Comité";
+            document.getElementById(`btn-submit-dep-${tipo}`).innerText = "💾 Guardar"; document.getElementById(`btn-cancel-dep-${tipo}`).style.display = "none";
             establecerFechaHoy(`dep-${tipo}-fecha`);
         }
+        function eliminarMovimientoDeporte(idx) { if(confirm('¿Borrar movimiento?')) { let arr = obtenerDeportes(); const t = arr[idx].tipo; arr.splice(idx, 1); guardarDeportes(arr); cancelarEdicionDeporte(t); cerrarModalComite(); } }
 
-        function eliminarMovimientoDeporte(idx) {
-            if(confirm('¿Desea borrar este movimiento contable del Comité de Deportes?')) {
-                let deportes = obtenerDeportes();
-                const tipo = deportes[idx].tipo;
-                deportes.splice(idx, 1);
-                guardarDeportes(deportes);
-                cancelarEdicionDeporte(tipo);
-            }
+
+        // --- GESTIÓN DEL COMITÉ DE SALUD ---
+        function mostrarSaludEnTabla() {
+            const salud = obtenerSalud(); const socios = obtenerSocios();
+            const tbody = document.getElementById('tabla-salud-resumen-body'); if(!tbody) return;
+            tbody.innerHTML = '';
+
+            let totalIngresosGlobal = 0; let totalSalidasGlobal = 0;
+
+            socios.forEach(socio => {
+                const ingresos = salud.filter(s => s.documento === socio.documento && s.tipo === 'ingreso').reduce((s, c) => s + parseFloat(c.valor), 0);
+                const salidas = salud.filter(s => s.documento === socio.documento && s.tipo === 'salida').reduce((s, c) => s + parseFloat(c.valor), 0);
+                const saldo = ingresos - salidas;
+
+                totalIngresosGlobal += ingresos; totalSalidasGlobal += salidas;
+
+                const fila = document.createElement('tr');
+                fila.innerHTML = `<td><strong>${socio.nombre}</strong></td><td>${socio.documento}</td>
+                    <td style="color:#27ae60;">+$${ingresos.toLocaleString()}</td>
+                    <td style="color:#c0392b;">-$${salidas.toLocaleString()}</td>
+                    <td style="font-weight:bold; color:${saldo >= 0 ? '#196f3d':'#922b21'};">$${saldo.toLocaleString()}</td>
+                    <td><button class="btn btn-actions btn-view" style="background-color:#9b59b6;" onclick="verHistorialComite('${socio.documento}', 'salud')">👁️ Ver Historial</button></td>`;
+                tbody.appendChild(fila);
+            });
+
+            const saldoDisponibleGlobal = totalIngresosGlobal - totalSalidasGlobal;
+            document.getElementById('salud-saldo-disponible').innerText = `$${saldoDisponibleGlobal.toLocaleString()}`;
+
+            const ft = document.createElement('tr'); ft.className = "total-row";
+            ft.innerHTML = `<td colspan="2" style="text-align:right;">TOTALES GENERALES:</td>
+                <td style="color:#27ae60;">$${totalIngresosGlobal.toLocaleString()}</td>
+                <td style="color:#c0392b;">$${totalSalidasGlobal.toLocaleString()}</td>
+                <td colspan="2" style="background-color:#f5eef8; color:#6c3483;">$${saldoDisponibleGlobal.toLocaleString()} (Saldo Disponible)</td>`;
+            tbody.appendChild(ft);
         }
 
-        function exportarDeportesExcel() {
+        function procesarSaludMovimiento(e, tipo) {
+            e.preventDefault(); const idx = parseInt(document.getElementById(`salud-${tipo}-edit-index`).value);
+            const selectSocio = document.getElementById(`sal-${tipo}-socio`); const fecha = document.getElementById(`sal-${tipo}-fecha`).value;
+            const valor = parseFloat(document.getElementById(`sal-${tipo}-valor`).value); const concepto = document.getElementById(`sal-${tipo}-concepto`).value.trim();
+            let salud = obtenerSalud();
+
+            if(idx === -1) {
+                const documento = selectSocio.value; const nombre = selectSocio.options[selectSocio.selectedIndex].text.split(' (')[0];
+                salud.push({ tipo, nombre, documento, fecha, valor, concepto });
+            } else { salud[idx].fecha = fecha; salud[idx].valor = valor; salud[idx].concepto = concepto; cancelarEdicionSalud(tipo); }
+            guardarSalud(salud); document.getElementById(`salud-${tipo}-form`).reset(); establecerFechaHoy(`sal-${tipo}-fecha`);
+        }
+        function prepararEdicionSalud(idx, tipo) {
+            cerrarModalComite(); const salud = obtenerSalud();
+            document.getElementById(`salud-${tipo}-edit-index`).value = idx; document.getElementById(`sal-` + tipo + `-fecha`).value = salud[idx].fecha;
+            document.getElementById(`sal-${tipo}-valor`).value = salud[idx].valor; document.getElementById(`sal-${tipo}-concepto`).value = salud[idx].concepto;
+            const s = document.getElementById(`sal-${tipo}-socio`); s.value = salud[idx].documento; s.disabled = true;
+            document.getElementById(`salud-${tipo}-title`).innerText = `✏️ Modificando ${tipo.toUpperCase()}`;
+            document.getElementById(`btn-submit-sal-${tipo}`).innerText = "🔄 Actualizar";
+            document.getElementById(`btn-cancel-sal-${tipo}`).style.display = "inline-block";
+        }
+        function cancelarEdicionSalud(tipo) {
+            document.getElementById(`salud-${tipo}-edit-index`).value = "-1"; document.getElementById(`salud-${tipo}-form`).reset();
+            document.getElementById(`sal-${tipo}-socio`).disabled = false; document.getElementById(`salud-${tipo}-title`).innerText = tipo === 'ingreso' ? "📥 Registrar INGRESO / Aporte al Comité de Salud":"📤 Registrar SALIDA / Gasto del Comité de Salud";
+            document.getElementById(`btn-submit-sal-${tipo}`).innerText = "💾 Guardar"; document.getElementById(`btn-cancel-sal-${tipo}`).style.display = "none";
+            establecerFechaHoy(`sal-${tipo}-fecha`);
+        }
+        function eliminarMovimientoSalud(idx) { if(confirm('¿Borrar movimiento?')) { let arr = obtenerSalud(); const t = arr[idx].tipo; arr.splice(idx, 1); guardarSalud(arr); cancelarEdicionSalud(t); cerrarModalComite(); } }
+
+
+        // MODAL AVANZADO HISTORIAL COMITES (DEPORTES / SALUD)
+        function verHistorialComite(docSocio, comite) {
+            const socios = obtenerSocios(); const socio = socios.find(s => s.documento === docSocio);
+            const data = comite === 'deportes' ? obtenerDeportes() : obtenerSalud();
+            const tbody = document.getElementById('comite-modal-tabla-body'); tbody.innerHTML = '';
+            
+            const modalContainer = document.getElementById('comite-modal-container');
+            modalContainer.style.borderTopColor = comite === 'deportes' ? '#2980b9' : '#9b59b6';
+
+            document.getElementById('comite-modal-titulo').innerText = `📊 Libro Contable de Socio: Comité de ${comite.toUpperCase()}`;
+            document.getElementById('comite-modal-socio').innerText = socio ? socio.nombre : 'No Registrado';
+            document.getElementById('comite-modal-doc').innerText = docSocio;
+
+            let totalIn = 0; let totalOut = 0;
+
+            data.forEach((item, indexOriginal) => {
+                if(item.documento === docSocio) {
+                    const esIn = item.tipo === 'ingreso';
+                    if(esIn) totalIn += parseFloat(item.valor); else totalOut += parseFloat(item.valor);
+
+                    const fila = document.createElement('tr');
+                    fila.innerHTML = `<td>${item.fecha}</td>
+                        <td><span style="font-size:0.75rem; font-weight:bold; color:${esIn ? '#27ae60':'#c0392b'}">${item.tipo.toUpperCase()}</span></td>
+                        <td>${item.concepto}</td>
+                        <td style="color:#27ae60;">${esIn ? '+$'+parseFloat(item.valor).toLocaleString() : '-'}</td>
+                        <td style="color:#c0392b;">${!esIn ? '-$'+parseFloat(item.valor).toLocaleString() : '-'}</td>
+                        <td>
+                            <button class="btn btn-actions btn-edit" onclick="${comite === 'deportes' ? 'prepararEdicionDeporte':'prepararEdicionSalud'}(${indexOriginal}, '${item.tipo}')">✏️</button>
+                            <button class="btn btn-actions btn-danger" onclick="${comite === 'deportes' ? 'eliminarMovimientoDeporte':'eliminarMovimientoSalud'}(${indexOriginal})">❌</button>
+                        </td>`;
+                    tbody.appendChild(fila);
+                }
+            });
+
+            const saldo = totalIn - totalOut;
+            const ft = document.createElement('tr'); ft.className = "total-row";
+            ft.innerHTML = `<td colspan="3" style="text-align:right;">BALANCE INDIVIDUAL:</td>
+                <td style="color:#27ae60;">+$${totalIn.toLocaleString()}</td><td style="color:#c0392b;">-$${totalOut.toLocaleString()}</td>
+                <td style="background-color:${saldo >= 0 ? '#d4efdf':'#fadbd8'}; color:${saldo >= 0 ? '#196f3d':'#922b21'}; font-weight:bold;">$${saldo.toLocaleString()}</td>`;
+            tbody.appendChild(ft);
+
+            document.getElementById('comite-modal').style.display = "flex";
+        }
+        function cerrarModalComite() { document.getElementById('comite-modal').style.display = "none"; }
+
+
+        // EXCEL EXPORTACIONES COMITES
+        function exportarComiteBaseExcel(comite, arrDatos) {
             if (typeof XLSX === 'undefined') { alert("Función no disponible offline."); return; }
-            const deportes = obtenerDeportes();
-            if(deportes.length === 0) { alert("No hay movimientos en deportes para exportar."); return; }
+            if(arrDatos.length === 0) { alert("No hay movimientos registrados para exportar."); return; }
 
-            let totalIngresos = 0;
-            let totalSalidas = 0;
-
-            const filasExcel = deportes.map(mov => {
-                const esIngreso = mov.tipo === 'ingreso';
-                const valor = parseFloat(mov.valor);
-                
-                if(esIngreso) totalIngresos += valor;
-                else totalSalidas += valor;
-
+            let totalIn = 0; let totalOut = 0;
+            const filasExcel = arrDatos.map(mov => {
+                const esIn = mov.tipo === 'ingreso'; const v = parseFloat(mov.valor);
+                if(esIn) totalIn += v; else totalOut += v;
                 return {
-                    "Fecha": mov.fecha,
-                    "Tipo de Movimiento": mov.tipo.toUpperCase(),
-                    "Socio Responsable": mov.nombre,
-                    "Documento": mov.documento,
-                    "Concepto / Motivo": mov.concepto,
-                    "Ingreso (+)": esIngreso ? valor : 0,
-                    "Salida (-)": !esIngreso ? valor : 0
+                    "Fecha": mov.fecha, "Tipo": mov.tipo.toUpperCase(), "Socio Responsable": mov.nombre,
+                    "Documento": mov.documento, "Concepto / Motivo": mov.concepto,
+                    "Ingreso (+)": esIn ? v : 0, "Salida (-)": !esIn ? v : 0
                 };
             });
 
-            // Fila de Totales e Indicadores de disponibilidad requeridos
-            filasExcel.push({
-                "Fecha": "RESUMEN FINAL",
-                "Tipo de Movimiento": "",
-                "Socio Responsable": "",
-                "Documento": "",
-                "Concepto / Motivo": "VALOR TOTAL RECAUDADO / GASTADO",
-                "Ingreso (+)": totalIngresos,
-                "Salida (-)": totalSalidas
-            });
+            filasExcel.push({ "Fecha": "RESUMEN FINAL", "Tipo": "", "Socio Responsable": "", "Documento": "", "Concepto / Motivo": "VALOR RECAUDADO / GASTADO", "Ingreso (+)": totalIn, "Salida (-)": totalOut });
+            filasExcel.push({ "Fecha": `SALDO DISPONIBLE COMITÉ ${comite.toUpperCase()}`, "Tipo": "", "Socio Responsable": "", "Documento": "", "Concepto / Motivo": "", "Ingreso (+)": (totalIn - totalOut), "Salida (-)": "" });
 
-            filasExcel.push({
-                "Fecha": "SALDO DISPONIBLE COMITÉ DE DEPORTES",
-                "Tipo de Movimiento": "",
-                "Socio Responsable": "",
-                "Documento": "",
-                "Concepto / Motivo": "",
-                "Ingreso (+)": totalIngresos - totalSalidas,
-                "Salida (-)": ""
-            });
-
-            const hoja = XLSX.utils.json_to_sheet(filasExcel);
-            const libro = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(libro, hoja, "Movimientos Deportes");
-            XLSX.writeFile(libro, "Libro_Contable_Deportes_San_Miguel.xlsx");
+            const hoja = XLSX.utils.json_to_sheet(filasExcel); const libro = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(libro, hoja, "Movimientos");
+            XLSX.writeFile(libro, `Libro_Contable_${comite}_San_Miguel.xlsx`);
         }
+        function exportarDeportesExcel() { exportarComiteBaseExcel('Deportes', obtenerDeportes()); }
+        function exportarSaludExcel() { exportarComiteBaseExcel('Salud', obtenerSalud()); }
 
 
-        // --- EXPORTACIÓN A EXCEL (CONSOLIDADO APORTES) ---
+        // EXCEL RESUMENES ADICIONALES
         function exportarHistorialAportesExcel() {
-            if (typeof XLSX === 'undefined') { alert("Función no disponible offline."); return; }
-            const aportes = obtenerAportes();
-            const socios = obtenerSocios();
-            if(aportes.length === 0) { alert("No hay transacciones en el historial para consolidar."); return; }
-
-            const sociosConAportes = socios.filter(s => aportes.some(ap => ap.documento === s.documento));
-            const conceptosUnicos = [...new Set(aportes.map(ap => ap.concepto))].sort();
-            
-            const filasExcel = sociosConAportes.map(socio => {
-                let filaSocio = { "Socio / Nombre": socio.nombre, "Documento": socio.documento };
-                let totalSocio = 0;
-                conceptosUnicos.forEach(concepto => {
-                    const sumaConcepto = aportes.filter(ap => ap.documento === socio.documento && ap.concepto === concepto).reduce((sum, item) => sum + parseFloat(item.valor), 0);
-                    filaSocio[concepto] = sumaConcepto;
-                    totalSocio += sumaConcepto;
-                });
-                filaSocio["Total Aportado ($)"] = totalSocio;
-                return filaSocio;
+            if (typeof XLSX === 'undefined') { alert("No disponible offline."); return; }
+            const aportes = obtenerAportes(); const socios = obtenerSocios(); if(aportes.length === 0) return;
+            const conceptos = [...new Set(aportes.map(ap => ap.concepto))].sort();
+            const filas = socios.map(s => {
+                let f = { "Socio": s.nombre, "Documento": s.documento }; let t = 0;
+                conceptos.forEach(c => { const v = aportes.filter(ap => ap.documento === s.documento && ap.concepto === c).reduce((sum, item) => sum + parseFloat(item.valor), 0); f[c] = v; t += v; });
+                f["Total Acumulado"] = t; return f;
             });
-
-            let filaTotalesGlobales = { "Socio / Nombre": "TOTAL GENERAL RECAUDADO", "Documento": "" };
-            let granTotalSistema = 0;
-            conceptosUnicos.forEach(concepto => {
-                const totalColumna = aportes.filter(ap => ap.concepto === concepto).reduce((sum, item) => sum + parseFloat(item.valor), 0);
-                filaTotalesGlobales[concepto] = totalColumna;
-                granTotalSistema += totalColumna;
-            });
-            filaTotalesGlobales["Total Aportado ($)"] = granTotalSistema;
-            filasExcel.push(filaTotalesGlobales);
-
-            const hoja = XLSX.utils.json_to_sheet(filasExcel);
-            const libro = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(libro, hoja, "Consolidado de Aportes");
-            XLSX.writeFile(libro, "Consolidado_Matriz_Aportes_San_Miguel.xlsx");
+            const hoja = XLSX.utils.json_to_sheet(filas); const libro = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(libro, hoja, "Aportes"); XLSX.writeFile(libro, "Consolidado_Aportes.xlsx");
         }
-
-        // --- EXPORTACIÓN A EXCEL (CONSOLIDADO MULTAS) ---
         function exportarHistorialMultasExcel() {
-            if (typeof XLSX === 'undefined') { alert("Función no disponible offline."); return; }
-            const multas = obtenerMultas();
-            const socios = obtenerSocios();
-            if(multas.length === 0) { alert("No hay registros de multas para consolidar."); return; }
-
-            const sociosConMultas = socios.filter(s => multas.some(m => m.documento === s.documento));
-            const motivosUnicos = [...new Set(multas.map(m => m.concepto))].sort();
-            
-            const filasExcel = sociosConMultas.map(socio => {
-                let filaSocio = { "Socio / Nombre": socio.nombre, "Documento": socio.documento };
-                let totalSocio = 0;
-                motivosUnicos.forEach(motivo => {
-                    const sumaMotivo = multas.filter(m => m.documento === socio.documento && m.concepto === motivo).reduce((sum, item) => sum + parseFloat(item.valor), 0);
-                    filaSocio[motivo] = sumaMotivo;
-                    totalSocio += sumaMotivo;
-                });
-                filaSocio["Total Multas Canceladas ($)"] = totalSocio;
-                return filaSocio;
+            if (typeof XLSX === 'undefined') { alert("No disponible."); return; }
+            const multas = obtenerMultas(); const socios = obtenerSocios(); if(multas.length === 0) return;
+            const motivos = [...new Set(multas.map(m => m.concepto))].sort();
+            const filas = socios.map(s => {
+                let f = { "Socio": s.nombre, "Documento": s.documento }; let t = 0;
+                motivos.forEach(m => { const v = multas.filter(mu => mu.documento === s.documento && mu.concepto === m).reduce((sum, item) => sum + parseFloat(item.valor), 0); f[m] = v; t += v; });
+                f["Total Multas"] = t; return f;
             });
-
-            let filaTotalesGlobales = { "Socio / Nombre": "TOTAL GENERAL MULTAS", "Documento": "" };
-            let granTotalMultas = 0;
-            motivosUnicos.forEach(motivo => {
-                const totalColumna = multas.filter(m => m.concepto === motivo).reduce((sum, item) => sum + parseFloat(item.valor), 0);
-                filaTotalesGlobales[motivo] = totalColumna;
-                granTotalMultas += totalColumna;
-            });
-            filaTotalesGlobales["Total Multas Canceladas ($)"] = granTotalMultas;
-            filasExcel.push(filaTotalesGlobales);
-
-            const hoja = XLSX.utils.json_to_sheet(filasExcel);
-            const libro = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(libro, hoja, "Consolidado de Multas");
-            XLSX.writeFile(libro, "Consolidado_Matriz_Multas_San_Miguel.xlsx");
+            const hoja = XLSX.utils.json_to_sheet(filas); const libro = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(libro, hoja, "Multas"); XLSX.writeFile(libro, "Consolidado_Multas.xlsx");
         }
 
-        // --- PLANTILLAS EXCEL MASIVAS ---
+        // PLANTILLAS
         function descargarPlantillaExcel() {
-            if (typeof XLSX === 'undefined') { alert("Función no disponible offline."); return; }
-            const plantilla = [
-                { "Nombre del Socio": "Pedro Alcántara Pérez", "Numero de Documento": "1075123456" },
-                { "Nombre del Socio": "María Ofelia Rojas", "Numero de Documento": "26543210" }
-            ];
-            const hoja = XLSX.utils.json_to_sheet(plantilla);
-            const libro = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(libro, hoja, "Lista Socios");
-            XLSX.writeFile(libro, "Plantilla_Maestro_Socios.xlsx");
+            if (typeof XLSX === 'undefined') return;
+            const p = [{ "Nombre del Socio": "Pedro Pérez", "Numero de Documento": "1075123456" }];
+            const h = XLSX.utils.json_to_sheet(p); const l = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(l, h, "Socios"); XLSX.writeFile(l, "Plantilla_Socios.xlsx");
         }
-
         function cargarDesdeExcel(e) {
-            if (typeof XLSX === 'undefined') { alert("Función no disponible offline."); return; }
-            const archivo = e.target.files[0];
-            if (!archivo) return;
-
-            const lector = new FileReader();
-            lector.onload = function(evt) {
-                try {
-                    const datos = new Uint8Array(evt.target.result);
-                    const libro = XLSX.read(datos, { type: 'array' });
-                    const hoja = libro.Sheets[libro.SheetNames[0]];
-                    const json = XLSX.utils.sheet_to_json(hoja);
-
-                    let listaActual = obtenerSocios();
-                    let agregados = 0;
-                    let duplicadosSaltados = 0;
-
-                    json.forEach(fila => {
-                        const nombre = fila["Nombre del Socio"] || fila["nombre"] || fila["Nombre"] || '';
-                        const documento = (fila["Numero de Documento"] || fila["documento"] || fila["Documento"] || '').toString().trim();
-
-                        if (nombre !== '' && documento !== '') {
-                            const yaExiste = listaActual.some(s => s.documento === documento);
-                            if(!yaExiste) {
-                                listaActual.push({ nombre: nombre.toString().trim(), documento });
-                                agregados++;
-                            } else {
-                                duplicadosSaltados++;
-                            }
-                        }
-                    });
-
-                    guardarSocios(listaActual);
-                    if(duplicadosSaltados > 0) {
-                        alert(`¡Carga finalizada! Se agregaron ${agregados} socios. Omitidos ${duplicadosSaltados} duplicados.`);
-                    } else {
-                        alert(`¡Éxito! Se han importado masivamente ${agregados} socios.`);
-                    }
-                } catch(err) {
-                    alert("Error al procesar el Excel.");
-                }
-                document.getElementById('excel-file').value = '';
-            };
-            lector.readAsArrayBuffer(archivo);
+            if (typeof XLSX === 'undefined') return; const file = e.target.files[0]; if (!file) return;
+            const lector = new FileReader(); lector.onload = function(evt) {
+                const d = new Uint8Array(evt.target.result); const libro = XLSX.read(d, { type: 'array' });
+                const j = XLSX.utils.sheet_to_json(libro.Sheets[libro.SheetNames[0]]);
+                let actual = obtenerSocios();
+                j.forEach(f => {
+                    const n = f["Nombre del Socio"] || f["Nombre"] || ''; const doc = (f["Numero de Documento"] || f["Documento"] || '').toString().trim();
+                    if (n && doc && !actual.some(s => s.documento === doc)) actual.push({ nombre: n.trim(), documento: doc });
+                });
+                guardarSocios(actual); alert("¡Carga masiva finalizada!");
+            }; lector.readAsArrayBuffer(file);
         }
 
-        // CERRAR MODALES AL CLICKEAR FUERA
-        window.onclick = function(event) {
-            const modalAportes = document.getElementById('historial-modal');
-            const modalMultas = document.getElementById('multas-modal');
-            if (event.target == modalAportes) modalAportes.style.display = "none";
-            if (event.target == modalMultas) modalMultas.style.display = "none";
+        // CIERRE POPUPS EXTERNOS
+        window.onclick = function(e) {
+            if (e.target == document.getElementById('historial-modal')) cerrarModal();
+            if (e.target == document.getElementById('comite-modal')) cerrarModalComite();
         }
 
-        function inicializarSistema() {
-            mostrarSociosEnTabla();
-            actualizarSelectorSocios();
-            actualizarSelectorSociosMultas();
-            mostrarAportesEnTablas();
-            mostrarMultasEnTablas();
-            mostrarDeportesEnTabla();
-            establecerFechaHoy('aporte-fecha');
-            establecerFechaHoy('multa-fecha');
-        }
-
-        window.addEventListener("load", inicializarSistema);
+        window.addEventListener("load", () => {
+            mostrarSociosEnTabla(); actualizarSelectorSocios(); actualizarSelectorSociosMultas();
+            mostrarAportesEnTablas(); mostrarMultasEnTablas(); mostrarDeportesEnTabla(); mostrarSaludEnTabla();
+        });
     </script>
 </body>
 </html>
