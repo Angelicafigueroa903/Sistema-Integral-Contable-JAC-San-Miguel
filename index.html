@@ -6,7 +6,7 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
-    <title>Sistema Contable JAC San Miguel v3.3</title>
+    <title>Sistema Contable JAC San Miguel v3.5</title>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <style>
         :root {
@@ -39,7 +39,7 @@
         .form-container.excel-mode { border-top-color: #27ae60; }
         .form-container.aportes-mode { border-top-color: #e67e22; }
         .form-title { font-size: 1.1rem; color: var(--primary-color); margin-bottom: 15px; font-weight: 600; }
-        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; }
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
         .form-group { display: flex; flex-direction: column; margin-bottom: 5px; }
         .form-group label { font-size: 0.85rem; margin-bottom: 5px; color: #555; font-weight: 600; }
         .form-group input, .form-group select { padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.9rem; outline: none; width: 100%; background: white; }
@@ -54,6 +54,8 @@
         .btn-warning { background-color: #e67e22; }
         .btn-warning:hover { background-color: #d35400; }
         .btn-actions { padding: 6px 12px; font-size: 0.8rem; margin-top: 0; margin-right: 5px; font-weight: normal; }
+        .btn-view { background-color: #8e44ad; }
+        .btn-view:hover { background-color: #732d91; }
         .btn-edit { background-color: #2980b9; }
         .btn-edit:hover { background-color: #1f618d; }
         .btn-danger { background-color: #e74c3c; }
@@ -67,13 +69,20 @@
         .offline-badge { background-color: #27ae60; color: white; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; float: right; }
         .instructions { background-color: #f8f9fa; padding: 15px; border-left: 4px solid #27ae60; margin-bottom: 15px; font-size: 0.85rem; color: #555; display: flex; justify-content: space-between; align-items: center; }
         .section-header-flex { display: flex; justify-content: space-between; align-items: center; margin-top: 25px; gap: 10px; }
+
+        /* VENTANA MODAL (POP-UP) */
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); align-items: center; justify-content: center; }
+        .modal-content { background-color: white; padding: 25px; border-radius: 8px; width: 80%; max-width: 700px; max-height: 85vh; overflow-y: auto; box-shadow: 0 5px 15px rgba(0,0,0,0.3); border-top: 5px solid #8e44ad; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        .modal-title { font-size: 1.25rem; color: var(--primary-color); font-weight: bold; }
+        .close-modal { font-size: 1.5rem; font-weight: bold; color: #999; cursor: pointer; transition: color 0.2s; }
+        .close-modal:hover { color: #333; }
     </style>
 </head>
 <body>
 
-    <!-- MENÚ LATERAL -->
     <nav class="sidebar">
-        <div class="sidebar-header">JAC San Miguel <span class="offline-badge">v3.3</span></div>
+        <div class="sidebar-header">JAC San Miguel <span class="offline-badge">v3.5</span></div>
         <ul class="sidebar-menu">
             <li><a onclick="switchView('inicio')" id="btn-inicio"><span class="menu-icon">🏠</span> Inicio</a></li>
             <li><a onclick="switchView('socios')" id="btn-socios" class="active"><span class="menu-icon">👥</span> Socios</a></li>
@@ -89,11 +98,9 @@
         </ul>
     </nav>
 
-    <!-- CONTENIDO GENERAL -->
     <main class="main-content">
         <div class="header-main" id="view-title">👥 Base de Datos de Socios</div>
 
-        <!-- VISTA: SOCIOS -->
         <section id="view-socios" class="view-section active">
             <div class="form-container">
                 <div class="form-title" id="form-action-title">Forma 1: Registro Individual de Socio</div>
@@ -142,7 +149,6 @@
             </table>
         </section>
 
-        <!-- VISTA: APORTES -->
         <section id="view-aportes" class="view-section">
             <div class="form-container aportes-mode">
                 <div class="form-title" id="aporte-form-title">💰 Registrar Aporte de Socio</div>
@@ -154,6 +160,10 @@
                             <select id="aporte-socio-select" required>
                                 <option value="">-- Seleccione un socio registrado --</option>
                             </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="aporte-fecha">Fecha de Recibo</label>
+                            <input type="date" id="aporte-fecha" required>
                         </div>
                         <div class="form-group">
                             <label for="aporte-valor">Valor del Aporte ($)</label>
@@ -169,7 +179,6 @@
                 </form>
             </div>
 
-            <!-- SUB-APARTADO 1: SUMATORIAS ACUMULADAS POR SOCIO -->
             <h3>📊 Resumen de Saldos y Totales por Socio</h3>
             <table class="data-table">
                 <thead>
@@ -182,7 +191,6 @@
                 <tbody id="tabla-resumen-aportes-body"></tbody>
             </table>
 
-            <!-- SUB-APARTADO 2: LISTADO INDEPENDIENTE DE APORTES REALIZADOS -->
             <div class="section-header-flex">
                 <h3>📋 Historial Detallado de Transacciones</h3>
                 <button class="btn btn-success" style="margin-top:0;" onclick="exportarHistorialAportesExcel()">📊 Descargar Consolidado de Conceptos a Excel</button>
@@ -190,6 +198,7 @@
             <table class="data-table">
                 <thead>
                     <tr>
+                        <th>Fecha</th>
                         <th>Socio</th>
                         <th>Documento</th>
                         <th>Valor Aporte</th>
@@ -201,7 +210,6 @@
             </table>
         </section>
 
-        <!-- OTROS MÓDULOS VENTANAS EN BLANCO -->
         <section id="view-inicio" class="view-section"><h2>Bienvenido al Sistema Contable</h2></section>
         <section id="view-multas" class="view-section"><h2>Módulo de Multas</h2></section>
         <section id="view-deportes" class="view-section"><h2>Comité Deportes</h2></section>
@@ -212,6 +220,31 @@
         <section id="view-reportes" class="view-section"><h2>Reportes</h2></section>
         <section id="view-configuracion" class="view-section"><h2>Configuración</h2></section>
     </main>
+
+    <div id="historial-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title" id="modal-socio-titulo">Historial del Socio</div>
+                <span class="close-modal" onclick="cerrarModal()">&times;</span>
+            </div>
+            <div style="margin-bottom: 15px; font-size: 0.95rem; color: #555;">
+                <p><strong>Documento de Identidad:</strong> <span id="modal-socio-doc"></span></p>
+            </div>
+            <table class="data-table" style="margin-top: 10px; margin-bottom: 5px;">
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Concepto / Descripción</th>
+                        <th>Valor Pagado</th>
+                    </tr>
+                </thead>
+                <tbody id="modal-tabla-body"></tbody>
+            </table>
+            <div style="text-align: right; margin-top: 15px;">
+                <button class="btn" style="margin-top:0; background-color: #7f8c8d;" onclick="cerrarModal()">Cerrar Ventana</button>
+            </div>
+        </div>
+    </div>
 
     <script>
         // CONTROL DE VISTAS Y NAVEGACIÓN
@@ -231,6 +264,15 @@
             if(viewId === 'aportes') {
                 actualizarSelectorSocios();
                 mostrarAportesEnTablas();
+                establecerFechaHoy();
+            }
+        }
+
+        function establecerFechaHoy() {
+            const inputFecha = document.getElementById('aporte-fecha');
+            if(inputFecha && !inputFecha.value) {
+                const hoy = new Date().toISOString().split('T')[0];
+                inputFecha.value = hoy;
             }
         }
 
@@ -324,279 +366,3 @@
         function borrarTodosLosSocios() {
             if(confirm('🚨 ¿Seguro que desea vaciar por completo el maestro de socios?')) {
                 localStorage.removeItem('jac_db_socios');
-                guardarSocios([]);
-            }
-        }
-
-        // --- GESTIÓN DE APORTES ---
-        function actualizarSelectorSocios() {
-            const select = document.getElementById('aporte-socio-select');
-            if(!select) return;
-            const socios = obtenerSocios();
-            
-            const valorSeleccionado = select.value;
-            select.innerHTML = '<option value="">-- Seleccione un socio registrado --</option>';
-            
-            socios.forEach(socio => {
-                const opt = document.createElement('option');
-                opt.value = socio.documento;
-                opt.innerText = `${socio.nombre} (${socio.documento})`;
-                select.appendChild(opt);
-            });
-            select.value = valorSeleccionado;
-        }
-
-        function mostrarAportesEnTablas() {
-            const aportes = obtenerAportes();
-            const socios = obtenerSocios();
-            
-            const tbodyDetalle = document.getElementById('tabla-aportes-detallado-body');
-            const tbodyResumen = document.getElementById('tabla-resumen-aportes-body');
-            if(!tbodyDetalle || !tbodyResumen) return;
-            
-            let granTotal = 0;
-
-            // 1. RENDERIZAR HISTORIAL DETALLADO
-            tbodyDetalle.innerHTML = '';
-            if(aportes.length === 0) {
-                tbodyDetalle.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#999; padding:15px;">No se han registrado aportes contables.</td></tr>`;
-            } else {
-                aportes.forEach((ap, index) => {
-                    granTotal += parseFloat(ap.valor);
-                    const fila = document.createElement('tr');
-                    fila.innerHTML = `
-                        <td>${ap.nombre}</td>
-                        <td>${ap.documento}</td>
-                        <td><strong>$${parseFloat(ap.valor).toLocaleString()}</strong></td>
-                        <td>${ap.concepto}</td>
-                        <td>
-                            <button class="btn btn-actions btn-edit" onclick="prepararEdicionAporte(${index})">✏️ Editar</button>
-                            <button class="btn btn-actions btn-danger" onclick="eliminarAporte(${index})">❌</button>
-                        </td>
-                    `;
-                    tbodyDetalle.appendChild(fila);
-                });
-                
-                const filaTotal = document.createElement('tr');
-                filaTotal.className = "total-row";
-                filaTotal.innerHTML = `<td colspan="2" style="text-align:right;">TOTAL RECAUDADO JAC:</td><td colspan="3" style="color:#27ae60;">$${granTotal.toLocaleString()}</td>`;
-                tbodyDetalle.appendChild(filaTotal);
-            }
-
-            // 2. RENDERIZAR TABLA DE SUMATORIAS ACUMULADAS POR SOCIO
-            tbodyResumen.innerHTML = '';
-            if(socios.length === 0) {
-                tbodyResumen.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#999; padding:15px;">Registre socios en el maestro para calcular sus acumulados.</td></tr>`;
-            } else {
-                socios.forEach(socio => {
-                    const sumaAcumulada = aportes
-                        .filter(ap => ap.documento === socio.documento)
-                        .reduce((sum, current) => sum + parseFloat(current.valor), 0);
-
-                    const filaRes = document.createElement('tr');
-                    filaRes.innerHTML = `
-                        <td><strong>${socio.nombre}</strong></td>
-                        <td>${socio.documento}</td>
-                        <td style="color:#2c3e50; font-weight:bold;">$${sumaAcumulada.toLocaleString()}</td>
-                    `;
-                    tbodyResumen.appendChild(filaRes);
-                });
-            }
-        }
-
-        function procesarFormularioAporte(e) {
-            e.preventDefault();
-            const idx = parseInt(document.getElementById('aporte-edit-index').value);
-            const selectSocio = document.getElementById('aporte-socio-select');
-            const valor = parseFloat(document.getElementById('aporte-valor').value);
-            const concepto = document.getElementById('aporte-concepto').value.trim();
-            
-            let aportes = obtenerAportes();
-
-            if(idx === -1) {
-                const documento = selectSocio.value;
-                const nombreSocio = selectSocio.options[selectSocio.selectedIndex].text.split(' (')[0];
-                aportes.push({ nombre: nombreSocio, documento, valor, concepto });
-            } else {
-                aportes[idx].valor = valor;
-                aportes[idx].concepto = concepto;
-                cancelarEdicionAporte();
-            }
-
-            guardarAportes(aportes);
-            document.getElementById('aporte-form').reset();
-        }
-
-        function prepararEdicionAporte(idx) {
-            const aportes = obtenerAportes();
-            document.getElementById('aporte-edit-index').value = idx;
-            
-            document.getElementById('aporte-valor').value = aportes[idx].valor;
-            document.getElementById('aporte-concepto').value = aportes[idx].concepto;
-
-            const select = document.getElementById('aporte-socio-select');
-            select.value = aportes[idx].documento;
-            select.disabled = true;
-
-            document.getElementById('aporte-form-title').innerText = "✏️ Modificando Valor y Concepto del Aporte";
-            document.getElementById('btn-submit-aporte').innerText = "🔄 Actualizar Aporte";
-            document.getElementById('btn-cancel-aporte-edit').style.display = "inline-block";
-            
-            document.querySelector('.main-content').scrollTop = 0;
-        }
-
-        function cancelarEdicionAporte() {
-            document.getElementById('aporte-edit-index').value = "-1";
-            document.getElementById('aporte-form').reset();
-            document.getElementById('aporte-socio-select').disabled = false;
-            document.getElementById('aporte-form-title').innerText = "💰 Registrar Aporte de Socio";
-            document.getElementById('btn-submit-aporte').innerText = "💾 Guardar Aporte";
-            document.getElementById('btn-cancel-aporte-edit').style.display = "none";
-        }
-
-        function eliminarAporte(idx) {
-            if(confirm('¿Eliminar esta boleta de aporte?')) {
-                let aportes = obtenerAportes();
-                aportes.splice(idx, 1);
-                guardarAportes(aportes);
-                cancelarEdicionAporte();
-            }
-        }
-
-        // --- NUEVA EXPORTACIÓN MATRICIAL DINÁMICA A EXCEL ---
-        function exportarHistorialAportesExcel() {
-            if (typeof XLSX === 'undefined') { alert("Función no disponible offline."); return; }
-            
-            const aportes = obtenerAportes();
-            const socios = obtenerSocios();
-
-            if(aportes.length === 0) {
-                alert("No hay transacciones en el historial para consolidar.");
-                return;
-            }
-
-            // 1. Obtener la lista de conceptos únicos ordenados alfabéticamente para usarlos como encabezados de columnas
-            const conceptosUnicos = [...new Set(aportes.map(ap => ap.concepto))].sort();
-
-            // 2. Construir la matriz agrupada por cada socio registrado
-            const filasExcel = socios.map(socio => {
-                // Estructura base de la fila del socio
-                let filaSocio = {
-                    "Socio / Nombre": socio.nombre,
-                    "Documento": socio.documento
-                };
-
-                let totalSocio = 0;
-
-                // Mapear dinámicamente cada concepto existente como una columna
-                conceptosUnicos.forEach(concepto => {
-                    // Sumar los pagos de este socio específicos para este concepto
-                    const sumaConcepto = aportes
-                        .filter(ap => ap.documento === socio.documento && ap.concepto === concepto)
-                        .reduce((sum, item) => sum + parseFloat(item.valor), 0);
-                    
-                    filaSocio[concepto] = sumaConcepto; // Asignar el valor de la celda
-                    totalSocio += sumaConcepto;
-                });
-
-                // Añadir columna de cierre con el total acumulado por el socio
-                filaSocio["Total Aportado ($)"] = totalSocio;
-                return filaSocio;
-            });
-
-            // 3. Fila final de Totales Globales por columna
-            let filaTotalesGlobales = {
-                "Socio / Nombre": "TOTAL GENERAL RECAUDADO",
-                "Documento": ""
-            };
-
-            let granTotalSistema = 0;
-            conceptosUnicos.forEach(concepto => {
-                const totalColumna = aportes
-                    .filter(ap => ap.concepto === concepto)
-                    .reduce((sum, item) => sum + parseFloat(item.valor), 0);
-                
-                filaTotalesGlobales[concepto] = totalColumna;
-                granTotalSistema += totalColumna;
-            });
-            filaTotalesGlobales["Total Aportado ($)"] = granTotalSistema;
-
-            filasExcel.push(filaTotalesGlobales);
-
-            // 4. Compilar y descargar el documento
-            const hoja = XLSX.utils.json_to_sheet(filasExcel);
-            const libro = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(libro, hoja, "Consolidado de Aportes");
-            
-            XLSX.writeFile(libro, "Consolidado_Matriz_Aportes_San_Miguel.xlsx");
-        }
-
-        // --- MANEJO DE PLANTILLAS EXCEL ---
-        function descargarPlantillaExcel() {
-            if (typeof XLSX === 'undefined') { alert("Función no disponible offline."); return; }
-            const plantilla = [
-                { "Nombre del Socio": "Pedro Alcántara Pérez", "Numero de Documento": "1075123456" },
-                { "Nombre del Socio": "María Ofelia Rojas", "Numero de Documento": "26543210" }
-            ];
-            const hoja = XLSX.utils.json_to_sheet(plantilla);
-            const libro = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(libro, hoja, "Lista Socios");
-            XLSX.writeFile(libro, "Plantilla_Maestro_Socios.xlsx");
-        }
-
-        function cargarDesdeExcel(e) {
-            if (typeof XLSX === 'undefined') { alert("Función no disponible offline."); return; }
-            const archivo = e.target.files[0];
-            if (!archivo) return;
-
-            const lector = new FileReader();
-            lector.onload = function(evt) {
-                try {
-                    const datos = new Uint8Array(evt.target.result);
-                    const libro = XLSX.read(datos, { type: 'array' });
-                    const hoja = libro.Sheets[libro.SheetNames[0]];
-                    const json = XLSX.utils.sheet_to_json(hoja);
-
-                    let listaActual = obtenerSocios();
-                    let agregados = 0;
-                    let duplicadosSaltados = 0;
-
-                    json.forEach(fila => {
-                        const nombre = fila["Nombre del Socio"] || fila["nombre"] || fila["Nombre"] || '';
-                        const documento = (fila["Numero de Documento"] || fila["documento"] || fila["Documento"] || '').toString().trim();
-
-                        if (nombre !== '' && documento !== '') {
-                            const yaExiste = listaActual.some(s => s.documento === documento);
-                            if(!yaExiste) {
-                                listaActual.push({ nombre: nombre.toString().trim(), documento });
-                                agregados++;
-                            } else {
-                                duplicadosSaltados++;
-                            }
-                        }
-                    });
-
-                    guardarSocios(listaActual);
-                    if(duplicadosSaltados > 0) {
-                        alert(`¡Carga finalizada! Se agregaron ${agregados} socios. Se omitieron ${duplicadosSaltados} duplicados.`);
-                    } else {
-                        alert(`¡Éxito! Se han importado de forma masiva ${agregados} socios.`);
-                    }
-                } catch(err) {
-                    alert("Error al procesar el Excel.");
-                }
-                document.getElementById('excel-file').value = '';
-            };
-            lector.readAsArrayBuffer(archivo);
-        }
-
-        function inicializarSistema() {
-            mostrarSociosEnTabla();
-            actualizarSelectorSocios();
-            mostrarAportesEnTablas();
-        }
-
-        window.addEventListener("load", inicializarSistema);
-    </script>
-</body>
-</html>
