@@ -121,18 +121,18 @@
 
         .form-group { display: flex; flex-direction: column; margin-bottom: 5px; }
         .form-group label { font-size: 0.85rem; margin-bottom: 5px; color: #555; font-weight: 600; }
-        .form-group input, .form-group select { padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.9rem; outline: none; }
+        .form-group input, .form-group select { padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.9rem; outline: none; width: 100%; }
         .form-group input:focus, .form-group select:focus { border-color: var(--secondary-color); }
 
-        /* Contenedor dinámico animado para 'Otro Concepto' */
-        .dynamic-field {
-            grid-column: 1 / -1; /* Ocupa todo el ancho disponible */
+        /* Contenedor corregido para el campo personalizado */
+        .dynamic-field-block {
+            margin-top: 15px;
             background-color: #f8f9fa;
             padding: 15px;
             border-radius: 6px;
             border-left: 4px solid var(--secondary-color);
             display: none;
-            margin-top: 5px;
+            width: 100%;
         }
 
         .btn {
@@ -242,12 +242,12 @@
                                 <option value="Otro">Otro (Escribir concepto...)</option>
                             </select>
                         </div>
+                    </div>
 
-                        <div id="wrapper-concepto-abierto" class="dynamic-field">
-                            <div class="form-group">
-                                <label for="concepto-abierto" style="color:var(--primary-color);">✍️ Escriba el concepto personalizado:</label>
-                                <input type="text" id="concepto-abierto" placeholder="Ej: Aporte Pro-Pavimentación Veredal">
-                            </div>
+                    <div id="wrapper-concepto-abierto" class="dynamic-field-block">
+                        <div class="form-group">
+                            <label for="concepto-abierto" style="color:var(--primary-color); font-weight: bold; margin-bottom: 8px;">✍️ Escriba el concepto personalizado:</label>
+                            <input type="text" id="concepto-abierto" placeholder="Ej: Aporte Pro-Pavimentación Veredal">
                         </div>
                     </div>
 
@@ -314,7 +314,7 @@
             if(eventTarget) eventTarget.classList.add('active');
         }
 
-        // Detectar cambio en el menú desplegable del concepto
+        // Evaluar cambio en el menú desplegable del concepto
         function evaluarConceptoDesplegable(valor) {
             const wrapper = document.getElementById('wrapper-concepto-abierto');
             const inputAbierto = document.getElementById('concepto-abierto');
@@ -322,10 +322,11 @@
             if(valor === 'Otro') {
                 wrapper.style.display = 'block';
                 inputAbierto.setAttribute('required', 'true');
+                inputAbierto.focus();
             } else {
                 wrapper.style.display = 'none';
                 inputAbierto.removeAttribute('required');
-                inputAbierto.value = ''; // Limpiar
+                inputAbierto.value = '';
             }
         }
 
@@ -380,9 +381,89 @@
             const fecha = document.getElementById('fecha').value;
             const valor = document.getElementById('valor').value;
             
-            // Lógica para capturar el concepto de forma inteligente
             const seleccionMenu = document.getElementById('concepto').value;
             let conceptoFinal = seleccionMenu;
             
             if(seleccionMenu === 'Otro') {
-                conceptoFinal = document
+                conceptoFinal = document.getElementById('concepto-abierto').value.trim();
+                if(!conceptoFinal) conceptoFinal = 'Otro';
+            }
+
+            const socioEstructura = { nombre, documento, fecha, valor, concepto: conceptoFinal };
+            let lista = obtenerSocios();
+
+            if (index === -1) {
+                lista.push(socioEstructura);
+            } else {
+                lista[index] = socioEstructura;
+                cancelarEdicion();
+            }
+
+            guardarSocios(lista);
+            document.getElementById('socio-form').reset();
+            evaluarConceptoDesplegable('');
+        }
+
+        function prepararEdicion(index) {
+            const lista = obtenerSocios();
+            const socio = lista[index];
+
+            document.getElementById('edit-index').value = index;
+            document.getElementById('nombre').value = socio.nombre;
+            document.getElementById('documento').value = socio.documento;
+            document.getElementById('fecha').value = socio.fecha;
+            document.getElementById('valor').value = socio.valor;
+
+            const selectConcepto = document.getElementById('concepto');
+            
+            if(socio.concepto === 'Cuota Mensual' || socio.concepto === 'Cuota Extraordinaria' || socio.concepto === 'Inscripción') {
+                selectConcepto.value = socio.concepto;
+                evaluarConceptoDesplegable(socio.concepto);
+            } else {
+                selectConcepto.value = 'Otro';
+                evaluarConceptoDesplegable('Otro');
+                document.getElementById('concepto-abierto').value = socio.concepto;
+            }
+
+            document.getElementById('form-action-title').innerText = "✏️ Modificando Información del Socio";
+            document.getElementById('btn-submit-form').innerText = "🔄 Actualizar Datos del Socio";
+            document.getElementById('btn-cancel-edit').style.display = "inline-block";
+            
+            document.querySelector('.main-content').scrollTop = 0;
+        }
+
+        function cancelarEdicion() {
+            document.getElementById('edit-index').value = "-1";
+            document.getElementById('socio-form').reset();
+            evaluarConceptoDesplegable('');
+            document.getElementById('form-action-title').innerText = "Forma 1: Registro Individual de Socio";
+            document.getElementById('btn-submit-form').innerText = "💾 Guardar Socio";
+            document.getElementById('btn-cancel-edit').style.display = "none";
+        }
+
+        function eliminarSocio(index) {
+            if(confirm('¿Está seguro de eliminar este registro de socio por completo?')) {
+                let lista = obtenerSocios();
+                lista.splice(index, 1);
+                guardarSocios(lista);
+                cancelarEdicion();
+            }
+        }
+
+        function borrarTodosLosSocios() {
+            if(confirm('🚨 ¡ALERTA CRÍTICA! Esto eliminará permanentemente la base de datos de socios de este dispositivo. ¿Continuar?')) {
+                localStorage.removeItem('jac_socios_db');
+                mostrarSociosEnTabla();
+                cancelarEdicion();
+            }
+        }
+
+        function descargarPlantillaExcel() {
+            const plantillaDatos = [
+                { "Nombre": "Ejemplo Pedro Pérez", "Documento": "1075123456", "Fecha": "2026-06-20", "Valor": 25000, "Concepto": "Cuota Mensual" },
+                { "Nombre": "Ejemplo María Rojas", "Documento": "1080987654", "Fecha": "2026-06-21", "Valor": 35000, "Concepto": "Fondo de Solidaridad" }
+            ];
+            const hoja = XLSX.utils.json_to_sheet(plantillaDatos);
+            const libro = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(libro, hoja, "Plantilla Socios");
+            XLSX.writeFile(libro, "Plantilla_Carga_Masiva_JAC.xlsx");
