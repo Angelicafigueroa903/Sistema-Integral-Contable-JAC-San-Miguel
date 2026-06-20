@@ -16,7 +16,35 @@
             --text-color: #333;
             --sidebar-width: 290px;
         }
-
+/* --- NUEVO DISEÑO PARA TABLAS FINANCIERAS --- */
+        .data-table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin-top: 20px; 
+            background: white; 
+        }
+        .data-table th { 
+            background-color: var(--primary-color); 
+            color: white; 
+            padding: 12px; 
+            text-align: left; 
+        }
+        .data-table td { 
+            padding: 12px; 
+            border-bottom: 1px solid #ddd; 
+        }
+        .data-table tr:hover { 
+            background-color: #f1f1f1; 
+        }
+        
+        /* Estilo para filas de totales */
+        .total-row { 
+            font-weight: bold; 
+            background-color: #ecf0f1 !important; 
+            border-top: 2px solid var(--primary-color); 
+        }
+    </style>
+    
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { display: flex; background-color: var(--bg-color); color: var(--text-color); height: 100vh; overflow: hidden; }
 
@@ -544,7 +572,20 @@
         <p style="text-align:center; color:#7f8c8d; margin-top:20px;">Seleccione un mes para visualizar el arqueo detallado.</p>
     </div>
 </section>
-        <section id="view-financiero" class="view-section"><h2>📈 Estado Financiero General</h2><p style="margin-top:15px;">Sección para balances e informes consolidados.</p></section>
+        <section id="view-estados" class="view-section" style="display:none;">
+    <div class="form-container">
+        <div class="form-title">📊 Estados Financieros JAC</div>
+        <div class="form-grid">
+            <select id="ef-tipo-reporte" onchange="actualizarReporte()">
+                <option value="mensual">Reporte Mensual</option>
+                <option value="general">Acumulado General</option>
+            </select>
+            <input type="month" id="ef-mes-filtro" onchange="actualizarReporte()">
+        </div>
+    </div>
+    <div id="resultado-estados" style="margin-top: 20px; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+        </div>
+</section>
         <section id="view-reportes" class="view-section"><h2>📄 Módulo de Reportes</h2><p style="margin-top:15px;">Sección para exportación de PDF y actas.</p></section>
         <section id="view-configuracion" class="view-section"><h2>⚙ Configuración del Sistema</h2><p style="margin-top:15px;">Sección para parámetros generales de la JAC.</p></section>
     </main>
@@ -1358,6 +1399,55 @@ function descargarCajaExcel() {
     // 4. Agregar al libro y descargar
     XLSX.utils.book_append_sheet(wb, ws, "Resumen_" + mes);
     XLSX.writeFile(wb, `Resumen_Caja_${mes}.xlsx`);
+}
+        function actualizarReporte() {
+    const tipo = document.getElementById('ef-tipo-reporte').value;
+    const mesFiltro = document.getElementById('ef-mes-filtro').value;
+    
+    // Función de cálculo según el periodo
+    const calcular = (mod, esIngreso) => {
+        let datos = obtenerDatosSegunModulo(mod); // Ajusta según tus funciones actuales
+        if (tipo === 'mensual' && mesFiltro) {
+            datos = datos.filter(d => d.fecha.startsWith(mesFiltro));
+        }
+        return datos.filter(d => (esIngreso ? d.tipo === 'ingreso' : d.tipo === 'salida'))
+                    .reduce((sum, d) => sum + parseFloat(d.valor || 0), 0);
+    };
+
+    // Obtenemos todos los valores
+    const data = {
+        aportes: { ing: calcular('Aportes', true), egr: calcular('Gastos', false) },
+        multas: { ing: calcular('Multas', true), egr: calcular('Multas', false) },
+        deporte: { ing: calcular('Deportes', true), egr: calcular('Deportes', false) },
+        salud: { ing: calcular('Salud', true), egr: calcular('Salud', false) }
+    };
+
+    // Renderizado profesional
+    let html = `
+    <h3 style="border-bottom: 2px solid #2c3e50; padding-bottom:10px;">Balance Financiero ${tipo === 'general' ? 'General' : mesFiltro}</h3>
+    <table class="data-table" style="width:100%; border-collapse: collapse; margin-top: 15px;">
+        <tr style="background:#f2f2f2;"><th>CONCEPTO</th><th>INGRESOS</th><th>EGRESOS</th><th>SALDO</th></tr>
+        ${filaEstado('Aportes', data.aportes)}
+        ${filaEstado('Multas', data.multas)}
+        ${filaEstado('Deporte', data.deporte)}
+        ${filaEstado('Salud', data.salud)}
+        <tr style="border-top: 3px solid #2c3e50; font-weight:bold;">
+            <td>TOTALES</td>
+            <td>$${(data.aportes.ing + data.multas.ing + data.deporte.ing + data.salud.ing).toLocaleString()}</td>
+            <td>$${(data.aportes.egr + data.multas.egr + data.deporte.egr + data.salud.egr).toLocaleString()}</td>
+            <td>$${(data.aportes.ing - data.aportes.egr + data.multas.ing - data.multas.egr + data.deporte.ing - data.deporte.egr + data.salud.ing - data.salud.egr).toLocaleString()}</td>
+        </tr>
+    </table>`;
+    document.getElementById('resultado-estados').innerHTML = html;
+}
+
+function filaEstado(nombre, obj) {
+    return `<tr>
+        <td>${nombre}</td>
+        <td>$${obj.ing.toLocaleString()}</td>
+        <td>$${obj.egr.toLocaleString()}</td>
+        <td>$${(obj.ing - obj.egr).toLocaleString()}</td>
+    </tr>`;
 }
         // CIERRE POPUPS EXTERNOS
         window.onclick = function(e) {
