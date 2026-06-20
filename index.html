@@ -6,7 +6,7 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
-    <title>Sistema Contable JAC San Miguel v3.0</title>
+    <title>Sistema Contable JAC San Miguel v3.2</title>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <style>
         :root {
@@ -66,12 +66,13 @@
         .total-row { background-color: #eaeded; font-weight: bold; font-size: 1.05rem; }
         .offline-badge { background-color: #27ae60; color: white; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; float: right; }
         .instructions { background-color: #f8f9fa; padding: 15px; border-left: 4px solid #27ae60; margin-bottom: 15px; font-size: 0.85rem; color: #555; display: flex; justify-content: space-between; align-items: center; }
+        .section-header-flex { display: flex; justify-content: space-between; align-items: center; margin-top: 25px; gap: 10px; }
     </style>
 </head>
 <body>
 
     <nav class="sidebar">
-        <div class="sidebar-header">JAC San Miguel <span class="offline-badge">v3.0</span></div>
+        <div class="sidebar-header">JAC San Miguel <span class="offline-badge">v3.2</span></div>
         <ul class="sidebar-menu">
             <li><a onclick="switchView('inicio')" id="btn-inicio"><span class="menu-icon">🏠</span> Inicio</a></li>
             <li><a onclick="switchView('socios')" id="btn-socios" class="active"><span class="menu-icon">👥</span> Socios</a></li>
@@ -88,7 +89,7 @@
     </nav>
 
     <main class="main-content">
-        <div class="header-main" id="view-title">👥 Sistema San Miguel</div>
+        <div class="header-main" id="view-title">👥 Base de Datos de Socios</div>
 
         <section id="view-socios" class="view-section active">
             <div class="form-container">
@@ -122,7 +123,7 @@
                 </div>
             </div>
 
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-top:20px;">
+            <div class="section-header-flex">
                 <h3>Base Maestro de Socios Únicos</h3>
                 <button class="btn btn-danger btn-actions" onclick="borrarTodosLosSocios()">⚠️ Eliminar Base de Datos</button>
             </div>
@@ -176,7 +177,10 @@
                 <tbody id="tabla-resumen-aportes-body"></tbody>
             </table>
 
-            <h3>📋 Historial Detallado de Transacciones (Aportes Separados)</h3>
+            <div class="section-header-flex">
+                <h3>📋 Historial Detallado de Transacciones (Aportes Separados)</h3>
+                <button class="btn btn-success" style="margin-top:0;" onclick="exportarHistorialAportesExcel()">📊 Exportar Historial a Excel</button>
+            </div>
             <table class="data-table">
                 <thead>
                     <tr>
@@ -262,7 +266,6 @@
             const documento = document.getElementById('documento').value.trim();
             let socios = obtenerSocios();
 
-            // CONTROL REPETIDOS: Verificar si la cédula ya existe en otro registro
             const existeDuplicado = socios.some((s, i) => s.documento === documento && i !== idx);
             if(existeDuplicado) {
                 alert(`🚨 ERROR: Ya existe un socio registrado con el número de documento: ${documento}. Ingrese un valor diferente.`);
@@ -272,7 +275,6 @@
             if(idx === -1) {
                 socios.push({ nombre, documento });
             } else {
-                // Al editar, actualizamos también en cascada el documento en el historial antiguo de aportes si cambió
                 const docAnterior = socios[idx].documento;
                 let aportes = obtenerAportes();
                 aportes.forEach(ap => { if(ap.documento === docAnterior) ap.documento = documento; });
@@ -325,13 +327,12 @@
             if(!select) return;
             const socios = obtenerSocios();
             
-            // Guardar selección actual para no perder el foco si está editando
             const valorSeleccionado = select.value;
             select.innerHTML = '<option value="">-- Seleccione un socio registrado --</option>';
             
             socios.forEach(socio => {
                 const opt = document.createElement('option');
-                opt.value = socio.documento; // Vinculación por documento único
+                opt.value = socio.documento;
                 opt.innerText = `${socio.nombre} (${socio.documento})`;
                 select.appendChild(opt);
             });
@@ -344,10 +345,11 @@
             
             const tbodyDetalle = document.getElementById('tabla-aportes-detallado-body');
             const tbodyResumen = document.getElementById('tabla-resumen-aportes-body');
+            if(!tbodyDetalle || !tbodyResumen) return;
             
             let granTotal = 0;
 
-            // 1. RENDERIZAR HISTORIAL DETALLADO (APORTES SEPARADOS)
+            // 1. RENDERIZAR HISTORIAL DETALLADO
             tbodyDetalle.innerHTML = '';
             if(aportes.length === 0) {
                 tbodyDetalle.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#999; padding:15px;">No se han registrado aportes contables.</td></tr>`;
@@ -368,7 +370,6 @@
                     tbodyDetalle.appendChild(fila);
                 });
                 
-                // Fila Final del Gran Total de la JAC
                 const filaTotal = document.createElement('tr');
                 filaTotal.className = "total-row";
                 filaTotal.innerHTML = `<td colspan="2" style="text-align:right;">TOTAL RECAUDADO JAC:</td><td colspan="3" style="color:#27ae60;">$${granTotal.toLocaleString()}</td>`;
@@ -381,7 +382,6 @@
                 tbodyResumen.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#999; padding:15px;">Registre socios en el maestro para calcular sus acumulados.</td></tr>`;
             } else {
                 socios.forEach(socio => {
-                    // Sumar todos los aportes de este socio en específico
                     const sumaAcumulada = aportes
                         .filter(ap => ap.documento === socio.documento)
                         .reduce((sum, current) => sum + parseFloat(current.valor), 0);
@@ -407,12 +407,10 @@
             let aportes = obtenerAportes();
 
             if(idx === -1) {
-                // Registrar nuevo aporte
                 const documento = selectSocio.value;
                 const nombreSocio = selectSocio.options[selectSocio.selectedIndex].text.split(' (')[0];
                 aportes.push({ nombre: nombreSocio, documento, valor, concepto });
             } else {
-                // Modificar aporte existente (SOLO MODIFICA VALOR Y CONCEPTO, el socio no cambia)
                 aportes[idx].valor = valor;
                 aportes[idx].concepto = concepto;
                 cancelarEdicionAporte();
@@ -426,11 +424,9 @@
             const aportes = obtenerAportes();
             document.getElementById('aporte-edit-index').value = idx;
             
-            // Fijar los campos editables
             document.getElementById('aporte-valor').value = aportes[idx].valor;
             document.getElementById('aporte-concepto').value = aportes[idx].concepto;
 
-            // Forzar y bloquear el selector del socio para que no sea alterado el nombre ni el documento
             const select = document.getElementById('aporte-socio-select');
             select.value = aportes[idx].documento;
             select.disabled = true;
@@ -460,7 +456,39 @@
             }
         }
 
-        // --- MANEJO DE EXCEL (SOCIOS CON CONTROL DE REPETIDOS) ---
+        // --- EXPORTACIÓN DEL CONSOLIDADO DETALLADO A EXCEL ---
+        function exportarHistorialAportesExcel() {
+            if (typeof XLSX === 'undefined') { alert("Función no disponible offline."); return; }
+            
+            const aportes = obtenerAportes();
+            if(aportes.length === 0) {
+                alert("No hay transacciones registradas en el historial para exportar.");
+                return;
+            }
+
+            const filasExcel = aportes.map(ap => ({
+                "Socio": ap.nombre,
+                "Documento": ap.documento,
+                "Valor Aporte ($)": parseFloat(ap.valor),
+                "Concepto / Descripción": ap.concepto
+            }));
+
+            const granTotal = aportes.reduce((sum, current) => sum + parseFloat(current.valor), 0);
+            filasExcel.push({
+                "Socio": "TOTAL GENERAL RECAUDADO",
+                "Documento": "",
+                "Valor Aporte ($)": granTotal,
+                "Concepto / Descripción": "Suma total acumulada del sistema"
+            });
+
+            const hoja = XLSX.utils.json_to_sheet(filasExcel);
+            const libro = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(libro, hoja, "Historial de Aportes");
+            
+            XLSX.writeFile(libro, "Consolidado_Aportes_San_Miguel.xlsx");
+        }
+
+        // --- MANEJO DE EXCEL (SOCIOS) ---
         function descargarPlantillaExcel() {
             if (typeof XLSX === 'undefined') { alert("Función no disponible offline."); return; }
             const plantilla = [
@@ -495,7 +523,6 @@
                         const documento = (fila["Numero de Documento"] || fila["documento"] || fila["Documento"] || '').toString().trim();
 
                         if (nombre !== '' && documento !== '') {
-                            // Validar que no se repita antes de meterlo a la lista
                             const yaExiste = listaActual.some(s => s.documento === documento);
                             if(!yaExiste) {
                                 listaActual.push({ nombre: nombre.toString().trim(), documento });
@@ -520,10 +547,14 @@
             lector.readAsArrayBuffer(archivo);
         }
 
-        // CARGA INICIAL
-        window.addEventListener("load", function() {
+        // FUNCION DE ARRANQUE SEGURO
+        function inicializarSistema() {
             mostrarSociosEnTabla();
-        });
+            actualizarSelectorSocios();
+            mostrarAportesEnTablas();
+        }
+
+        window.addEventListener("load", inicializarSistema);
     </script>
 </body>
 </html>
