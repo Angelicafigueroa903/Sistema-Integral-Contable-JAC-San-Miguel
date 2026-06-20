@@ -41,6 +41,7 @@
         .form-container.multas-mode { border-top-color: #e74c3c; }
         .form-title { font-size: 1.1rem; color: var(--primary-color); margin-bottom: 15px; font-weight: 600; }
         .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
         .form-group { display: flex; flex-direction: column; margin-bottom: 5px; }
         .form-group label { font-size: 0.85rem; margin-bottom: 5px; color: #555; font-weight: 600; }
         .form-group input, .form-group select { padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.9rem; outline: none; width: 100%; background: white; }
@@ -83,6 +84,7 @@
 </head>
 <body>
 
+    <!-- MENÚ LATERAL -->
     <nav class="sidebar">
         <div class="sidebar-header">
             Sistema Integral Contable<br>JAC San Miguel<br>
@@ -103,14 +105,17 @@
         </ul>
     </nav>
 
+    <!-- CONTENIDO GENERAL -->
     <main class="main-content">
         <div class="header-main" id="view-title">👥 Base de Datos de Socios</div>
 
+        <!-- VISTA: INICIO -->
         <section id="view-inicio" class="view-section">
             <h2>🏠 Bienvenido al Sistema Integral Contable</h2>
             <p style="margin-top: 15px;">Seleccione una opción del menú lateral para gestionar las cuentas de la Junta de Acción Comunal Vereda San Miguel.</p>
         </section>
 
+        <!-- VISTA: SOCIOS -->
         <section id="view-socios" class="view-section active">
             <div class="form-container">
                 <div class="form-title" id="form-action-title">Forma 1: Registro Individual de Socio</div>
@@ -159,6 +164,7 @@
             </table>
         </section>
 
+        <!-- VISTA: APORTES -->
         <section id="view-aportes" class="view-section">
             <div class="form-container aportes-mode">
                 <div class="form-title" id="aporte-form-title">💰 Registrar Aporte de Socio</div>
@@ -218,6 +224,7 @@
             </table>
         </section>
 
+        <!-- VISTA: MULTAS -->
         <section id="view-multas" class="view-section">
             <div class="form-container multas-mode">
                 <div class="form-title" id="multa-form-title">⚠ Registrar Pago de Multa de Socio</div>
@@ -248,7 +255,7 @@
                 </form>
             </div>
 
-            <h3>📊 Resumen de Saldos de Multas por Socio</h3>
+            <h3>📊 Resumen de Saldos de Multas (Solo Socios con Multas)</h3>
             <table class="data-table">
                 <thead>
                     <tr>
@@ -277,6 +284,7 @@
             </table>
         </section>
 
+        <!-- VISTAS ADICIONALES -->
         <section id="view-deportes" class="view-section"><h2>🏆 Comité Deportes</h2><p style="margin-top:15px;">Sección para fondos del comité de deportes.</p></section>
         <section id="view-salud" class="view-section"><h2>❤️ Comité Salud</h2><p style="margin-top:15px;">Sección para fondos destinados a salud.</p></section>
         <section id="view-gastos" class="view-section"><h2>💸 Control de Gastos</h2><p style="margin-top:15px;">Sección para salidas de dinero de la junta.</p></section>
@@ -286,6 +294,7 @@
         <section id="view-configuracion" class="view-section"><h2>⚙ Configuración del Sistema</h2><p style="margin-top:15px;">Sección para parámetros generales de la JAC.</p></section>
     </main>
 
+    <!-- VENTANA POP-UP (MODAL) APORTES -->
     <div id="historial-modal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -312,6 +321,7 @@
         </div>
     </div>
 
+    <!-- VENTANA POP-UP (MODAL) MULTAS -->
     <div id="multas-modal" class="modal">
         <div class="modal-content modal-content.modal-multas">
             <div class="modal-header">
@@ -704,6 +714,8 @@
 
             if(sociosConMultas.length === 0) {
                 tbodyDetalle.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#999; padding:15px;">No se han recaudado pagos de multas.</td></tr>`;
+                tbodyResumen.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#999; padding:15px;">No hay saldos de multas para mostrar.</td></tr>`;
+                return;
             } else {
                 sociosConMultas.forEach((socio) => {
                     const sumaSocio = multas
@@ -730,25 +742,21 @@
                 tbodyDetalle.appendChild(filaTotal);
             }
 
-            // Renderizar tabla resumen de saldos por socio con conceptos incluidos mentalmente
+            // MODIFICACIÓN: Renderizar tabla resumen solo para los socios que sí registran multas
             tbodyResumen.innerHTML = '';
-            if(socios.length === 0) {
-                tbodyResumen.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#999; padding:15px;">Registre socios para calcular estado de multas.</td></tr>`;
-            } else {
-                socios.forEach(socio => {
-                    const sumaAcumulada = multas
-                        .filter(m => m.documento === socio.documento)
-                        .reduce((sum, current) => sum + parseFloat(current.valor), 0);
+            sociosConMultas.forEach(socio => {
+                const sumaAcumulada = multas
+                    .filter(m => m.documento === socio.documento)
+                    .reduce((sum, current) => sum + parseFloat(current.valor), 0);
 
-                    const filaRes = document.createElement('tr');
-                    filaRes.innerHTML = `
-                        <td><strong>${socio.nombre}</strong></td>
-                        <td>${socio.documento}</td>
-                        <td style="color:#c0392b; font-weight:bold;">$${sumaAcumulada.toLocaleString()}</td>
-                    `;
-                    tbodyResumen.appendChild(filaRes);
-                });
-            }
+                const filaRes = document.createElement('tr');
+                filaRes.innerHTML = `
+                    <td><strong>${socio.nombre}</strong></td>
+                    <td>${socio.documento}</td>
+                    <td style="color:#c0392b; font-weight:bold;">$${sumaAcumulada.toLocaleString()}</td>
+                `;
+                tbodyResumen.appendChild(filaRes);
+            });
         }
 
         function procesarFormularioMulta(e) {
@@ -897,7 +905,7 @@
             XLSX.writeFile(libro, "Consolidado_Matriz_Aportes_San_Miguel.xlsx");
         }
 
-        // --- EXPORTACIÓN A EXCEL (CONSOLIDADO MULTAS CON CONCEPTOS MAPPED) ---
+        // --- EXPORTACIÓN A EXCEL (CONSOLIDADO MULTAS) ---
         function exportarHistorialMultasExcel() {
             if (typeof XLSX === 'undefined') { alert("Función no disponible offline."); return; }
             const multas = obtenerMultas();
