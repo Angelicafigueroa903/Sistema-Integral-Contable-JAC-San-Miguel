@@ -124,7 +124,7 @@
         .form-group input, .form-group select { padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.9rem; outline: none; width: 100%; }
         .form-group input:focus, .form-group select:focus { border-color: var(--secondary-color); }
 
-        /* Contenedor corregido para el campo personalizado */
+        /* Contenedor del campo personalizado */
         .dynamic-field-block {
             margin-top: 15px;
             background-color: #f8f9fa;
@@ -310,11 +310,9 @@
             document.querySelectorAll('.sidebar-menu li a').forEach(link => link.classList.remove('active'));
             const targetSection = document.getElementById('view-' + viewId);
             if(targetSection) targetSection.classList.add('active');
-            const eventTarget = window.event?.currentTarget;
-            if(eventTarget) eventTarget.classList.add('active');
         }
 
-        // Evaluar cambio en el menú desplegable del concepto
+        // Evaluar cambio en el menú desplegable (NATIVO, independiente de librerías)
         function evaluarConceptoDesplegable(valor) {
             const wrapper = document.getElementById('wrapper-concepto-abierto');
             const inputAbierto = document.getElementById('concepto-abierto');
@@ -335,19 +333,24 @@
                 const almacenados = localStorage.getItem('jac_socios_db');
                 return almacenados ? JSON.parse(almacenados) : [];
             } catch (e) {
-                console.error("Error leyendo base de datos local", e);
                 return [];
             }
         }
 
         function guardarSocios(arreglo) {
-            localStorage.setItem('jac_socios_db', JSON.stringify(arreglo));
+            try {
+                localStorage.setItem('jac_socios_db', JSON.stringify(arreglo));
+            } catch(e) {
+                alert("Error de espacio en almacenamiento local.");
+            }
             mostrarSociosEnTabla();
         }
 
         function mostrarSociosEnTabla() {
             const socios = obtenerSocios();
             const tbody = document.getElementById('tabla-socios-body');
+            if(!tbody) return;
+            
             tbody.innerHTML = '';
 
             if(socios.length === 0) {
@@ -451,19 +454,82 @@
         }
 
         function borrarTodosLosSocios() {
-            if(confirm('🚨 ¡ALERTA CRÍTICA! Esto eliminará permanentemente la base de datos de socios de este dispositivo. ¿Continuar?')) {
+            if(confirm('🚨 ¡ALERTA! Esto eliminará permanentemente todos los socios. ¿Continuar?')) {
                 localStorage.removeItem('jac_socios_db');
                 mostrarSociosEnTabla();
                 cancelarEdicion();
             }
         }
 
+        // CONTROL DE ERRORES PARA EXCEL EN ENTORNOS RESTRINGIDOS LOCALES
         function descargarPlantillaExcel() {
+            if (typeof XLSX === 'undefined') {
+                alert("🚨 El navegador bloqueó temporalmente la extensión de Excel debido a políticas locales del sistema. Para usar la carga masiva de Excel, abre la aplicación usando tu dirección web generada por GitHub Pages en lugar del archivo local.");
+                return;
+            }
             const plantillaDatos = [
-                { "Nombre": "Ejemplo Pedro Pérez", "Documento": "1075123456", "Fecha": "2026-06-20", "Valor": 25000, "Concepto": "Cuota Mensual" },
-                { "Nombre": "Ejemplo María Rojas", "Documento": "1080987654", "Fecha": "2026-06-21", "Valor": 35000, "Concepto": "Fondo de Solidaridad" }
+                { "Nombre": "Ejemplo Pedro Pérez", "Documento": "1075123456", "Fecha": "2026-06-20", "Valor": 25000, "Concepto": "Cuota Mensual" }
             ];
             const hoja = XLSX.utils.json_to_sheet(plantillaDatos);
             const libro = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(libro, hoja, "Plantilla Socios");
             XLSX.writeFile(libro, "Plantilla_Carga_Masiva_JAC.xlsx");
+        }
+
+        function cargarDesdeExcel(event) {
+            if (typeof XLSX === 'undefined') {
+                alert("🚨 El navegador no permite procesar el archivo Excel localmente por seguridad en archivos de disco rígido. Por favor, accede mediante el link de tu entorno web en línea (GitHub Pages).");
+                document.getElementById('excel-file').value = '';
+                return;
+            }
+            const archivo = event.target.files[0];
+            if (!archivo) return;
+
+            const lector = new FileReader();
+            lector.onload = function(e) {
+                try {
+                    const datos = new Uint8Array(e.target.result);
+                    const libroTrabajo = XLSX.read(datos, { type: 'array' });
+                    const hoja = libroTrabajo.Sheets[libroTrabajo.SheetNames[0]];
+                    const datosJson = XLSX.utils.sheet_to_json(hoja);
+
+                    if(datosJson.length === 0) return;
+
+                    let listaActual = obtenerSocios();
+                    let agregados = 0;
+
+                    datosJson.forEach(fila => {
+                        const nombre = fila.Nombre || fila.nombre || fila.NOMBRE || '';
+                        const documento = fila.Documento || fila.documento || fila.DOCUMENTO || '';
+                        let fecha = fila.Fecha || fila.fecha || fila.FECHA || '';
+                        const valor = fila.Valor || fila.valor || fila.VALOR || 0;
+                        const concepto = fila.Concepto || fila.concepto || fila.CONCEPTO || 'Cuota Mensual';
+
+                        if (typeof fecha === 'number') {
+                            const dateObj = XLSX.utils.parse_date(fecha);
+                            fecha = dateObj.toISOString().split('T')[0];
+                        }
+
+                        if (nombre !== '' && documento !== '') {
+                            listaActual.push({ nombre, documento, fecha, valor, concepto });
+                            agregados++;
+                        }
+                    });
+
+                    guardarSocios(listaActual);
+                    alert(`¡Éxito! Se cargaron ${agregados} socios.`);
+                } catch(err) {
+                    alert("Error leyendo la estructura del archivo.");
+                }
+                document.getElementById('excel-file').value = '';
+            };
+            lector.readAsArrayBuffer(archivo);
+        }
+
+        // Carga forzada segura
+        window.addEventListener("load", function() {
+            mostrarSociosEnTabla();
+        });
+    </script>
+</body>
+</html>
