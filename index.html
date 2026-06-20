@@ -39,6 +39,8 @@
         .form-container.excel-mode { border-top-color: #27ae60; }
         .form-container.aportes-mode { border-top-color: #e67e22; }
         .form-container.multas-mode { border-top-color: #e74c3c; }
+        .form-container.deportes-mode { border-top-color: #2980b9; }
+        .form-container.deportes-salida-mode { border-top-color: #c0392b; }
         .form-title { font-size: 1.1rem; color: var(--primary-color); margin-bottom: 15px; font-weight: 600; }
         .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
         .form-group { display: flex; flex-direction: column; margin-bottom: 5px; }
@@ -46,6 +48,11 @@
         .form-group input, .form-group select { padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.9rem; outline: none; width: 100%; background: white; }
         .form-group input:focus, .form-group select:focus { border-color: var(--secondary-color); }
         .form-group input:disabled { background-color: #f1f2f6; color: #7f8c8d; cursor: not-allowed; }
+
+        /* SALDO DESTACADO */
+        .balance-card { background: #ebf5fb; border: 1px solid #a9ccee; padding: 15px 20px; border-radius: 8px; margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center; }
+        .balance-card h3 { color: #2980b9; font-size: 1.1rem; }
+        .balance-value { font-size: 1.6rem; font-weight: bold; color: #2471a3; }
 
         /* BOTONES */
         .btn { background-color: var(--secondary-color); color: white; border: none; padding: 12px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.95rem; transition: background 0.2s; margin-top: 15px; }
@@ -283,8 +290,100 @@
             </table>
         </section>
 
+        <!-- VISTA: COMITÉ DE DEPORTES -->
+        <section id="view-deportes" class="view-section">
+            <!-- Balance General del Comité -->
+            <div class="balance-card">
+                <div>
+                    <h3>Estado del Fondo del Comité de Deportes</h3>
+                    <p style="font-size:0.85rem; color:#7f8c8d; margin-top:3px;">Cálculo automático de Ingresos menos Salidas</p>
+                </div>
+                <div class="balance-value" id="deportes-saldo-disponible">$0</div>
+            </div>
+
+            <!-- Formulario 1: Ingresos / Aportes Recibidos -->
+            <div class="form-container deportes-mode">
+                <div class="form-title" id="deporte-ingreso-title">📥 Registrar INGRESO / Aporte al Comité</div>
+                <form id="deporte-ingreso-form" onsubmit="procesarDeporteMovimiento(event, 'ingreso')">
+                    <input type="hidden" id="deporte-ingreso-edit-index" value="-1">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="dep-ingreso-socio">Nombre del Socio (Quien aporta)</label>
+                            <select id="dep-ingreso-socio" required>
+                                <option value="">-- Seleccione un socio --</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="dep-ingreso-fecha">Fecha del Aporte</label>
+                            <input type="date" id="dep-ingreso-fecha" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="dep-ingreso-valor">Valor del Aporte ($)</label>
+                            <input type="number" id="dep-ingreso-valor" required min="0" placeholder="Ej: 30000">
+                        </div>
+                        <div class="form-group">
+                            <label for="dep-ingreso-concepto">Concepto del Aporte</label>
+                            <input type="text" id="dep-ingreso-concepto" required placeholder="Ej: Inscripción Torneo Banquitas">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-edit" id="btn-submit-dep-ingreso">💾 Guardar Ingreso</button>
+                    <button type="button" class="btn btn-danger btn-actions" id="btn-cancel-dep-ingreso" style="display:none; margin-top:15px; height:43px;" onclick="cancelarEdicionDeporte('ingreso')">Cancelar Edición</button>
+                </form>
+            </div>
+
+            <!-- Formulario 2: Salidas / Gastos Realizados -->
+            <div class="form-container deportes-salida-mode">
+                <div class="form-title" id="deporte-salida-title">📤 Registrar SALIDA / Gasto del Comité</div>
+                <form id="deporte-salida-form" onsubmit="procesarDeporteMovimiento(event, 'salida')">
+                    <input type="hidden" id="deporte-salida-edit-index" value="-1">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="dep-salida-socio">Nombre del Socio (Quien hace la salida)</label>
+                            <select id="dep-salida-socio" required>
+                                <option value="">-- Seleccione un socio --</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="dep-salida-fecha">Fecha de la Salida</label>
+                            <input type="date" id="dep-salida-fecha" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="dep-salida-valor">Valor Retirado / Gastado ($)</label>
+                            <input type="number" id="dep-salida-valor" required min="0" placeholder="Ej: 45000">
+                        </div>
+                        <div class="form-group">
+                            <label for="dep-salida-concepto">Concepto de la Salida</label>
+                            <input type="text" id="dep-salida-concepto" required placeholder="Ej: Compra de Balón Oficial">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-danger" id="btn-submit-dep-salida">💾 Guardar Salida</button>
+                    <button type="button" class="btn btn-danger btn-actions" id="btn-cancel-dep-salida" style="display:none; margin-top:15px; height:43px;" onclick="cancelarEdicionDeporte('salida')">Cancelar Edición</button>
+                </form>
+            </div>
+
+            <!-- Libro de Movimientos y Descarga -->
+            <div class="section-header-flex">
+                <h3>📋 Libro de Movimientos de Deporte (Ingresos y Salidas)</h3>
+                <button class="btn btn-success" style="margin-top:0;" onclick="exportarDeportesExcel()">📊 Descargar Movimientos a Excel</button>
+            </div>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Tipo</th>
+                        <th>Socio Responsable</th>
+                        <th>Documento</th>
+                        <th>Concepto</th>
+                        <th>Ingreso (+)</th>
+                        <th>Salida (-)</th>
+                        <th style="width: 120px;">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="tabla-deportes-movimientos-body"></tbody>
+            </table>
+        </section>
+
         <!-- VISTAS ADICIONALES -->
-        <section id="view-deportes" class="view-section"><h2>🏆 Comité Deportes</h2><p style="margin-top:15px;">Sección para fondos del comité de deportes.</p></section>
         <section id="view-salud" class="view-section"><h2>❤️ Comité Salud</h2><p style="margin-top:15px;">Sección para fondos destinados a salud.</p></section>
         <section id="view-gastos" class="view-section"><h2>💸 Control de Gastos</h2><p style="margin-top:15px;">Sección para salidas de dinero de la junta.</p></section>
         <section id="view-caja" class="view-section"><h2>🏦 Control de Caja</h2><p style="margin-top:15px;">Sección para arqueos y saldos en efectivo.</p></section>
@@ -383,6 +482,11 @@
                 actualizarSelectorSociosMultas();
                 mostrarMultasEnTablas();
                 establecerFechaHoy('multa-fecha');
+            } else if(viewId === 'deportes') {
+                actualizarSelectoresDeportes();
+                mostrarDeportesEnTabla();
+                establecerFechaHoy('dep-ingreso-fecha');
+                establecerFechaHoy('dep-salida-fecha');
             }
         }
 
@@ -396,13 +500,22 @@
 
         // --- ALMACENAMIENTO (LOCALSTORAGE) ---
         function obtenerSocios() { return JSON.parse(localStorage.getItem('jac_db_socios')) || []; }
-        function guardarSocios(arr) { localStorage.setItem('jac_db_socios', JSON.stringify(arr)); mostrarSociosEnTabla(); actualizarSelectorSocios(); actualizarSelectorSociosMultas(); }
+        function guardarSocios(arr) { 
+            localStorage.setItem('jac_db_socios', JSON.stringify(arr)); 
+            mostrarSociosEnTabla(); 
+            actualizarSelectorSocios(); 
+            actualizarSelectorSociosMultas();
+            actualizarSelectoresDeportes();
+        }
         
         function obtenerAportes() { return JSON.parse(localStorage.getItem('jac_db_aportes')) || []; }
         function guardarAportes(arr) { localStorage.setItem('jac_db_aportes', JSON.stringify(arr)); mostrarAportesEnTablas(); }
         
         function obtenerMultas() { return JSON.parse(localStorage.getItem('jac_db_multas')) || []; }
         function guardarMultas(arr) { localStorage.setItem('jac_db_multas', JSON.stringify(arr)); mostrarMultasEnTablas(); }
+
+        function obtenerDeportes() { return JSON.parse(localStorage.getItem('jac_db_deportes')) || []; }
+        function guardarDeportes(arr) { localStorage.setItem('jac_db_deportes', JSON.stringify(arr)); mostrarDeportesEnTabla(); }
 
         // --- GESTIÓN DE SOCIOS ---
         function mostrarSociosEnTabla() {
@@ -455,6 +568,10 @@
                 let multas = obtenerMultas();
                 multas.forEach(mu => { if(mu.documento === docAnterior) mu.documento = documento; });
                 localStorage.setItem('jac_db_multas', JSON.stringify(multas));
+
+                let deportes = obtenerDeportes();
+                deportes.forEach(dp => { if(dp.documento === docAnterior) dp.documento = documento; });
+                localStorage.setItem('jac_db_deportes', JSON.stringify(deportes));
 
                 socios[idx] = { nombre, documento };
                 cancelarEdicion();
@@ -867,14 +984,218 @@
         function cerrarModalMultas() { document.getElementById('multas-modal').style.display = "none"; }
 
 
-        // --- EXPORTACIÓN A EXCEL (CONSOLIDADO APORTES - MODIFICADO) ---
+        // --- GESTIÓN DEL COMITÉ DE DEPORTES (NUEVO) ---
+        function actualizarSelectoresDeportes() {
+            const selectIngreso = document.getElementById('dep-ingreso-socio');
+            const selectSalida = document.getElementById('dep-salida-socio');
+            if(!selectIngreso || !selectSalida) return;
+            
+            const socios = obtenerSocios();
+            const valIngreso = selectIngreso.value;
+            const valSalida = selectSalida.value;
+
+            const plantillaHtml = '<option value="">-- Seleccione un socio --</option>';
+            selectIngreso.innerHTML = plantillaHtml;
+            selectSalida.innerHTML = plantillaHtml;
+
+            socios.forEach(socio => {
+                const opt1 = document.createElement('option');
+                opt1.value = socio.documento;
+                opt1.innerText = `${socio.nombre} (${socio.documento})`;
+                
+                const opt2 = opt1.cloneNode(true);
+                
+                selectIngreso.appendChild(opt1);
+                selectSalida.appendChild(opt2);
+            });
+
+            selectIngreso.value = valIngreso;
+            selectSalida.value = valSalida;
+        }
+
+        function mostrarDeportesEnTabla() {
+            const deportes = obtenerDeportes();
+            const tbody = document.getElementById('tabla-deportes-movimientos-body');
+            if(!tbody) return;
+            tbody.innerHTML = '';
+
+            let totalIngresos = 0;
+            let totalSalidas = 0;
+
+            if(deportes.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:#999; padding:20px;">No hay movimientos contables en el Comité de Deportes.</td></tr>`;
+                document.getElementById('deportes-saldo-disponible').innerText = "$0";
+                return;
+            }
+
+            deportes.forEach((mov, idx) => {
+                const fila = document.createElement('tr');
+                let celdaIngreso = "-";
+                let celdaSalida = "-";
+
+                if(mov.tipo === 'ingreso') {
+                    totalIngresos += parseFloat(mov.valor);
+                    celdaIngreso = `<strong style="color:#27ae60;">+$${parseFloat(mov.valor).toLocaleString()}</strong>`;
+                } else {
+                    totalSalidas += parseFloat(mov.valor);
+                    celdaSalida = `<strong style="color:#c0392b;">-$${parseFloat(mov.valor).toLocaleString()}</strong>`;
+                }
+
+                fila.innerHTML = `
+                    <td><span style="background-color:#e1e8ed; padding:3px 6px; border-radius:4px; font-size:0.85rem;">${mov.fecha}</span></td>
+                    <td><span style="text-transform: uppercase; font-size: 0.75rem; font-weight: bold; color: ${mov.tipo === 'ingreso' ? '#27ae60':'#c0392b'}">${mov.tipo}</span></td>
+                    <td><strong>${mov.nombre}</strong></td>
+                    <td>${mov.documento}</td>
+                    <td>${mov.concepto}</td>
+                    <td>${celdaIngreso}</td>
+                    <td>${celdaSalida}</td>
+                    <td>
+                        <button class="btn btn-actions btn-edit" onclick="prepararEdicionDeporte(${idx}, '${mov.tipo}')">✏️</button>
+                        <button class="btn btn-actions btn-danger" onclick="eliminarMovimientoDeporte(${idx})">❌</button>
+                    </td>
+                `;
+                tbody.appendChild(fila);
+            });
+
+            const saldoDisponible = totalIngresos - totalSalidas;
+            document.getElementById('deportes-saldo-disponible').innerText = `$${saldoDisponible.toLocaleString()}`;
+
+            // Fila de resumen final
+            const filaResumen = document.createElement('tr');
+            filaResumen.className = "total-row";
+            filaResumen.innerHTML = `
+                <td colspan="5" style="text-align:right;">TOTALES GENERALES / SALDO DISPONIBLE:</td>
+                <td style="color:#27ae60;">$${totalIngresos.toLocaleString()}</td>
+                <td style="color:#c0392b;">$${totalSalidas.toLocaleString()}</td>
+                <td style="background-color: #d4efdf; color: #196f3d; font-weight: bold;">$${saldoDisponible.toLocaleString()}</td>
+            `;
+            tbody.appendChild(filaResumen);
+        }
+
+        function procesarDeporteMovimiento(e, tipo) {
+            e.preventDefault();
+            const idx = parseInt(document.getElementById(`deporte-${tipo}-edit-index`).value);
+            const selectSocio = document.getElementById(`dep-${tipo}-socio`);
+            const fecha = document.getElementById(`dep-${tipo}-fecha`).value;
+            const valor = parseFloat(document.getElementById(`dep-${tipo}-valor`).value);
+            const concepto = document.getElementById(`dep-${tipo}-concepto`).value.trim();
+
+            let deportes = obtenerDeportes();
+
+            if(idx === -1) {
+                const documento = selectSocio.value;
+                const nombreSocio = selectSocio.options[selectSocio.selectedIndex].text.split(' (')[0];
+                deportes.push({ tipo, nombre: nombreSocio, documento, fecha, valor, concepto });
+            } else {
+                deportes[idx].fecha = fecha;
+                deportes[idx].valor = valor;
+                deportes[idx].concepto = concepto;
+                cancelarEdicionDeporte(tipo);
+            }
+
+            guardarDeportes(deportes);
+            document.getElementById(`deporte-${tipo}-form`).reset();
+            establecerFechaHoy(`dep-${tipo}-fecha`);
+        }
+
+        function prepararEdicionDeporte(idx, tipo) {
+            const deportes = obtenerDeportes();
+            document.getElementById(`deporte-${tipo}-edit-index`).value = idx;
+            document.getElementById(`dep-${tipo}-fecha`).value = deportes[idx].fecha;
+            document.getElementById(`dep-${tipo}-valor`).value = deportes[idx].valor;
+            document.getElementById(`dep-${tipo}-concepto`).value = deportes[idx].concepto;
+
+            const select = document.getElementById(`dep-${tipo}-socio`);
+            select.value = deportes[idx].documento;
+            select.disabled = true;
+
+            document.getElementById(`deporte-${tipo}-title`).innerText = `✏️ Modificando Registro de ${tipo.toUpperCase()}`;
+            document.getElementById(`btn-submit-dep-${tipo}`).innerText = "🔄 Actualizar Movimiento";
+            document.getElementById(`btn-cancel-dep-${tipo}`).style.display = "inline-block";
+            document.querySelector('.main-content').scrollTop = 0;
+        }
+
+        function cancelarEdicionDeporte(tipo) {
+            document.getElementById(`deporte-${tipo}-edit-index`).value = "-1";
+            document.getElementById(`deporte-${tipo}-form`).reset();
+            document.getElementById(`dep-${tipo}-socio`).disabled = false;
+            document.getElementById(`deporte-${tipo}-title`).innerText = tipo === 'ingreso' ? "📥 Registrar INGRESO / Aporte al Comité" : "📤 Registrar SALIDA / Gasto del Comité";
+            document.getElementById(`btn-submit-dep-${tipo}`).innerText = tipo === 'ingreso' ? "💾 Guardar Ingreso" : "💾 Guardar Salida";
+            document.getElementById(`btn-cancel-dep-${tipo}`).style.display = "none";
+            establecerFechaHoy(`dep-${tipo}-fecha`);
+        }
+
+        function eliminarMovimientoDeporte(idx) {
+            if(confirm('¿Desea borrar este movimiento contable del Comité de Deportes?')) {
+                let deportes = obtenerDeportes();
+                const tipo = deportes[idx].tipo;
+                deportes.splice(idx, 1);
+                guardarDeportes(deportes);
+                cancelarEdicionDeporte(tipo);
+            }
+        }
+
+        function exportarDeportesExcel() {
+            if (typeof XLSX === 'undefined') { alert("Función no disponible offline."); return; }
+            const deportes = obtenerDeportes();
+            if(deportes.length === 0) { alert("No hay movimientos en deportes para exportar."); return; }
+
+            let totalIngresos = 0;
+            let totalSalidas = 0;
+
+            const filasExcel = deportes.map(mov => {
+                const esIngreso = mov.tipo === 'ingreso';
+                const valor = parseFloat(mov.valor);
+                
+                if(esIngreso) totalIngresos += valor;
+                else totalSalidas += valor;
+
+                return {
+                    "Fecha": mov.fecha,
+                    "Tipo de Movimiento": mov.tipo.toUpperCase(),
+                    "Socio Responsable": mov.nombre,
+                    "Documento": mov.documento,
+                    "Concepto / Motivo": mov.concepto,
+                    "Ingreso (+)": esIngreso ? valor : 0,
+                    "Salida (-)": !esIngreso ? valor : 0
+                };
+            });
+
+            // Fila de Totales e Indicadores de disponibilidad requeridos
+            filasExcel.push({
+                "Fecha": "RESUMEN FINAL",
+                "Tipo de Movimiento": "",
+                "Socio Responsable": "",
+                "Documento": "",
+                "Concepto / Motivo": "VALOR TOTAL RECAUDADO / GASTADO",
+                "Ingreso (+)": totalIngresos,
+                "Salida (-)": totalSalidas
+            });
+
+            filasExcel.push({
+                "Fecha": "SALDO DISPONIBLE COMITÉ DE DEPORTES",
+                "Tipo de Movimiento": "",
+                "Socio Responsable": "",
+                "Documento": "",
+                "Concepto / Motivo": "",
+                "Ingreso (+)": totalIngresos - totalSalidas,
+                "Salida (-)": ""
+            });
+
+            const hoja = XLSX.utils.json_to_sheet(filasExcel);
+            const libro = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(libro, hoja, "Movimientos Deportes");
+            XLSX.writeFile(libro, "Libro_Contable_Deportes_San_Miguel.xlsx");
+        }
+
+
+        // --- EXPORTACIÓN A EXCEL (CONSOLIDADO APORTES) ---
         function exportarHistorialAportesExcel() {
             if (typeof XLSX === 'undefined') { alert("Función no disponible offline."); return; }
             const aportes = obtenerAportes();
             const socios = obtenerSocios();
             if(aportes.length === 0) { alert("No hay transacciones en el historial para consolidar."); return; }
 
-            // MODIFICACIÓN: Filtrar solo socios que tengan aportes registrados
             const sociosConAportes = socios.filter(s => aportes.some(ap => ap.documento === s.documento));
             const conceptosUnicos = [...new Set(aportes.map(ap => ap.concepto))].sort();
             
@@ -906,14 +1227,13 @@
             XLSX.writeFile(libro, "Consolidado_Matriz_Aportes_San_Miguel.xlsx");
         }
 
-        // --- EXPORTACIÓN A EXCEL (CONSOLIDADO MULTAS - MODIFICADO) ---
+        // --- EXPORTACIÓN A EXCEL (CONSOLIDADO MULTAS) ---
         function exportarHistorialMultasExcel() {
             if (typeof XLSX === 'undefined') { alert("Función no disponible offline."); return; }
             const multas = obtenerMultas();
             const socios = obtenerSocios();
             if(multas.length === 0) { alert("No hay registros de multas para consolidar."); return; }
 
-            // MODIFICACIÓN: Filtrar solo socios que tengan multas registradas
             const sociosConMultas = socios.filter(s => multas.some(m => m.documento === s.documento));
             const motivosUnicos = [...new Set(multas.map(m => m.concepto))].sort();
             
@@ -1018,6 +1338,7 @@
             actualizarSelectorSociosMultas();
             mostrarAportesEnTablas();
             mostrarMultasEnTablas();
+            mostrarDeportesEnTabla();
             establecerFechaHoy('aporte-fecha');
             establecerFechaHoy('multa-fecha');
         }
