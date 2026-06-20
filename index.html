@@ -6,7 +6,7 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
-    <title>Sistema Contable JAC San Miguel v3.5</title>
+    <title>Sistema Contable JAC San Miguel v3.6</title>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <style>
         :root {
@@ -82,24 +82,29 @@
 <body>
 
     <nav class="sidebar">
-        <div class="sidebar-header">JAC San Miguel <span class="offline-badge">v3.5</span></div>
+        <div class="sidebar-header">JAC San Miguel <span class="offline-badge">v3.6</span></div>
         <ul class="sidebar-menu">
             <li><a onclick="switchView('inicio')" id="btn-inicio"><span class="menu-icon">🏠</span> Inicio</a></li>
             <li><a onclick="switchView('socios')" id="btn-socios" class="active"><span class="menu-icon">👥</span> Socios</a></li>
             <li><a onclick="switchView('aportes')" id="btn-aportes"><span class="menu-icon">💰</span> Aportes</a></li>
-            <li><a onclick="switchView('multas')"><span class="menu-icon">⚠</span> Multas</a></li>
-            <li><a onclick="switchView('deportes')"><span class="menu-icon">🏆</span> Comité Deportes</a></li>
-            <li><a onclick="switchView('salud')"><span class="menu-icon">❤️</span> Comité Salud</a></li>
-            <li><a onclick="switchView('gastos')"><span class="menu-icon">💸</span> Gastos</a></li>
-            <li><a onclick="switchView('caja')"><span class="menu-icon">🏦</span> Caja</a></li>
-            <li><a onclick="switchView('financiero')"><span class="menu-icon">📈</span> Estado Financiero</a></li>
-            <li><a onclick="switchView('reportes')"><span class="menu-icon">📄</span> Reportes</a></li>
-            <li><a onclick="switchView('configuracion')"><span class="menu-icon">⚙</span> Configuración</a></li>
+            <li><a onclick="switchView('multas')" id="btn-multas"><span class="menu-icon">⚠</span> Multas</a></li>
+            <li><a onclick="switchView('deportes')" id="btn-deportes"><span class="menu-icon">🏆</span> Comité Deportes</a></li>
+            <li><a onclick="switchView('salud')" id="btn-salud"><span class="menu-icon">❤️</span> Comité Salud</a></li>
+            <li><a onclick="switchView('gastos')" id="btn-gastos"><span class="menu-icon">💸</span> Gastos</a></li>
+            <li><a onclick="switchView('caja')" id="btn-caja"><span class="menu-icon">🏦</span> Caja</a></li>
+            <li><a onclick="switchView('financiero')" id="btn-financiero"><span class="menu-icon">📈</span> Estado Financiero</a></li>
+            <li><a onclick="switchView('reportes')" id="btn-reportes"><span class="menu-icon">📄</span> Reportes</a></li>
+            <li><a onclick="switchView('configuracion')" id="btn-configuracion"><span class="menu-icon">⚙</span> Configuración</a></li>
         </ul>
     </nav>
 
     <main class="main-content">
         <div class="header-main" id="view-title">👥 Base de Datos de Socios</div>
+
+        <section id="view-inicio" class="view-section">
+            <h2>🏠 Bienvenido al Sistema Contable JAC San Miguel</h2>
+            <p style="margin-top: 15px;">Seleccione una opción en el menú de la izquierda para comenzar a trabajar.</p>
+        </section>
 
         <section id="view-socios" class="view-section active">
             <div class="form-container">
@@ -210,15 +215,14 @@
             </table>
         </section>
 
-        <section id="view-inicio" class="view-section"><h2>Bienvenido al Sistema Contable</h2></section>
-        <section id="view-multas" class="view-section"><h2>Módulo de Multas</h2></section>
-        <section id="view-deportes" class="view-section"><h2>Comité Deportes</h2></section>
-        <section id="view-salud" class="view-section"><h2>Comité Salud</h2></section>
-        <section id="view-gastos" class="view-section"><h2>Gastos</h2></section>
-        <section id="view-caja" class="view-section"><h2>Caja</h2></section>
-        <section id="view-financiero" class="view-section"><h2>Estado Financiero</h2></section>
-        <section id="view-reportes" class="view-section"><h2>Reportes</h2></section>
-        <section id="view-configuracion" class="view-section"><h2>Configuración</h2></section>
+        <section id="view-multas" class="view-section"><h2>⚠ Módulo de Multas</h2><p style="margin-top:15px;">Sección en desarrollo para el control de inasistencias y multas.</p></section>
+        <section id="view-deportes" class="view-section"><h2>🏆 Comité Deportes</h2><p style="margin-top:15px;">Sección en desarrollo para fondos del comité de deportes.</p></section>
+        <section id="view-salud" class="view-section"><h2>❤️ Comité Salud</h2><p style="margin-top:15px;">Sección en desarrollo para fondos destinados a salud.</p></section>
+        <section id="view-gastos" class="view-section"><h2>💸 Control de Gastos</h2><p style="margin-top:15px;">Sección en desarrollo para salidas de dinero de la junta.</p></section>
+        <section id="view-caja" class="view-section"><h2>🏦 Control de Caja</h2><p style="margin-top:15px;">Sección en desarrollo para arqueos y saldos en efectivo.</p></section>
+        <section id="view-financiero" class="view-section"><h2>📈 Estado Financiero General</h2><p style="margin-top:15px;">Sección en desarrollo para balances e informes consolidados.</p></section>
+        <section id="view-reportes" class="view-section"><h2>📄 Módulo de Reportes</h2><p style="margin-top:15px;">Sección en desarrollo para exportación de PDF y actas.</p></section>
+        <section id="view-configuracion" class="view-section"><h2>⚙ Configuración del Sistema</h2><p style="margin-top:15px;">Sección en desarrollo para parámetros generales de la JAC.</p></section>
     </main>
 
     <div id="historial-modal" class="modal">
@@ -247,7 +251,7 @@
     </div>
 
     <script>
-        // CONTROL DE VISTAS Y NAVEGACIÓN
+        // CONTROL DE VISTAS Y NAVEGACIÓN (CORREGIDO PARA EVITAR BLOQUEOS)
         function switchView(viewId) {
             document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
             document.querySelectorAll('.sidebar-menu li a').forEach(l => l.classList.remove('active'));
@@ -258,7 +262,21 @@
             if(targetSection) targetSection.classList.add('active');
             if(targetLink) targetLink.classList.add('active');
 
-            const titulos = { socios: "👥 Base de Datos de Socios", aportes: "💰 Control y Registro de Aportes", inicio: "🏠 Inicio" };
+            // Listado de títulos seguro para evitar que falle si falta alguno
+            const titulos = { 
+                inicio: "🏠 Inicio",
+                socios: "👥 Base de Datos de Socios", 
+                aportes: "💰 Control y Registro de Aportes",
+                multas: "⚠ Control de Multas",
+                deportes: "🏆 Comité de Deportes",
+                salud: "❤️ Comité de Salud",
+                gastos: "💸 Control de Gastos",
+                caja: "🏦 Estado de Caja",
+                financiero: "📈 Balance Financiero",
+                reportes: "📄 Generación de Reportes",
+                configuracion: "⚙ Configuración"
+            };
+            
             document.getElementById('view-title').innerText = titulos[viewId] || "JAC San Miguel";
 
             if(viewId === 'aportes') {
@@ -276,7 +294,7 @@
             }
         }
 
-        // --- LÓGICA DEL ALMACENAMIENTO (LOCALSTORAGE) ---
+        // --- ALMACENAMIENTO (LOCALSTORAGE) ---
         function obtenerSocios() { return JSON.parse(localStorage.getItem('jac_db_socios')) || []; }
         function guardarSocios(arr) { localStorage.setItem('jac_db_socios', JSON.stringify(arr)); mostrarSociosEnTabla(); actualizarSelectorSocios(); }
         function obtenerAportes() { return JSON.parse(localStorage.getItem('jac_db_aportes')) || []; }
@@ -317,7 +335,7 @@
 
             const existeDuplicado = socios.some((s, i) => s.documento === documento && i !== idx);
             if(existeDuplicado) {
-                alert(`🚨 ERROR: Ya existe un socio registrado con el número de documento: ${documento}. Ingrese un valor diferente.`);
+                alert(`🚨 ERROR: Ya existe un socio registrado con el número de documento: ${documento}.`);
                 return;
             }
 
@@ -356,7 +374,7 @@
         }
 
         function eliminarSocio(idx) {
-            if(confirm('¿Desea eliminar este socio? Esto no borrará sus aportes del historial pero ya no aparecerá en el listado maestro.')) {
+            if(confirm('¿Desea eliminar este socio? No borrará sus aportes pero ya no aparecerá en el listado maestro.')) {
                 let socios = obtenerSocios();
                 socios.splice(idx, 1);
                 guardarSocios(socios);
@@ -366,3 +384,70 @@
         function borrarTodosLosSocios() {
             if(confirm('🚨 ¿Seguro que desea vaciar por completo el maestro de socios?')) {
                 localStorage.removeItem('jac_db_socios');
+                guardarSocios([]);
+            }
+        }
+
+        // --- GESTIÓN DE APORTES ---
+        function actualizarSelectorSocios() {
+            const select = document.getElementById('aporte-socio-select');
+            if(!select) return;
+            const socios = obtenerSocios();
+            
+            const valorSeleccionado = select.value;
+            select.innerHTML = '<option value="">-- Seleccione un socio registrado --</option>';
+            
+            socios.forEach(socio => {
+                const opt = document.createElement('option');
+                opt.value = socio.documento;
+                opt.innerText = `${socio.nombre} (${socio.documento})`;
+                select.appendChild(opt);
+            });
+            select.value = valorSeleccionado;
+        }
+
+        function mostrarAportesEnTablas() {
+            const aportes = obtenerAportes();
+            const socios = obtenerSocios();
+            
+            const tbodyDetalle = document.getElementById('tabla-aportes-detallado-body');
+            const tbodyResumen = document.getElementById('tabla-resumen-aportes-body');
+            if(!tbodyDetalle || !tbodyResumen) return;
+            
+            let granTotal = 0;
+
+            tbodyDetalle.innerHTML = '';
+            if(aportes.length === 0) {
+                tbodyDetalle.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#999; padding:15px;">No se han registrado aportes contables.</td></tr>`;
+            } else {
+                const aportesOrdenados = [...aportes].sort((a,b) => new Date(b.fecha) - new Date(a.fecha));
+
+                aportesOrdenados.forEach((ap) => {
+                    granTotal += parseFloat(ap.valor);
+                    const indexOriginal = aportes.findIndex(o => o.documento === ap.documento && o.fecha === ap.fecha && o.valor === ap.valor && o.concepto === ap.concepto);
+
+                    const fila = document.createElement('tr');
+                    fila.innerHTML = `
+                        <td><span style="background-color:#e1e8ed; padding:3px 6px; border-radius:4px; font-size:0.85rem;">${ap.fecha || 'Sin fecha'}</span></td>
+                        <td>${ap.nombre}</td>
+                        <td>${ap.documento}</td>
+                        <td><strong>$${parseFloat(ap.valor).toLocaleString()}</strong></td>
+                        <td>${ap.concepto}</td>
+                        <td>
+                            <button class="btn btn-actions btn-view" onclick="verHistorialSocio('${ap.documento}')">👁️ Ver</button>
+                            <button class="btn btn-actions btn-edit" onclick="prepararEdicionAporte(${indexOriginal})">✏️</button>
+                            <button class="btn btn-actions btn-danger" onclick="eliminarAporte(${indexOriginal})">❌</button>
+                        </td>
+                    `;
+                    tbodyDetalle.appendChild(fila);
+                });
+                
+                const filaTotal = document.createElement('tr');
+                filaTotal.className = "total-row";
+                filaTotal.innerHTML = `<td colspan="3" style="text-align:right;">TOTAL RECAUDADO JAC:</td><td colspan="3" style="color:#27ae60;">$${granTotal.toLocaleString()}</td>`;
+                tbodyDetalle.appendChild(filaTotal);
+            }
+
+            tbodyResumen.innerHTML = '';
+            if(socios.length === 0) {
+                tbodyResumen.innerHTML = `<tr><td colspan="3" style="text-align:
