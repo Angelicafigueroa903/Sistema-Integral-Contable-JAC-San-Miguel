@@ -41,7 +41,6 @@
         .form-container.multas-mode { border-top-color: #e74c3c; }
         .form-title { font-size: 1.1rem; color: var(--primary-color); margin-bottom: 15px; font-weight: 600; }
         .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
-        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
         .form-group { display: flex; flex-direction: column; margin-bottom: 5px; }
         .form-group label { font-size: 0.85rem; margin-bottom: 5px; color: #555; font-weight: 600; }
         .form-group input, .form-group select { padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.9rem; outline: none; width: 100%; background: white; }
@@ -742,7 +741,6 @@
                 tbodyDetalle.appendChild(filaTotal);
             }
 
-            // MODIFICACIÓN: Renderizar tabla resumen solo para los socios que sí registran multas
             tbodyResumen.innerHTML = '';
             sociosConMultas.forEach(socio => {
                 const sumaAcumulada = multas
@@ -869,15 +867,18 @@
         function cerrarModalMultas() { document.getElementById('multas-modal').style.display = "none"; }
 
 
-        // --- EXPORTACIÓN A EXCEL (CONSOLIDADO APORTES) ---
+        // --- EXPORTACIÓN A EXCEL (CONSOLIDADO APORTES - MODIFICADO) ---
         function exportarHistorialAportesExcel() {
             if (typeof XLSX === 'undefined') { alert("Función no disponible offline."); return; }
             const aportes = obtenerAportes();
             const socios = obtenerSocios();
             if(aportes.length === 0) { alert("No hay transacciones en el historial para consolidar."); return; }
 
+            // MODIFICACIÓN: Filtrar solo socios que tengan aportes registrados
+            const sociosConAportes = socios.filter(s => aportes.some(ap => ap.documento === s.documento));
             const conceptosUnicos = [...new Set(aportes.map(ap => ap.concepto))].sort();
-            const filasExcel = socios.map(socio => {
+            
+            const filasExcel = sociosConAportes.map(socio => {
                 let filaSocio = { "Socio / Nombre": socio.nombre, "Documento": socio.documento };
                 let totalSocio = 0;
                 conceptosUnicos.forEach(concepto => {
@@ -905,15 +906,18 @@
             XLSX.writeFile(libro, "Consolidado_Matriz_Aportes_San_Miguel.xlsx");
         }
 
-        // --- EXPORTACIÓN A EXCEL (CONSOLIDADO MULTAS) ---
+        // --- EXPORTACIÓN A EXCEL (CONSOLIDADO MULTAS - MODIFICADO) ---
         function exportarHistorialMultasExcel() {
             if (typeof XLSX === 'undefined') { alert("Función no disponible offline."); return; }
             const multas = obtenerMultas();
             const socios = obtenerSocios();
             if(multas.length === 0) { alert("No hay registros de multas para consolidar."); return; }
 
+            // MODIFICACIÓN: Filtrar solo socios que tengan multas registradas
+            const sociosConMultas = socios.filter(s => multas.some(m => m.documento === s.documento));
             const motivosUnicos = [...new Set(multas.map(m => m.concepto))].sort();
-            const filasExcel = socios.map(socio => {
+            
+            const filasExcel = sociosConMultas.map(socio => {
                 let filaSocio = { "Socio / Nombre": socio.nombre, "Documento": socio.documento };
                 let totalSocio = 0;
                 motivosUnicos.forEach(motivo => {
