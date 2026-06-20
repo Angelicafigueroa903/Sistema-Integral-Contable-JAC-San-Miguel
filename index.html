@@ -450,4 +450,267 @@
 
             tbodyResumen.innerHTML = '';
             if(socios.length === 0) {
-                tbodyResumen.innerHTML = `<tr><td colspan="3" style="text-align:
+                tbodyResumen.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#999; padding:15px;">Registre socios para calcular acumulados.</td></tr>`;
+            } else {
+                socios.forEach(socio => {
+                    const sumaAcumulada = aportes
+                        .filter(ap => ap.documento === socio.documento)
+                        .reduce((sum, current) => sum + parseFloat(current.valor), 0);
+
+                    const filaRes = document.createElement('tr');
+                    filaRes.innerHTML = `
+                        <td><strong>${socio.nombre}</strong></td>
+                        <td>${socio.documento}</td>
+                        <td style="color:#2c3e50; font-weight:bold;">$${sumaAcumulada.toLocaleString()}</td>
+                    `;
+                    tbodyResumen.appendChild(filaRes);
+                });
+            }
+        }
+
+        function procesarFormularioAporte(e) {
+            e.preventDefault();
+            const idx = parseInt(document.getElementById('aporte-edit-index').value);
+            const selectSocio = document.getElementById('aporte-socio-select');
+            const fecha = document.getElementById('aporte-fecha').value;
+            const valor = parseFloat(document.getElementById('aporte-valor').value);
+            const concepto = document.getElementById('aporte-concepto').value.trim();
+            
+            let aportes = obtenerAportes();
+
+            if(idx === -1) {
+                const documento = selectSocio.value;
+                const nombreSocio = selectSocio.options[selectSocio.selectedIndex].text.split(' (')[0];
+                aportes.push({ nombre: nombreSocio, documento, fecha, valor, concepto });
+            } else {
+                aportes[idx].fecha = fecha;
+                aportes[idx].valor = valor;
+                aportes[idx].concepto = concepto;
+                cancelarEdicionAporte();
+            }
+
+            guardarAportes(aportes);
+            document.getElementById('aporte-form').reset();
+            establecerFechaHoy();
+        }
+
+        function prepararEdicionAporte(idx) {
+            const aportes = obtenerAportes();
+            document.getElementById('aporte-edit-index').value = idx;
+            
+            document.getElementById('aporte-fecha').value = aportes[idx].fecha || '';
+            document.getElementById('aporte-valor').value = aportes[idx].valor;
+            document.getElementById('aporte-concepto').value = aportes[idx].concepto;
+
+            const select = document.getElementById('aporte-socio-select');
+            select.value = aportes[idx].documento;
+            select.disabled = true;
+
+            document.getElementById('aporte-form-title').innerText = "✏️ Modificando Datos de la Transacción";
+            document.getElementById('btn-submit-aporte').innerText = "🔄 Actualizar Aporte";
+            document.getElementById('btn-cancel-aporte-edit').style.display = "inline-block";
+            
+            document.querySelector('.main-content').scrollTop = 0;
+        }
+
+        function cancelarEdicionAporte() {
+            document.getElementById('aporte-edit-index').value = "-1";
+            document.getElementById('aporte-form').reset();
+            document.getElementById('aporte-socio-select').disabled = false;
+            document.getElementById('aporte-form-title').innerText = "💰 Registrar Aporte de Socio";
+            document.getElementById('btn-submit-aporte').innerText = "💾 Guardar Aporte";
+            document.getElementById('btn-cancel-aporte-edit').style.display = "none";
+            establecerFechaHoy();
+        }
+
+        function eliminarAporte(idx) {
+            if(confirm('¿Eliminar esta boleta de aporte?')) {
+                let aportes = obtenerAportes();
+                aportes.splice(idx, 1);
+                guardarAportes(aportes);
+                cancelarEdicionAporte();
+            }
+        }
+
+        // --- POP-UP MODAL ---
+        function verHistorialSocio(documentoSocio) {
+            const socios = obtenerSocios();
+            const aportes = obtenerAportes();
+            
+            const socio = socios.find(s => s.documento === documentoSocio);
+            const nombreSocio = socio ? socio.nombre : "Socio no encontrado";
+            
+            const aportesSocio = aportes
+                .filter(ap => ap.documento === documentoSocio)
+                .sort((a,b) => new Date(a.fecha) - new Date(b.fecha));
+
+            document.getElementById('modal-socio-titulo').innerText = `📊 Expediente Contable: ${nombreSocio}`;
+            document.getElementById('modal-socio-doc').innerText = documentoSocio;
+
+            const tbodyModal = document.getElementById('modal-tabla-body');
+            tbodyModal.innerHTML = '';
+
+            if(aportesSocio.length === 0) {
+                tbodyModal.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#999; padding:15px;">Este socio no registra ningún aporte contable.</td></tr>`;
+            } else {
+                let acumulado = 0;
+                aportesSocio.forEach(ap => {
+                    acumulado += parseFloat(ap.valor);
+                    const fila = document.createElement('tr');
+                    fila.innerHTML = `
+                        <td>${ap.fecha || 'Sin fecha'}</td>
+                        <td>${ap.concepto}</td>
+                        <td><strong>$${parseFloat(ap.valor).toLocaleString()}</strong></td>
+                    `;
+                    tbodyModal.appendChild(fila);
+                });
+
+                const filaTotal = document.createElement('tr');
+                filaTotal.className = "total-row";
+                filaTotal.innerHTML = `<td colspan="2" style="text-align:right;">TOTAL ACUMULADO VIGENTE:</td><td style="color:#8e44ad;">$${acumulado.toLocaleString()}</td>`;
+                tbodyModal.appendChild(filaTotal);
+            }
+
+            document.getElementById('historial-modal').style.display = "flex";
+        }
+
+        function cerrarModal() {
+            document.getElementById('historial-modal').style.display = "none";
+        }
+
+        window.onclick = function(event) {
+            const modal = document.getElementById('historial-modal');
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        }
+
+        // --- EXPORTACIÓN MATRICIAL A EXCEL ---
+        function exportarHistorialAportesExcel() {
+            if (typeof XLSX === 'undefined') { alert("Función no disponible offline."); return; }
+            
+            const aportes = obtenerAportes();
+            const socios = obtenerSocios();
+
+            if(aportes.length === 0) {
+                alert("No hay transacciones en el historial para consolidar.");
+                return;
+            }
+
+            const conceptosUnicos = [...new Set(aportes.map(ap => ap.concepto))].sort();
+
+            const filasExcel = socios.map(socio => {
+                let filaSocio = {
+                    "Socio / Nombre": socio.nombre,
+                    "Documento": socio.documento
+                };
+
+                let totalSocio = 0;
+
+                conceptosUnicos.forEach(concepto => {
+                    const sumaConcepto = aportes
+                        .filter(ap => ap.documento === socio.documento && ap.concepto === concepto)
+                        .reduce((sum, item) => sum + parseFloat(item.valor), 0);
+                    
+                    filaSocio[concepto] = sumaConcepto;
+                    totalSocio += sumaConcepto;
+                });
+
+                filaSocio["Total Aportado ($)"] = totalSocio;
+                return filaSocio;
+            });
+
+            let filaTotalesGlobales = {
+                "Socio / Nombre": "TOTAL GENERAL RECAUDADO",
+                "Documento": ""
+            };
+
+            let granTotalSistema = 0;
+            conceptosUnicos.forEach(concepto => {
+                const totalColumna = aportes
+                    .filter(ap => ap.concepto === concepto)
+                    .reduce((sum, item) => sum + parseFloat(item.valor), 0);
+                
+                filaTotalesGlobales[concepto] = totalColumna;
+                granTotalSistema += totalColumna;
+            });
+            filaTotalesGlobales["Total Aportado ($)"] = granTotalSistema;
+
+            filasExcel.push(filaTotalesGlobales);
+
+            const hoja = XLSX.utils.json_to_sheet(filasExcel);
+            const libro = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(libro, hoja, "Consolidado de Aportes");
+            XLSX.writeFile(libro, "Consolidado_Matriz_Aportes_San_Miguel.xlsx");
+        }
+
+        // --- PLANTILLAS EXCEL ---
+        function descargarPlantillaExcel() {
+            if (typeof XLSX === 'undefined') { alert("Función no disponible offline."); return; }
+            const plantilla = [
+                { "Nombre del Socio": "Pedro Alcántara Pérez", "Numero de Documento": "1075123456" },
+                { "Nombre del Socio": "María Ofelia Rojas", "Numero de Documento": "26543210" }
+            ];
+            const hoja = XLSX.utils.json_to_sheet(plantilla);
+            const libro = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(libro, hoja, "Lista Socios");
+            XLSX.writeFile(libro, "Plantilla_Maestro_Socios.xlsx");
+        }
+
+        function cargarDesdeExcel(e) {
+            if (typeof XLSX === 'undefined') { alert("Función no disponible offline."); return; }
+            const archivo = e.target.files[0];
+            if (!archivo) return;
+
+            const lector = new FileReader();
+            lector.onload = function(evt) {
+                try {
+                    const datos = new Uint8Array(evt.target.result);
+                    const libro = XLSX.read(datos, { type: 'array' });
+                    const hoja = libro.Sheets[libro.SheetNames[0]];
+                    const json = XLSX.utils.sheet_to_json(hoja);
+
+                    let listaActual = obtenerSocios();
+                    let agregados = 0;
+                    let duplicadosSaltados = 0;
+
+                    json.forEach(fila => {
+                        const nombre = fila["Nombre del Socio"] || fila["nombre"] || fila["Nombre"] || '';
+                        const documento = (fila["Numero de Documento"] || fila["documento"] || fila["Documento"] || '').toString().trim();
+
+                        if (nombre !== '' && documento !== '') {
+                            const yaExiste = listaActual.some(s => s.documento === documento);
+                            if(!yaExiste) {
+                                listaActual.push({ nombre: nombre.toString().trim(), documento });
+                                agregados++;
+                            } else {
+                                duplicadosSaltados++;
+                            }
+                        }
+                    });
+
+                    guardarSocios(listaActual);
+                    if(duplicadosSaltados > 0) {
+                        alert(`¡Carga finalizada! Se agregaron ${agregados} socios. Omitidos ${duplicadosSaltados} duplicados.`);
+                    } else {
+                        alert(`¡Éxito! Se han importado masivamente ${agregados} socios.`);
+                    }
+                } catch(err) {
+                    alert("Error al procesar el Excel.");
+                }
+                document.getElementById('excel-file').value = '';
+            };
+            lector.readAsArrayBuffer(archivo);
+        }
+
+        function inicializarSistema() {
+            mostrarSociosEnTabla();
+            actualizarSelectorSocios();
+            mostrarAportesEnTablas();
+            establecerFechaHoy();
+        }
+
+        window.addEventListener("load", inicializarSistema);
+    </script>
+</body>
+</html>
