@@ -1283,50 +1283,81 @@
         }
 // --- LÓGICA DE CAJA INTEGRADA ---
 
-function calcularDatosCaja(mes) {
-    // 1. Obtener datos
+// Función única que calcula todo de forma segura
+function obtenerCalculosCaja(mes) {
+    // Obtenemos los datos filtrados por mes
     const dataAportes = obtenerAportes().filter(d => d.fecha && d.fecha.startsWith(mes));
     const dataGastos = obtenerGastos().filter(d => d.fecha && d.fecha.startsWith(mes));
+    
+    // Multas, Deportes y Salud NO necesitan filtrar por 'tipo' porque 
+    // sus arrays ya guardan solo ese tipo de movimiento o la lógica es distinta
     const dataMultas = obtenerMultas().filter(d => d.fecha && d.fecha.startsWith(mes));
     const dataDep = obtenerDeportes().filter(d => d.fecha && d.fecha.startsWith(mes));
     const dataSalud = obtenerSalud().filter(d => d.fecha && d.fecha.startsWith(mes));
 
-    // Función que busca el valor sin importar si es 'tipo', 'categoria', etc.
-    const getVal = (d) => parseFloat(d.valor || d.monto || 0);
-    // Detector flexible para identificar ingresos/salidas
-    const esIngreso = (d) => ['ingreso', 'ing', 'entrada'].includes((d.tipo || '').toLowerCase());
-    const esSalida = (d) => ['salida', 'egreso', 'gasto', 'sal'].includes((d.tipo || '').toLowerCase());
+    // Cálculos
+    const ingAportes = dataAportes.reduce((s, d) => s + parseFloat(d.valor || 0), 0);
+    const egrGastos = dataGastos.reduce((s, d) => s + parseFloat(d.valor || 0), 0);
+    
+    // En multas, el valor es simplemente la suma de lo registrado en ese mes
+    const totMultas = dataMultas.reduce((s, d) => s + parseFloat(d.valor || 0), 0);
+    
+    // En deportes y salud, usamos la lógica de ingreso/salida según el objeto
+    const ingDep = dataDep.filter(d => d.tipo === 'ingreso').reduce((s, d) => s + parseFloat(d.valor || 0), 0);
+    const egrDep = dataDep.filter(d => d.tipo === 'salida').reduce((s, d) => s + parseFloat(d.valor || 0), 0);
+    
+    const ingSalud = dataSalud.filter(d => d.tipo === 'ingreso').reduce((s, d) => s + parseFloat(d.valor || 0), 0);
+    const egrSalud = dataSalud.filter(d => d.tipo === 'salida').reduce((s, d) => s + parseFloat(d.valor || 0), 0);
 
-    return {
-        ingAportes: dataAportes.reduce((s, d) => s + getVal(d), 0),
-        egrGastos: dataGastos.reduce((s, d) => s + getVal(d), 0),
-        ingMultas: dataMultas.filter(esIngreso).reduce((s, d) => s + getVal(d), 0),
-        egrMultas: dataMultas.filter(esSalida).reduce((s, d) => s + getVal(d), 0),
-        ingDep: dataDep.filter(esIngreso).reduce((s, d) => s + getVal(d), 0),
-        egrDep: dataDep.filter(esSalida).reduce((s, d) => s + getVal(d), 0),
-        ingSalud: dataSalud.filter(esIngreso).reduce((s, d) => s + getVal(d), 0),
-        egrSalud: dataSalud.filter(esSalida).reduce((s, d) => s + getVal(d), 0)
-    };
+    return { ingAportes, egrGastos, totMultas, ingDep, egrDep, ingSalud, egrSalud };
 }
 
 function procesarCaja() {
     const mes = document.getElementById('caja-mes-filtro').value;
     if (!mes) return;
 
-    const c = calcularDatosCaja(mes);
-    
-    const totIng = c.ingAportes + c.ingMultas + c.ingDep + c.ingSalud;
-    const totEgr = c.egrGastos + c.egrMultas + c.egrDep + c.egrSalud;
+    const c = obtenerCalculosCaja(mes);
+    const totIng = c.ingAportes + c.totMultas + c.ingDep + c.ingSalud;
+    const totEgr = c.egrGastos + 0 + c.egrDep + c.egrSalud; // Multas no tienen egreso
 
     let html = `<table class="data-table"><thead><tr><th>Módulo</th><th>Ingresos (+)</th><th>Egresos (-)</th><th>Saldo</th></tr></thead><tbody>
         <tr style="background:#e8f8f5;"><td>Aportes y Gastos J.A.C.</td><td>$${c.ingAportes.toLocaleString()}</td><td>$${c.egrGastos.toLocaleString()}</td><td>$${(c.ingAportes - c.egrGastos).toLocaleString()}</td></tr>
-        <tr><td>Multas</td><td>$${c.ingMultas.toLocaleString()}</td><td>$${c.egrMultas.toLocaleString()}</td><td>$${(c.ingMultas - c.egrMultas).toLocaleString()}</td></tr>
+        <tr><td>Multas</td><td>$${c.totMultas.toLocaleString()}</td><td>$0</td><td>$${c.totMultas.toLocaleString()}</td></tr>
         <tr><td>Comité Deporte</td><td>$${c.ingDep.toLocaleString()}</td><td>$${c.egrDep.toLocaleString()}</td><td>$${(c.ingDep - c.egrDep).toLocaleString()}</td></tr>
         <tr><td>Comité Salud</td><td>$${c.ingSalud.toLocaleString()}</td><td>$${c.egrSalud.toLocaleString()}</td><td>$${(c.ingSalud - c.egrSalud).toLocaleString()}</td></tr>
         <tr style="font-weight:bold; background:#eee;"><td>TOTAL GENERAL</td><td>$${totIng.toLocaleString()}</td><td>$${totEgr.toLocaleString()}</td><td>$${(totIng - totEgr).toLocaleString()}</td></tr>
         </tbody></table>`;
 
     document.getElementById('resultado-caja').innerHTML = html;
+}
+
+function descargarCajaExcel() {
+    const mes = document.getElementById('caja-mes-filtro').value;
+    if (!mes) return alert("Selecciona un mes.");
+    
+    const c = obtenerCalculosCaja(mes);
+    
+    // 1. Preparamos los datos con sus respectivos saldos
+    const data = [
+        { Módulo: "Aportes y Gastos J.A.C.", Ingresos: c.ingAportes, Egresos: c.egrGastos, Saldo: (c.ingAportes - c.egrGastos) },
+        { Módulo: "Multas", Ingresos: c.totMultas, Egresos: 0, Saldo: c.totMultas },
+        { Módulo: "Comité Deporte", Ingresos: c.ingDep, Egresos: c.egrDep, Saldo: (c.ingDep - c.egrDep) },
+        { Módulo: "Comité Salud", Ingresos: c.ingSalud, Egresos: c.egrSalud, Saldo: (c.ingSalud - c.egrSalud) },
+        // 2. Agregamos la fila de Totales Generales que hace falta
+        { Módulo: "TOTAL GENERAL", 
+          Ingresos: (c.ingAportes + c.totMultas + c.ingDep + c.ingSalud), 
+          Egresos: (c.egrGastos + 0 + c.egrDep + c.egrSalud), 
+          Saldo: (c.ingAportes - c.egrGastos) + c.totMultas + (c.ingDep - c.egrDep) + (c.ingSalud - c.egrSalud) 
+        }
+    ];
+
+    // 3. Crear el archivo
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.json_to_sheet(data);
+    
+    // 4. Agregar al libro y descargar
+    XLSX.utils.book_append_sheet(wb, ws, "Resumen_" + mes);
+    XLSX.writeFile(wb, `Resumen_Caja_${mes}.xlsx`);
 }
         // CIERRE POPUPS EXTERNOS
         window.onclick = function(e) {
