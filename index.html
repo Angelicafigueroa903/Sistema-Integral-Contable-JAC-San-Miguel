@@ -1283,28 +1283,29 @@
         }
 // --- LÓGICA DE CAJA INTEGRADA ---
 
-// --- FUNCIÓN UNIFICADA DE CÁLCULO ---
-// Esta función evita repetir código y errores
 function calcularDatosCaja(mes) {
+    // 1. Obtener datos
     const dataAportes = obtenerAportes().filter(d => d.fecha && d.fecha.startsWith(mes));
     const dataGastos = obtenerGastos().filter(d => d.fecha && d.fecha.startsWith(mes));
     const dataMultas = obtenerMultas().filter(d => d.fecha && d.fecha.startsWith(mes));
     const dataDep = obtenerDeportes().filter(d => d.fecha && d.fecha.startsWith(mes));
     const dataSalud = obtenerSalud().filter(d => d.fecha && d.fecha.startsWith(mes));
 
-    // Función auxiliar para normalizar el tipo de movimiento
-    const esIngreso = (d) => (d.tipo || '').toLowerCase() === 'ingreso';
-    const esSalida = (d) => (d.tipo || '').toLowerCase() === 'salida';
+    // Función que busca el valor sin importar si es 'tipo', 'categoria', etc.
+    const getVal = (d) => parseFloat(d.valor || d.monto || 0);
+    // Detector flexible para identificar ingresos/salidas
+    const esIngreso = (d) => ['ingreso', 'ing', 'entrada'].includes((d.tipo || '').toLowerCase());
+    const esSalida = (d) => ['salida', 'egreso', 'gasto', 'sal'].includes((d.tipo || '').toLowerCase());
 
     return {
-        ingAportes: dataAportes.reduce((s, d) => s + parseFloat(d.valor || 0), 0),
-        egrGastos: dataGastos.reduce((s, d) => s + parseFloat(d.valor || 0), 0),
-        ingMultas: dataMultas.filter(esIngreso).reduce((s, d) => s + parseFloat(d.valor || 0), 0),
-        egrMultas: dataMultas.filter(esSalida).reduce((s, d) => s + parseFloat(d.valor || 0), 0),
-        ingDep: dataDep.filter(esIngreso).reduce((s, d) => s + parseFloat(d.valor || 0), 0),
-        egrDep: dataDep.filter(esSalida).reduce((s, d) => s + parseFloat(d.valor || 0), 0),
-        ingSalud: dataSalud.filter(esIngreso).reduce((s, d) => s + parseFloat(d.valor || 0), 0),
-        egrSalud: dataSalud.filter(esSalida).reduce((s, d) => s + parseFloat(d.valor || 0), 0)
+        ingAportes: dataAportes.reduce((s, d) => s + getVal(d), 0),
+        egrGastos: dataGastos.reduce((s, d) => s + getVal(d), 0),
+        ingMultas: dataMultas.filter(esIngreso).reduce((s, d) => s + getVal(d), 0),
+        egrMultas: dataMultas.filter(esSalida).reduce((s, d) => s + getVal(d), 0),
+        ingDep: dataDep.filter(esIngreso).reduce((s, d) => s + getVal(d), 0),
+        egrDep: dataDep.filter(esSalida).reduce((s, d) => s + getVal(d), 0),
+        ingSalud: dataSalud.filter(esIngreso).reduce((s, d) => s + getVal(d), 0),
+        egrSalud: dataSalud.filter(esSalida).reduce((s, d) => s + getVal(d), 0)
     };
 }
 
@@ -1313,34 +1314,19 @@ function procesarCaja() {
     if (!mes) return;
 
     const c = calcularDatosCaja(mes);
+    
+    const totIng = c.ingAportes + c.ingMultas + c.ingDep + c.ingSalud;
+    const totEgr = c.egrGastos + c.egrMultas + c.egrDep + c.egrSalud;
 
     let html = `<table class="data-table"><thead><tr><th>Módulo</th><th>Ingresos (+)</th><th>Egresos (-)</th><th>Saldo</th></tr></thead><tbody>
         <tr style="background:#e8f8f5;"><td>Aportes y Gastos J.A.C.</td><td>$${c.ingAportes.toLocaleString()}</td><td>$${c.egrGastos.toLocaleString()}</td><td>$${(c.ingAportes - c.egrGastos).toLocaleString()}</td></tr>
         <tr><td>Multas</td><td>$${c.ingMultas.toLocaleString()}</td><td>$${c.egrMultas.toLocaleString()}</td><td>$${(c.ingMultas - c.egrMultas).toLocaleString()}</td></tr>
         <tr><td>Comité Deporte</td><td>$${c.ingDep.toLocaleString()}</td><td>$${c.egrDep.toLocaleString()}</td><td>$${(c.ingDep - c.egrDep).toLocaleString()}</td></tr>
         <tr><td>Comité Salud</td><td>$${c.ingSalud.toLocaleString()}</td><td>$${c.egrSalud.toLocaleString()}</td><td>$${(c.ingSalud - c.egrSalud).toLocaleString()}</td></tr>
+        <tr style="font-weight:bold; background:#eee;"><td>TOTAL GENERAL</td><td>$${totIng.toLocaleString()}</td><td>$${totEgr.toLocaleString()}</td><td>$${(totIng - totEgr).toLocaleString()}</td></tr>
         </tbody></table>`;
 
     document.getElementById('resultado-caja').innerHTML = html;
-}
-
-function descargarCajaExcel() {
-    const mes = document.getElementById('caja-mes-filtro').value;
-    if (!mes) return alert("Selecciona un mes.");
-
-    const c = calcularDatosCaja(mes); // Ahora toma los mismos cálculos
-
-    const data = [
-        { Modulo: "Aportes y Gastos J.A.C.", Ingresos: c.ingAportes, Egresos: c.egrGastos, Saldo: (c.ingAportes - c.egrGastos) },
-        { Modulo: "Multas", Ingresos: c.ingMultas, Egresos: c.egrMultas, Saldo: (c.ingMultas - c.egrMultas) },
-        { Modulo: "Deporte", Ingresos: c.ingDep, Egresos: c.egrDep, Saldo: (c.ingDep - c.egrDep) },
-        { Modulo: "Salud", Ingresos: c.ingSalud, Egresos: c.egrSalud, Saldo: (c.ingSalud - c.egrSalud) }
-    ];
-
-    const wb = XLSX.utils.book_new();
-    const ws = XLSX.utils.json_to_sheet(data);
-    XLSX.utils.book_append_sheet(wb, ws, "Resumen_" + mes);
-    XLSX.writeFile(wb, `Resumen_Caja_${mes}.xlsx`);
 }
         // CIERRE POPUPS EXTERNOS
         window.onclick = function(e) {
