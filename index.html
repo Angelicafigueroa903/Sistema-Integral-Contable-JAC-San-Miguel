@@ -71,10 +71,7 @@
             color: white;
         }
 
-        .menu-icon {
-            margin-right: 15px;
-            font-size: 1.2rem;
-        }
+        .menu-icon { margin-right: 15px; font-size: 1.2rem; }
 
         /* --- CONTENIDO PRINCIPAL --- */
         .main-content {
@@ -94,15 +91,10 @@
             font-weight: bold;
         }
 
-        .view-section {
-            display: none;
-        }
+        .view-section { display: none; }
+        .view-section.active { display: block; }
 
-        .view-section.active {
-            display: block;
-        }
-
-        /* --- CONTENEDORES Y FORMULARIOS --- */
+        /* --- FORMULARIOS Y CONTENEDORES --- */
         .form-container {
             background: white;
             padding: 20px;
@@ -112,9 +104,7 @@
             border-top: 4px solid var(--secondary-color);
         }
 
-        .form-container.excel-mode {
-            border-top-color: #27ae60;
-        }
+        .form-container.excel-mode { border-top-color: #27ae60; }
 
         .form-title {
             font-size: 1.1rem;
@@ -125,29 +115,14 @@
 
         .form-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
             gap: 15px;
         }
 
-        .form-group {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .form-group label {
-            font-size: 0.85rem;
-            margin-bottom: 5px;
-            color: #555;
-            font-weight: 600;
-        }
-
-        .form-group input, .form-group select {
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            font-size: 0.9rem;
-            outline: none;
-        }
+        .form-group { display: flex; flex-direction: column; }
+        .form-group label { font-size: 0.85rem; margin-bottom: 5px; color: #555; font-weight: 600; }
+        .form-group input, .form-group select { padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.9rem; outline: none; }
+        .form-group input:focus, .form-group select:focus { border-color: var(--secondary-color); }
 
         .btn {
             background-color: var(--secondary-color);
@@ -161,11 +136,13 @@
             transition: background 0.2s;
             margin-top: 15px;
         }
-
         .btn:hover { background-color: #149a80; }
-        .btn-success { background-color: #27ae60; }
+        .btn-success { background-color: #27ae60; margin-top: 0; }
         .btn-success:hover { background-color: #219150; }
-        .btn-danger { background-color: #e74c3c; padding: 5px 10px; font-size: 0.8rem; margin-top: 0; }
+        .btn-actions { padding: 6px 12px; font-size: 0.8rem; margin-top: 0; margin-right: 5px; font-weight: normal; }
+        .btn-edit { background-color: #2980b9; }
+        .btn-edit:hover { background-color: #1f618d; }
+        .btn-danger { background-color: #e74c3c; }
         .btn-danger:hover { background-color: #c0392b; }
 
         /* --- TABLAS --- */
@@ -179,22 +156,20 @@
             margin-top: 15px;
         }
 
-        .data-table th, .data-table td {
-            padding: 12px 15px;
-            text-align: left;
-            border-bottom: 1px solid #eeeeee;
-        }
-
+        .data-table th, .data-table td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #eeeeee; }
         .data-table th { background-color: var(--primary-color); color: white; }
         .offline-badge { background-color: #27ae60; color: white; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; float: right; }
         
         .instructions {
             background-color: #f8f9fa;
-            padding: 10px;
+            padding: 15px;
             border-left: 4px solid #27ae60;
             margin-bottom: 15px;
             font-size: 0.85rem;
             color: #555;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
     </style>
 </head>
@@ -225,8 +200,10 @@
         <section id="view-socios" class="view-section active">
             
             <div class="form-container">
-                <div class="form-title">Forma 1: Registro Individual de Socio</div>
-                <form id="socio-form" onsubmit="registrarSocioIndividual(event)">
+                <div class="form-title" id="form-action-title">Forma 1: Registro Individual de Socio</div>
+                <form id="socio-form" onsubmit="procesarFormularioSocio(event)">
+                    <input type="hidden" id="edit-index" value="-1">
+                    
                     <div class="form-grid">
                         <div class="form-group">
                             <label for="nombre">Nombre Completo</label>
@@ -255,26 +232,28 @@
                             </select>
                         </div>
                     </div>
-                    <button type="submit" class="btn">💾 Guardar Socio</button>
+                    <button type="submit" class="btn" id="btn-submit-form">💾 Guardar Socio</button>
+                    <button type="button" class="btn btn-danger btn-actions" id="btn-cancel-edit" style="display:none; margin-top:15px; height:43px;" onclick="cancelarEdicion()">Cancelar Edición</button>
                 </form>
             </div>
 
             <div class="form-container excel-mode">
                 <div class="form-title">Forma 2: Carga Masiva desde archivo Excel (.xlsx)</div>
                 <div class="instructions">
-                    💡 <strong>Formato requerido de las columnas en su archivo Excel:</strong><br>
-                    Las columnas de la primera fila deben llamarse exactamente: 
-                    <code>Nombre</code>, <code>Documento</code>, <code>Fecha</code>, <code>Valor</code>, y <code>Concepto</code>.
+                    <div>
+                        <strong>¿No tiene la plantilla?</strong> Descargue el formato oficial estructurado para llenar sus datos locales.
+                    </div>
+                    <button class="btn btn-success" onclick="descargarPlantillaExcel()">📥 Descargar Plantilla Excel</button>
                 </div>
                 <div class="form-group">
-                    <label for="excel-file">Seleccione el archivo de Excel:</label>
+                    <label for="excel-file">Seleccione el archivo de Excel lleno para cargar:</label>
                     <input type="file" id="excel-file" accept=".xlsx, .xls" onchange="cargarDesdeExcel(event)">
                 </div>
             </div>
 
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <h3>Socios Registrados</h3>
-                <button class="btn btn-danger" onclick="borrarTodosLosSocios()" style="margin-top:0;">⚠️ Borrar Base de Datos</button>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top:20px;">
+                <h3>Socios Registrados en el Sistema</h3>
+                <button class="btn btn-danger btn-actions" onclick="borrarTodosLosSocios()">⚠️ Borrar Toda la Base de Datos</button>
             </div>
             
             <table class="data-table">
@@ -285,7 +264,7 @@
                         <th>Fecha Pago</th>
                         <th>Valor</th>
                         <th>Concepto</th>
-                        <th>Acción</th>
+                        <th>Acciones</th>
                     </tr>
                 </thead>
                 <tbody id="tabla-socios-body">
@@ -311,16 +290,25 @@
             document.querySelectorAll('.view-section').forEach(section => section.classList.remove('active'));
             document.querySelectorAll('.sidebar-menu li a').forEach(link => link.classList.remove('active'));
             const targetSection = document.getElementById('view-' + viewId);
-            if(targetSection) {
-                targetSection.classList.add('active');
-            }
+            if(targetSection) targetSection.classList.add('active');
             const eventTarget = window.event?.currentTarget;
             if(eventTarget) eventTarget.classList.add('active');
         }
 
+        // Recuperar datos con validación estricta de persistencia
         function obtenerSocios() {
-            const sociosLocalStorage = localStorage.getItem('jac_socios');
-            return sociosLocalStorage ? JSON.parse(sociosLocalStorage) : [];
+            try {
+                const almacenados = localStorage.getItem('jac_socios_db');
+                return almacenados ? JSON.parse(almacenados) : [];
+            } catch (e) {
+                console.error("Error leyendo base de datos local", e);
+                return [];
+            }
+        }
+
+        function guardarSocios(arreglo) {
+            localStorage.setItem('jac_socios_db', JSON.stringify(arreglo));
+            mostrarSociosEnTabla();
         }
 
         function mostrarSociosEnTabla() {
@@ -329,7 +317,7 @@
             tbody.innerHTML = '';
 
             if(socios.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#999;">Ningún socio registrado aún.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#999; padding: 20px;">Ningún socio registrado en el sistema local.</td></tr>`;
                 return;
             }
 
@@ -341,30 +329,104 @@
                     <td>${socio.fecha || ''}</td>
                     <td>$${socio.valor ? Number(socio.valor).toLocaleString('es-CO') : '0'}</td>
                     <td><span style="background:#e8f8f5; color:#117a65; padding:3px 8px; border-radius:12px; font-size:0.85rem;">${socio.concepto || 'Cuota Mensual'}</span></td>
-                    <td><button class="btn btn-danger" onclick="eliminarSocio(${index})">❌ Eliminar</button></td>
+                    <td>
+                        <button class="btn btn-actions btn-edit" onclick="prepararEdicion(${index})">✏️ Editar</button>
+                        <button class="btn btn-actions btn-danger" onclick="eliminarSocio(${index})">❌ Eliminar</button>
+                    </td>
                 `;
                 tbody.appendChild(fila);
             });
         }
 
-        function registrarSocioIndividual(event) {
+        // Procesar Formulario unificado (Sirve para Registrar NUEVO o guardar EDICIÓN)
+        function procesarFormularioSocio(event) {
             event.preventDefault();
+            
+            const index = parseInt(document.getElementById('edit-index').value);
             const nombre = document.getElementById('nombre').value;
             const documento = document.getElementById('documento').value;
             const fecha = document.getElementById('fecha').value;
             const valor = document.getElementById('valor').value;
             const concepto = document.getElementById('concepto').value;
 
-            const nuevoSocio = { nombre, documento, fecha, valor, concepto };
-            const listaSocios = obtenerSocios();
-            listaSocios.push(nuevoSocio);
-            localStorage.setItem('jac_socios', JSON.stringify(listaSocios));
+            const socioEstructura = { nombre, documento, fecha, valor, concepto };
+            let lista = obtenerSocios();
 
+            if (index === -1) {
+                // Es un socio NUEVO
+                lista.push(socioEstructura);
+            } else {
+                // Es la MODIFICACIÓN de un socio existente
+                lista[index] = socioEstructura;
+                cancelarEdicion(); // Restaurar entorno visual
+            }
+
+            guardarSocios(lista);
             document.getElementById('socio-form').reset();
-            mostrarSociosEnTabla();
         }
 
-        // --- LÓGICA DE PROCESAMIENTO PARA EXCEL ---
+        // Cargar datos al formulario para editar
+        function prepararEdicion(index) {
+            const lista = obtenerSocios();
+            const socio = lista[index];
+
+            document.getElementById('edit-index').value = index;
+            document.getElementById('nombre').value = socio.nombre;
+            document.getElementById('documento').value = socio.documento;
+            document.getElementById('fecha').value = socio.fecha;
+            document.getElementById('valor').value = socio.valor;
+            document.getElementById('concepto').value = socio.concepto;
+
+            // Cambios de diseño interactivos
+            document.getElementById('form-action-title').innerText = "✏️ Modificando Información del Socio";
+            document.getElementById('btn-submit-form').innerText = "🔄 Actualizar Datos del Socio";
+            document.getElementById('btn-cancel-edit').style.display = "inline-block";
+            
+            // Subir el scroll de la pantalla automáticamente al formulario
+            document.querySelector('.main-content').scrollTop = 0;
+        }
+
+        function cancelarEdicion() {
+            document.getElementById('edit-index').value = "-1";
+            document.getElementById('socio-form').reset();
+            document.getElementById('form-action-title').innerText = "Forma 1: Registro Individual de Socio";
+            document.getElementById('btn-submit-form').innerText = "💾 Guardar Socio";
+            document.getElementById('btn-cancel-edit').style.display = "none";
+        }
+
+        function eliminarSocio(index) {
+            if(confirm('¿Está seguro de eliminar este registro de socio por completo?')) {
+                let lista = obtenerSocios();
+                lista.splice(index, 1);
+                guardarSocios(lista);
+                cancelarEdicion();
+            }
+        }
+
+        function borrarTodosLosSocios() {
+            if(confirm('🚨 ¡ALERTA CRÍTICA! Esto eliminará permanentemente la base de datos de socios de este dispositivo. ¿Continuar?')) {
+                localStorage.removeItem('jac_socios_db');
+                mostrarSociosEnTabla();
+                cancelarEdicion();
+            }
+        }
+
+        // --- EXCEL FORMA 2: DESCARGAR PLANTILLA FORMATEADA ---
+        function descargarPlantillaExcel() {
+            // Estructura idéntica que solicita el analizador de código
+            const plantillaDatos = [
+                { "Nombre": "Ejemplo Pedro Pérez", "Documento": "1075123456", "Fecha": "2026-06-20", "Valor": 25000, "Concepto": "Cuota Mensual" }
+            ];
+            
+            const hoja = XLSX.utils.json_to_sheet(plantillaDatos);
+            const libro = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(libro, hoja, "Plantilla Socios");
+            
+            // Generar descarga local inmediata libre de red
+            XLSX.writeFile(libro, "Plantilla_Carga_Masiva_JAC.xlsx");
+        }
+
+        // --- EXCEL FORMA 2: LEER Y CARGAR EXCEL ---
         function cargarDesdeExcel(event) {
             const archivo = event.target.files[0];
             if (!archivo) return;
@@ -373,67 +435,48 @@
             lector.onload = function(e) {
                 const datos = new Uint8Array(e.target.result);
                 const libroTrabajo = XLSX.read(datos, { type: 'array' });
-                
-                // Obtener la primera pestaña del archivo Excel
-                const nombrePestana = libroTrabajo.SheetNames[0];
-                const hoja = libroTrabajo.Sheets[nombrePestana];
-                
-                // Convertir las filas a un arreglo de objetos JSON
+                const hoja = libroTrabajo.Sheets[libroTrabajo.SheetNames[0]];
                 const datosJson = XLSX.utils.sheet_to_json(hoja);
 
                 if(datosJson.length === 0) {
-                    alert("El archivo Excel está vacío o no tiene el formato correcto.");
+                    alert("El documento Excel se encuentra vacío.");
                     return;
                 }
 
-                const listaSociosActuales = obtenerSocios();
-                let registrosCargados = 0;
+                let listaActual = obtenerSocios();
+                let agregados = 0;
 
                 datosJson.forEach(fila => {
-                    // Mapear los datos validando minúsculas o mayúsculas en los encabezados
                     const nombre = fila.Nombre || fila.nombre || fila.NOMBRE || '';
                     const documento = fila.Documento || fila.documento || fila.DOCUMENTO || '';
-                    const fecha = fila.Fecha || fila.fecha || fila.FECHA || '';
+                    let fecha = fila.Fecha || fila.fecha || fila.FECHA || '';
                     const valor = fila.Valor || fila.valor || fila.VALOR || 0;
                     const concepto = fila.Concepto || fila.concepto || fila.CONCEPTO || 'Cuota Mensual';
 
+                    // Corrección técnica si Excel procesa las fechas como números internos de serie
+                    if (typeof fecha === 'number') {
+                        const dateObj = XLSX.utils.parse_date(fecha);
+                        fecha = dateObj.toISOString().split('T')[0];
+                    }
+
                     if (nombre !== '' && documento !== '') {
-                        listaSociosActuales.push({ nombre, documento, fecha, valor, concepto });
-                        registrosCargados++;
+                        listaActual.push({ nombre, documento, fecha, valor, concepto });
+                        agregados++;
                     }
                 });
 
-                // Guardar la nueva lista combinada en el navegador
-                localStorage.setItem('jac_socios', JSON.stringify(listaSociosActuales));
-                
-                alert(`¡Éxito! Se cargaron de forma masiva ${registrosCargados} socios desde el archivo Excel.`);
-                document.getElementById('excel-file').value = ''; // Resetear campo de archivo
-                mostrarSociosEnTabla(); // Actualizar la vista de la tabla
+                guardarSocios(listaActual);
+                alert(`¡Proceso Exitoso! Se han incorporado de forma masiva ${agregados} socios al listado.`);
+                document.getElementById('excel-file').value = '';
             };
-            
             lector.readAsArrayBuffer(archivo);
         }
 
-        function eliminarSocio(index) {
-            if(confirm('¿Está seguro de eliminar este registro de socio?')) {
-                const listaSocios = obtenerSocios();
-                listaSocios.splice(index, 1);
-                localStorage.setItem('jac_socios', JSON.stringify(listaSocios));
-                mostrarSociosEnTabla();
-            }
-        }
-
-        function borrarTodosLosSocios() {
-            if(confirm('🚨 ¡ATENCIÓN! Esto borrará permanentemente a TODOS los socios guardados del sistema local. ¿Desea continuar?')) {
-                localStorage.removeItem('jac_socios');
-                mostrarSociosEnTabla();
-            }
-        }
-
-        window.onload = function() {
+        // Ejecución de renderizado limpia controlando asincronía del navegador
+        document.addEventListener("DOMContentLoaded", function() {
             switchView('socios');
             mostrarSociosEnTabla();
-        };
+        });
     </script>
 </body>
 </html>
