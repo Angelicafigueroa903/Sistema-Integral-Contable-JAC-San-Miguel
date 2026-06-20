@@ -6,7 +6,7 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
-    <title>Sistema Contable JAC San Miguel v3.6</title>
+    <title>Sistema Integral Contable JAC San Miguel</title>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <style>
         :root {
@@ -14,7 +14,7 @@
             --secondary-color: #18bc9c;
             --bg-color: #f4f6f9;
             --text-color: #333;
-            --sidebar-width: 260px;
+            --sidebar-width: 290px; /* Ajustado ligeramente para el nombre largo */
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
@@ -22,7 +22,7 @@
 
         /* MENÚ LATERAL */
         .sidebar { width: var(--sidebar-width); background-color: var(--primary-color); color: white; display: flex; flex-direction: column; box-shadow: 2px 0 5px rgba(0,0,0,0.1); }
-        .sidebar-header { padding: 20px; background-color: #1a252f; text-align: center; font-size: 1.1rem; font-weight: bold; border-bottom: 1px solid #34495e; }
+        .sidebar-header { padding: 20px; background-color: #1a252f; text-align: center; font-size: 1rem; font-weight: bold; border-bottom: 1px solid #34495e; line-height: 1.4; }
         .sidebar-menu { list-style: none; overflow-y: auto; flex-grow: 1; }
         .sidebar-menu li a { display: flex; align-items: center; padding: 14px 20px; color: #ecf0f1; text-decoration: none; transition: all 0.3s ease; border-left: 4px solid transparent; cursor: pointer; }
         .sidebar-menu li a:hover, .sidebar-menu li a.active { background-color: #34495e; border-left-color: var(--secondary-color); color: white; }
@@ -66,7 +66,7 @@
         .data-table th, .data-table td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #eeeeee; }
         .data-table th { background-color: var(--primary-color); color: white; }
         .total-row { background-color: #eaeded; font-weight: bold; font-size: 1.05rem; }
-        .offline-badge { background-color: #27ae60; color: white; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; float: right; }
+        .offline-badge { background-color: #27ae60; color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; display: inline-block; margin-top: 5px; }
         .instructions { background-color: #f8f9fa; padding: 15px; border-left: 4px solid #27ae60; margin-bottom: 15px; font-size: 0.85rem; color: #555; display: flex; justify-content: space-between; align-items: center; }
         .section-header-flex { display: flex; justify-content: space-between; align-items: center; margin-top: 25px; gap: 10px; }
 
@@ -82,7 +82,10 @@
 <body>
 
     <nav class="sidebar">
-        <div class="sidebar-header">JAC San Miguel <span class="offline-badge">v3.6</span></div>
+        <div class="sidebar-header">
+            Sistema Integral Contable<br>JAC San Miguel<br>
+            <span class="offline-badge">Local/Offline</span>
+        </div>
         <ul class="sidebar-menu">
             <li><a onclick="switchView('inicio')" id="btn-inicio"><span class="menu-icon">🏠</span> Inicio</a></li>
             <li><a onclick="switchView('socios')" id="btn-socios" class="active"><span class="menu-icon">👥</span> Socios</a></li>
@@ -102,8 +105,8 @@
         <div class="header-main" id="view-title">👥 Base de Datos de Socios</div>
 
         <section id="view-inicio" class="view-section">
-            <h2>🏠 Bienvenido al Sistema Contable JAC San Miguel</h2>
-            <p style="margin-top: 15px;">Seleccione una opción en el menú de la izquierda para comenzar a trabajar.</p>
+            <h2>🏠 Bienvenido al Sistema Integral Contable</h2>
+            <p style="margin-top: 15px;">Seleccione una opción del menú lateral para gestionar las cuentas de la Junta de Acción Comunal Vereda San Miguel.</p>
         </section>
 
         <section id="view-socios" class="view-section active">
@@ -197,32 +200,30 @@
             </table>
 
             <div class="section-header-flex">
-                <h3>📋 Historial Detallado de Transacciones</h3>
+                <h3>📋 Historial Resumido de Aportes por Socio</h3>
                 <button class="btn btn-success" style="margin-top:0;" onclick="exportarHistorialAportesExcel()">📊 Descargar Consolidado de Conceptos a Excel</button>
             </div>
             <table class="data-table">
                 <thead>
                     <tr>
-                        <th>Fecha</th>
                         <th>Socio</th>
                         <th>Documento</th>
-                        <th>Valor Aporte</th>
-                        <th>Concepto / Descripción</th>
-                        <th>Acciones</th>
+                        <th>Valor Total Aportado</th>
+                        <th style="width: 150px;">Acciones</th>
                     </tr>
                 </thead>
                 <tbody id="tabla-aportes-detallado-body"></tbody>
             </table>
         </section>
 
-        <section id="view-multas" class="view-section"><h2>⚠ Módulo de Multas</h2><p style="margin-top:15px;">Sección en desarrollo para el control de inasistencias y multas.</p></section>
-        <section id="view-deportes" class="view-section"><h2>🏆 Comité Deportes</h2><p style="margin-top:15px;">Sección en desarrollo para fondos del comité de deportes.</p></section>
-        <section id="view-salud" class="view-section"><h2>❤️ Comité Salud</h2><p style="margin-top:15px;">Sección en desarrollo para fondos destinados a salud.</p></section>
-        <section id="view-gastos" class="view-section"><h2>💸 Control de Gastos</h2><p style="margin-top:15px;">Sección en desarrollo para salidas de dinero de la junta.</p></section>
-        <section id="view-caja" class="view-section"><h2>🏦 Control de Caja</h2><p style="margin-top:15px;">Sección en desarrollo para arqueos y saldos en efectivo.</p></section>
-        <section id="view-financiero" class="view-section"><h2>📈 Estado Financiero General</h2><p style="margin-top:15px;">Sección en desarrollo para balances e informes consolidados.</p></section>
-        <section id="view-reportes" class="view-section"><h2>📄 Módulo de Reportes</h2><p style="margin-top:15px;">Sección en desarrollo para exportación de PDF y actas.</p></section>
-        <section id="view-configuracion" class="view-section"><h2>⚙ Configuración del Sistema</h2><p style="margin-top:15px;">Sección en desarrollo para parámetros generales de la JAC.</p></section>
+        <section id="view-multas" class="view-section"><h2>⚠ Control de Multas</h2><p style="margin-top:15px;">Sección para el control de inasistencias y multas.</p></section>
+        <section id="view-deportes" class="view-section"><h2>🏆 Comité Deportes</h2><p style="margin-top:15px;">Sección para fondos del comité de deportes.</p></section>
+        <section id="view-salud" class="view-section"><h2>❤️ Comité Salud</h2><p style="margin-top:15px;">Sección para fondos destinados a salud.</p></section>
+        <section id="view-gastos" class="view-section"><h2>💸 Control de Gastos</h2><p style="margin-top:15px;">Sección para salidas de dinero de la junta.</p></section>
+        <section id="view-caja" class="view-section"><h2>🏦 Control de Caja</h2><p style="margin-top:15px;">Sección para arqueos y saldos en efectivo.</p></section>
+        <section id="view-financiero" class="view-section"><h2>📈 Estado Financiero General</h2><p style="margin-top:15px;">Sección para balances e informes consolidados.</p></section>
+        <section id="view-reportes" class="view-section"><h2>📄 Módulo de Reportes</h2><p style="margin-top:15px;">Sección para exportación de PDF y actas.</p></section>
+        <section id="view-configuracion" class="view-section"><h2>⚙ Configuración del Sistema</h2><p style="margin-top:15px;">Sección para parámetros generales de la JAC.</p></section>
     </main>
 
     <div id="historial-modal" class="modal">
@@ -240,6 +241,7 @@
                         <th>Fecha</th>
                         <th>Concepto / Descripción</th>
                         <th>Valor Pagado</th>
+                        <th>Acciones de Boleta</th>
                     </tr>
                 </thead>
                 <tbody id="modal-tabla-body"></tbody>
@@ -251,7 +253,7 @@
     </div>
 
     <script>
-        // CONTROL DE VISTAS Y NAVEGACIÓN (CORREGIDO PARA EVITAR BLOQUEOS)
+        // CONTROL DE VISTAS Y NAVEGACIÓN
         function switchView(viewId) {
             document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
             document.querySelectorAll('.sidebar-menu li a').forEach(l => l.classList.remove('active'));
@@ -262,7 +264,6 @@
             if(targetSection) targetSection.classList.add('active');
             if(targetLink) targetLink.classList.add('active');
 
-            // Listado de títulos seguro para evitar que falle si falta alguno
             const titulos = { 
                 inicio: "🏠 Inicio",
                 socios: "👥 Base de Datos de Socios", 
@@ -416,27 +417,29 @@
             
             let granTotal = 0;
 
+            // 1. RENDERIZAR HISTORIAL COMPACTADO (UNA FILA POR SOCIO)
             tbodyDetalle.innerHTML = '';
-            if(aportes.length === 0) {
-                tbodyDetalle.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#999; padding:15px;">No se han registrado aportes contables.</td></tr>`;
-            } else {
-                const aportesOrdenados = [...aportes].sort((a,b) => new Date(b.fecha) - new Date(a.fecha));
+            
+            // Filtrar socios que tienen al menos un aporte para mostrar en este historial visual
+            const sociosConAportes = socios.filter(s => aportes.some(ap => ap.documento === s.documento));
 
-                aportesOrdenados.forEach((ap) => {
-                    granTotal += parseFloat(ap.valor);
-                    const indexOriginal = aportes.findIndex(o => o.documento === ap.documento && o.fecha === ap.fecha && o.valor === ap.valor && o.concepto === ap.concepto);
+            if(sociosConAportes.length === 0) {
+                tbodyDetalle.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#999; padding:15px;">No se han registrado aportes contables.</td></tr>`;
+            } else {
+                sociosConAportes.forEach((socio) => {
+                    const sumaSocio = aportes
+                        .filter(ap => ap.documento === socio.documento)
+                        .reduce((sum, current) => sum + parseFloat(current.valor), 0);
+
+                    granTotal += sumaSocio;
 
                     const fila = document.createElement('tr');
                     fila.innerHTML = `
-                        <td><span style="background-color:#e1e8ed; padding:3px 6px; border-radius:4px; font-size:0.85rem;">${ap.fecha || 'Sin fecha'}</span></td>
-                        <td>${ap.nombre}</td>
-                        <td>${ap.documento}</td>
-                        <td><strong>$${parseFloat(ap.valor).toLocaleString()}</strong></td>
-                        <td>${ap.concepto}</td>
+                        <td><strong>${socio.nombre}</strong></td>
+                        <td>${socio.documento}</td>
+                        <td><strong style="color:#27ae60;">$${sumaSocio.toLocaleString()}</strong></td>
                         <td>
-                            <button class="btn btn-actions btn-view" onclick="verHistorialSocio('${ap.documento}')">👁️ Ver</button>
-                            <button class="btn btn-actions btn-edit" onclick="prepararEdicionAporte(${indexOriginal})">✏️</button>
-                            <button class="btn btn-actions btn-danger" onclick="eliminarAporte(${indexOriginal})">❌</button>
+                            <button class="btn btn-actions btn-view" onclick="verHistorialSocio('${socio.documento}')">👁️ Ver Historial</button>
                         </td>
                     `;
                     tbodyDetalle.appendChild(fila);
@@ -444,10 +447,11 @@
                 
                 const filaTotal = document.createElement('tr');
                 filaTotal.className = "total-row";
-                filaTotal.innerHTML = `<td colspan="3" style="text-align:right;">TOTAL RECAUDADO JAC:</td><td colspan="3" style="color:#27ae60;">$${granTotal.toLocaleString()}</td>`;
+                filaTotal.innerHTML = `<td colspan="2" style="text-align:right;">TOTAL RECAUDADO JAC:</td><td colspan="2" style="color:#27ae60;">$${granTotal.toLocaleString()}</td>`;
                 tbodyDetalle.appendChild(filaTotal);
             }
 
+            // 2. RENDERIZAR TABLA DE RESUMEN SUPERIOR (MAESTRA)
             tbodyResumen.innerHTML = '';
             if(socios.length === 0) {
                 tbodyResumen.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#999; padding:15px;">Registre socios para calcular acumulados.</td></tr>`;
@@ -495,6 +499,7 @@
         }
 
         function prepararEdicionAporte(idx) {
+            cerrarModal(); // Cerrar el modal para enfocar el formulario principal
             const aportes = obtenerAportes();
             document.getElementById('aporte-edit-index').value = idx;
             
@@ -529,10 +534,11 @@
                 aportes.splice(idx, 1);
                 guardarAportes(aportes);
                 cancelarEdicionAporte();
+                cerrarModal();
             }
         }
 
-        // --- POP-UP MODAL ---
+        // --- POP-UP MODAL (DESGLOSE COMPLETO POR SOCIO) ---
         function verHistorialSocio(documentoSocio) {
             const socios = obtenerSocios();
             const aportes = obtenerAportes();
@@ -540,34 +546,41 @@
             const socio = socios.find(s => s.documento === documentoSocio);
             const nombreSocio = socio ? socio.nombre : "Socio no encontrado";
             
-            const aportesSocio = aportes
-                .filter(ap => ap.documento === documentoSocio)
-                .sort((a,b) => new Date(a.fecha) - new Date(b.fecha));
+            // Buscar los aportes y guardar su índice original en LocalStorage para poder editar/eliminar correctamente
+            const tbodyModal = document.getElementById('modal-tabla-body');
+            tbodyModal.innerHTML = '';
+
+            let acumulado = 0;
+            let totalFilas = 0;
+
+            aportes.forEach((ap, indexOriginal) => {
+                if (ap.documento === documentoSocio) {
+                    acumulado += parseFloat(ap.valor);
+                    totalFilas++;
+
+                    const fila = document.createElement('tr');
+                    fila.innerHTML = `
+                        <td><span style="background-color:#e1e8ed; padding:3px 6px; border-radius:4px; font-size:0.85rem;">${ap.fecha || 'Sin fecha'}</span></td>
+                        <td>${ap.concepto}</td>
+                        <td><strong>$${parseFloat(ap.valor).toLocaleString()}</strong></td>
+                        <td>
+                            <button class="btn btn-actions btn-edit" onclick="prepararEdicionAporte(${indexOriginal})">✏️ Editar</button>
+                            <button class="btn btn-actions btn-danger" onclick="eliminarAporte(${indexOriginal})">❌ Borrar</button>
+                        </td>
+                    `;
+                    tbodyModal.appendChild(fila);
+                }
+            });
 
             document.getElementById('modal-socio-titulo').innerText = `📊 Expediente Contable: ${nombreSocio}`;
             document.getElementById('modal-socio-doc').innerText = documentoSocio;
 
-            const tbodyModal = document.getElementById('modal-tabla-body');
-            tbodyModal.innerHTML = '';
-
-            if(aportesSocio.length === 0) {
-                tbodyModal.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#999; padding:15px;">Este socio no registra ningún aporte contable.</td></tr>`;
+            if(totalFilas === 0) {
+                tbodyModal.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#999; padding:15px;">Este socio no registra ningún aporte contable vigente.</td></tr>`;
             } else {
-                let acumulado = 0;
-                aportesSocio.forEach(ap => {
-                    acumulado += parseFloat(ap.valor);
-                    const fila = document.createElement('tr');
-                    fila.innerHTML = `
-                        <td>${ap.fecha || 'Sin fecha'}</td>
-                        <td>${ap.concepto}</td>
-                        <td><strong>$${parseFloat(ap.valor).toLocaleString()}</strong></td>
-                    `;
-                    tbodyModal.appendChild(fila);
-                });
-
                 const filaTotal = document.createElement('tr');
                 filaTotal.className = "total-row";
-                filaTotal.innerHTML = `<td colspan="2" style="text-align:right;">TOTAL ACUMULADO VIGENTE:</td><td style="color:#8e44ad;">$${acumulado.toLocaleString()}</td>`;
+                filaTotal.innerHTML = `<td colspan="2" style="text-align:right;">TOTAL ACUMULADO VIGENTE:</td><td colspan="2" style="color:#8e44ad;">$${acumulado.toLocaleString()}</td>`;
                 tbodyModal.appendChild(filaTotal);
             }
 
@@ -644,7 +657,7 @@
             XLSX.writeFile(libro, "Consolidado_Matriz_Aportes_San_Miguel.xlsx");
         }
 
-        // --- PLANTILLAS EXCEL ---
+        // --- PLANTILLAS EXCEL MASIVAS ---
         function descargarPlantillaExcel() {
             if (typeof XLSX === 'undefined') { alert("Función no disponible offline."); return; }
             const plantilla = [
