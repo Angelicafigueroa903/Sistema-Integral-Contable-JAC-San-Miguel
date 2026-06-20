@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema Integral Contable JAC San Miguel</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <title>Sistema Central JAC San Miguel v2.0</title>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <style>
         :root {
@@ -94,7 +97,7 @@
         .view-section { display: none; }
         .view-section.active { display: block; }
 
-        /* --- FORMULARIOS Y CONTENEDORES --- */
+        /* --- FORMULARIOS --- */
         .form-container {
             background: white;
             padding: 20px;
@@ -177,7 +180,7 @@
 
     <nav class="sidebar">
         <div class="sidebar-header">
-            JAC San Miguel <span class="offline-badge">Local/Offline</span>
+            JAC San Miguel <span class="offline-badge">Maestro v2</span>
         </div>
         <ul class="sidebar-menu">
             <li><a onclick="switchView('inicio')" id="btn-inicio"><span class="menu-icon">🏠</span> Inicio</a></li>
@@ -195,7 +198,7 @@
     </nav>
 
     <main class="main-content">
-        <div class="header-main" id="view-title">👥 Base de Datos de Socios</div>
+        <div class="header-main" id="view-title">👥 Base de Datos Central de Socios</div>
 
         <section id="view-socios" class="view-section active">
             
@@ -224,9 +227,9 @@
                 <div class="form-title">Forma 2: Carga Masiva de Socios desde Excel (.xlsx)</div>
                 <div class="instructions">
                     <div>
-                        <strong>¿No tiene la plantilla oficial?</strong> Descárguela para estructurar correctamente los nombres y documentos.
+                        <strong>¿No tiene la plantilla centralizada?</strong> Descargue este formato limpio de solo 2 columnas.
                     </div>
-                    <button class="btn btn-success" onclick="descargarPlantillaExcel()">📥 Descargar Plantilla Maestros</button>
+                    <button class="btn btn-success" onclick="descargarPlantillaExcel()">📥 Descargar Plantilla Limpia</button>
                 </div>
                 <div class="form-group">
                     <label for="excel-file">Seleccione el archivo de Excel para subir la lista:</label>
@@ -235,7 +238,7 @@
             </div>
 
             <div style="display: flex; justify-content: space-between; align-items: center; margin-top:20px;">
-                <h3>Listado de Socios Registrados</h3>
+                <h3>Listado Oficial de Socios Registrados</h3>
                 <button class="btn btn-danger btn-actions" onclick="borrarTodosLosSocios()">⚠️ Eliminar Todos los Socios</button>
             </div>
             
@@ -286,7 +289,7 @@
             try {
                 localStorage.setItem('jac_socios_db', JSON.stringify(arreglo));
             } catch(e) {
-                alert("Error al almacenar en el dispositivo.");
+                alert("Error al almacenar.");
             }
             mostrarSociosEnTabla();
         }
@@ -319,7 +322,6 @@
 
         function procesarFormularioSocio(event) {
             event.preventDefault();
-            
             const index = parseInt(document.getElementById('edit-index').value);
             const nombre = document.getElementById('nombre').value.trim();
             const documento = document.getElementById('documento').value.trim();
@@ -328,10 +330,8 @@
             let lista = obtenerSocios();
 
             if (index === -1) {
-                // Registrar nuevo
                 lista.push(socioEstructura);
             } else {
-                // Modificar existente
                 lista[index] = socioEstructura;
                 cancelarEdicion();
             }
@@ -351,7 +351,6 @@
             document.getElementById('form-action-title').innerText = "✏️ Modificando Datos del Socio";
             document.getElementById('btn-submit-form').innerText = "🔄 Actualizar Socio";
             document.getElementById('btn-cancel-edit').style.display = "inline-block";
-            
             document.querySelector('.main-content').scrollTop = 0;
         }
 
@@ -364,7 +363,7 @@
         }
 
         function eliminarSocio(index) {
-            if(confirm('¿Está seguro de eliminar este socio del listado central?')) {
+            if(confirm('¿Está seguro de eliminar este socio?')) {
                 let lista = obtenerSocios();
                 lista.splice(index, 1);
                 guardarSocios(lista);
@@ -372,21 +371,20 @@
             }
         }
 
+        // Esta función remueve los datos viejos que puedan estar interfiriendo
         function borrarTodosLosSocios() {
-            if(confirm('🚨 ¡ALERTA MÁXIMA! Esto borrará todos los socios del sistema. ¿Continuar?')) {
+            if(confirm('🚨 ¡ALERTA! Esto limpiará la base de datos de socios. ¿Continuar?')) {
                 localStorage.removeItem('jac_socios_db');
                 mostrarSociosEnTabla();
                 cancelarEdicion();
             }
         }
 
-        // --- MANEJO DE EXCEL ADAPTADO (SOLO 2 COLUMNAS) ---
         function descargarPlantillaExcel() {
             if (typeof XLSX === 'undefined') {
-                alert("🚨 El navegador bloqueó temporalmente la librería de Excel por seguridad local. Acceda desde su link web de GitHub Pages para descargar.");
+                alert("🚨 Cargue la página usando su dirección web de GitHub Pages para descargar la plantilla.");
                 return;
             }
-            // Formato limpio con solo Nombre y Documento
             const plantillaDatos = [
                 { "Nombre del Socio": "Pedro Alcántara Pérez", "Numero de Documento": "1075123456" },
                 { "Nombre del Socio": "María Ofelia Rojas", "Numero de Documento": "26543210" }
@@ -399,7 +397,7 @@
 
         function cargarDesdeExcel(event) {
             if (typeof XLSX === 'undefined') {
-                alert("🚨 Función bloqueada localmente en el disco duro por seguridad. Use el enlace de GitHub Pages en línea.");
+                alert("🚨 Use el enlace de GitHub Pages en línea para procesar archivos de Excel.");
                 document.getElementById('excel-file').value = '';
                 return;
             }
@@ -414,18 +412,14 @@
                     const hoja = libroTrabajo.Sheets[libroTrabajo.SheetNames[0]];
                     const datosJson = XLSX.utils.sheet_to_json(hoja);
 
-                    if(datosJson.length === 0) {
-                        alert("El archivo Excel está vacío.");
-                        return;
-                    }
+                    if(datosJson.length === 0) return;
 
                     let listaActual = obtenerSocios();
                     let agregados = 0;
 
                     datosJson.forEach(fila => {
-                        // Mapeo flexible para capturar las dos columnas sin importar minúsculas/mayúsculas o tildes
-                        const nombre = fila["Nombre del Socio"] || fila["nombre"] || fila["Nombre"] || fila["NOMBRE"] || '';
-                        const documento = fila["Numero de Documento"] || fila["documento"] || fila["Documento"] || fila["DOCUMENTO"] || '';
+                        const nombre = fila["Nombre del Socio"] || fila["nombre"] || fila["Nombre"] || '';
+                        const documento = fila["Numero de Documento"] || fila["documento"] || fila["Documento"] || '';
 
                         if (nombre !== '' && documento !== '') {
                             listaActual.push({ 
@@ -437,16 +431,15 @@
                     });
 
                     guardarSocios(listaActual);
-                    alert(`¡Éxito! Se han importado de forma masiva ${agregados} socios al maestro.`);
+                    alert(`¡Éxito! Importados ${agregados} socios.`);
                 } catch(err) {
-                    alert("Error al procesar la estructura del Excel.");
+                    alert("Error en la lectura del Excel.");
                 }
                 document.getElementById('excel-file').value = '';
             };
             lector.readAsArrayBuffer(archivo);
         }
 
-        // Carga e inicialización segura de datos
         window.addEventListener("load", function() {
             mostrarSociosEnTabla();
         });
