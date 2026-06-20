@@ -1282,81 +1282,32 @@
             }; lector.readAsArrayBuffer(file);
         }
 // --- LÓGICA DE CAJA INTEGRADA ---
-function procesarCaja() {
-    const mes = document.getElementById('caja-mes-filtro').value;
-    if (!mes) return;
-
-    // Ajusta estos nombres según los que usas en tu localStorage
-    const fuentes = [
-        { nombre: 'Aportes', datos: JSON.parse(localStorage.getItem('aportes') || '[]') },
-        { nombre: 'Multas', datos: JSON.parse(localStorage.getItem('multas') || '[]') },
-        { nombre: 'Deporte', datos: JSON.parse(localStorage.getItem('deporte') || '[]') },
-        { nombre: 'Salud', datos: JSON.parse(localStorage.getItem('salud') || '[]') },
-        { nombre: 'Gastos', datos: JSON.parse(localStorage.getItem('gastos') || '[]') }
-    ];
-
-    let html = `<table class="data-table"><thead><tr><th>Módulo</th><th>Ingresos</th><th>Egresos</th><th>Saldo</th></tr></thead><tbody>`;
-    
-    fuentes.forEach(fuente => {
-        const filtrados = fuente.datos.filter(d => d.fecha && d.fecha.startsWith(mes));
-        const ingresos = filtrados.filter(d => d.tipo === 'ingreso').reduce((s, d) => s + Number(d.valor), 0);
-        const egresos = filtrados.filter(d => d.tipo === 'salida').reduce((s, d) => s + Number(d.valor), 0);
-        
-        html += `<tr><td>${fuente.nombre}</td><td>$${ingresos}</td><td>$${egresos}</td><td>$${ingresos - egresos}</td></tr>`;
-    });
-
-    html += `</tbody></table>`;
-    document.getElementById('resultado-caja').innerHTML = html;
-}
 
         function procesarCaja() {
     const mes = document.getElementById('caja-mes-filtro').value;
     if (!mes) return;
 
-    const contenedores = [
-        { nombre: 'Aportes', datos: obtenerAportes() },
-        { nombre: 'Multas', datos: obtenerMultas() },
-        { nombre: 'Deportes', datos: obtenerDeportes() },
-        { nombre: 'Salud', datos: obtenerSalud() },
-        { nombre: 'Gastos J.A.C.', datos: obtenerGastos() }
-    ];
+    // 1. Obtener datos de cada fuente usando tus funciones existentes
+    const dataAportes = obtenerAportes().filter(d => d.fecha && d.fecha.startsWith(mes));
+    const dataGastos = obtenerGastos().filter(d => d.fecha && d.fecha.startsWith(mes));
+    
+    // 2. Calcular valores
+    const totalIngresosAportes = dataAportes.reduce((sum, d) => sum + parseFloat(d.valor || 0), 0);
+    const totalEgresosGastos = dataGastos.reduce((sum, d) => sum + parseFloat(d.valor || 0), 0);
+    const saldoFinal = totalIngresosAportes - totalEgresosGastos;
 
+    // 3. Generar la tabla consolidada (Aportes vs Gastos)
     let html = `<table class="data-table"><thead><tr>
-                <th>Módulo</th><th>Ingresos (+)</th><th>Egresos (-)</th><th>Saldo</th>
-                </tr></thead><tbody>`;
-    
-    let totalIngresosGeneral = 0;
-    let totalEgresosGeneral = 0;
+                <th>Concepto</th><th>Ingresos (+)</th><th>Egresos (-)</th><th>Saldo</th>
+                </tr></thead><tbody>
+                <tr style="background:#f9f9f9;">
+                    <td><b>Aportes y Gastos J.A.C.</b></td>
+                    <td>$${totalIngresosAportes.toLocaleString()}</td>
+                    <td>$${totalEgresosGastos.toLocaleString()}</td>
+                    <td><b>$${saldoFinal.toLocaleString()}</b></td>
+                </tr>
+                </tbody></table>`;
 
-    contenedores.forEach(mod => {
-        const filtrados = mod.datos.filter(item => item.fecha && item.fecha.startsWith(mes));
-        let ingresos = 0, egresos = 0;
-        
-        filtrados.forEach(item => {
-            const valor = parseFloat(item.valor || 0);
-            // Clasificación basada en tus funciones de guardado
-            if (item.tipo === 'ingreso' || mod.nombre === 'Aportes' || mod.nombre === 'Multas') {
-                ingresos += valor;
-            } else {
-                egresos += valor;
-            }
-        });
-
-        html += `<tr><td>${mod.nombre}</td>
-                 <td>$${ingresos.toLocaleString()}</td>
-                 <td>$${egresos.toLocaleString()}</td>
-                 <td>$${(ingresos - egresos).toLocaleString()}</td></tr>`;
-        
-        totalIngresosGeneral += ingresos;
-        totalEgresosGeneral += egresos;
-    });
-
-    html += `<tr class="total-row"><td>TOTAL MENSUAL</td>
-             <td>$${totalIngresosGeneral.toLocaleString()}</td>
-             <td>$${totalEgresosGeneral.toLocaleString()}</td>
-             <td>$${(totalIngresosGeneral - totalEgresosGeneral).toLocaleString()}</td></tr>`;
-    
-    html += `</tbody></table>`;
     document.getElementById('resultado-caja').innerHTML = html;
 }
 
