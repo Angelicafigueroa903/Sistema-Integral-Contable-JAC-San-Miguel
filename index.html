@@ -14,7 +14,7 @@
             --secondary-color: #18bc9c;
             --bg-color: #f4f6f9;
             --text-color: #333;
-            --sidebar-width: 290px; /* Ajustado ligeramente para el nombre largo */
+            --sidebar-width: 290px;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
@@ -38,6 +38,7 @@
         .form-container { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 25px; border-top: 4px solid var(--secondary-color); }
         .form-container.excel-mode { border-top-color: #27ae60; }
         .form-container.aportes-mode { border-top-color: #e67e22; }
+        .form-container.multas-mode { border-top-color: #e74c3c; }
         .form-title { font-size: 1.1rem; color: var(--primary-color); margin-bottom: 15px; font-weight: 600; }
         .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
         .form-group { display: flex; flex-direction: column; margin-bottom: 5px; }
@@ -53,13 +54,13 @@
         .btn-success:hover { background-color: #219150; }
         .btn-warning { background-color: #e67e22; }
         .btn-warning:hover { background-color: #d35400; }
+        .btn-danger { background-color: #e74c3c; }
+        .btn-danger:hover { background-color: #c0392b; }
         .btn-actions { padding: 6px 12px; font-size: 0.8rem; margin-top: 0; margin-right: 5px; font-weight: normal; }
         .btn-view { background-color: #8e44ad; }
         .btn-view:hover { background-color: #732d91; }
         .btn-edit { background-color: #2980b9; }
         .btn-edit:hover { background-color: #1f618d; }
-        .btn-danger { background-color: #e74c3c; }
-        .btn-danger:hover { background-color: #c0392b; }
 
         /* TABLAS */
         .data-table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-top: 15px; margin-bottom: 30px; }
@@ -73,6 +74,7 @@
         /* VENTANA MODAL (POP-UP) */
         .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); align-items: center; justify-content: center; }
         .modal-content { background-color: white; padding: 25px; border-radius: 8px; width: 80%; max-width: 700px; max-height: 85vh; overflow-y: auto; box-shadow: 0 5px 15px rgba(0,0,0,0.3); border-top: 5px solid #8e44ad; }
+        .modal-content.modal-multas { border-top-color: #e74c3c; }
         .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 2px solid #eee; padding-bottom: 10px; }
         .modal-title { font-size: 1.25rem; color: var(--primary-color); font-weight: bold; }
         .close-modal { font-size: 1.5rem; font-weight: bold; color: #999; cursor: pointer; transition: color 0.2s; }
@@ -216,7 +218,65 @@
             </table>
         </section>
 
-        <section id="view-multas" class="view-section"><h2>⚠ Control de Multas</h2><p style="margin-top:15px;">Sección para el control de inasistencias y multas.</p></section>
+        <section id="view-multas" class="view-section">
+            <div class="form-container multas-mode">
+                <div class="form-title" id="multa-form-title">⚠ Registrar Pago de Multa de Socio</div>
+                <form id="multa-form" onsubmit="procesarFormularioMulta(event)">
+                    <input type="hidden" id="multa-edit-index" value="-1">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="multa-socio-select">Seleccione el Socio</label>
+                            <select id="multa-socio-select" required>
+                                <option value="">-- Seleccione un socio registrado --</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="multa-fecha">Fecha de Pago</label>
+                            <input type="date" id="multa-fecha" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="multa-valor">Valor de la Multa ($)</label>
+                            <input type="number" id="multa-valor" required min="0" placeholder="Ej: 20000">
+                        </div>
+                        <div class="form-group">
+                            <label for="multa-concepto">Motivo / Concepto de la Multa</label>
+                            <input type="text" id="multa-concepto" required placeholder="Ej: Inasistencia Asamblea 20-Junio">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-danger" id="btn-submit-multa">💾 Guardar Multa</button>
+                    <button type="button" class="btn btn-danger btn-actions" id="btn-cancel-multa-edit" style="display:none; margin-top:15px; height:43px;" onclick="cancelarEdicionMulta()">Cancelar Edición</button>
+                </form>
+            </div>
+
+            <h3>📊 Resumen de Saldos de Multas por Socio</h3>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Nombre del Socio</th>
+                        <th>Número de Documento</th>
+                        <th>Total Multas Canceladas</th>
+                    </tr>
+                </thead>
+                <tbody id="tabla-resumen-multas-body"></tbody>
+            </table>
+
+            <div class="section-header-flex">
+                <h3>📋 Historial Resumido de Multas por Socio</h3>
+                <button class="btn btn-success" style="margin-top:0;" onclick="exportarHistorialMultasExcel()">📊 Descargar Consolidado de Multas a Excel</button>
+            </div>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Socio</th>
+                        <th>Documento</th>
+                        <th>Valor Total Multas</th>
+                        <th style="width: 150px;">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="tabla-multas-detallado-body"></tbody>
+            </table>
+        </section>
+
         <section id="view-deportes" class="view-section"><h2>🏆 Comité Deportes</h2><p style="margin-top:15px;">Sección para fondos del comité de deportes.</p></section>
         <section id="view-salud" class="view-section"><h2>❤️ Comité Salud</h2><p style="margin-top:15px;">Sección para fondos destinados a salud.</p></section>
         <section id="view-gastos" class="view-section"><h2>💸 Control de Gastos</h2><p style="margin-top:15px;">Sección para salidas de dinero de la junta.</p></section>
@@ -252,6 +312,32 @@
         </div>
     </div>
 
+    <div id="multas-modal" class="modal">
+        <div class="modal-content modal-content.modal-multas">
+            <div class="modal-header">
+                <div class="modal-title" id="modal-multa-titulo">Historial de Multas del Socio</div>
+                <span class="close-modal" onclick="cerrarModalMultas()">&times;</span>
+            </div>
+            <div style="margin-bottom: 15px; font-size: 0.95rem; color: #555;">
+                <p><strong>Documento de Identidad:</strong> <span id="modal-multa-doc"></span></p>
+            </div>
+            <table class="data-table" style="margin-top: 10px; margin-bottom: 5px;">
+                <thead>
+                    <tr>
+                        <th>Fecha Pago</th>
+                        <th>Motivo / Concepto</th>
+                        <th>Valor Multa</th>
+                        <th>Acciones de Boleta</th>
+                    </tr>
+                </thead>
+                <tbody id="modal-multas-tabla-body"></tbody>
+            </table>
+            <div style="text-align: right; margin-top: 15px;">
+                <button class="btn" style="margin-top:0; background-color: #7f8c8d;" onclick="cerrarModalMultas()">Cerrar Ventana</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // CONTROL DE VISTAS Y NAVEGACIÓN
         function switchView(viewId) {
@@ -283,12 +369,16 @@
             if(viewId === 'aportes') {
                 actualizarSelectorSocios();
                 mostrarAportesEnTablas();
-                establecerFechaHoy();
+                establecerFechaHoy('aporte-fecha');
+            } else if(viewId === 'multas') {
+                actualizarSelectorSociosMultas();
+                mostrarMultasEnTablas();
+                establecerFechaHoy('multa-fecha');
             }
         }
 
-        function establecerFechaHoy() {
-            const inputFecha = document.getElementById('aporte-fecha');
+        function establecerFechaHoy(idInput) {
+            const inputFecha = document.getElementById(idInput);
             if(inputFecha && !inputFecha.value) {
                 const hoy = new Date().toISOString().split('T')[0];
                 inputFecha.value = hoy;
@@ -297,9 +387,13 @@
 
         // --- ALMACENAMIENTO (LOCALSTORAGE) ---
         function obtenerSocios() { return JSON.parse(localStorage.getItem('jac_db_socios')) || []; }
-        function guardarSocios(arr) { localStorage.setItem('jac_db_socios', JSON.stringify(arr)); mostrarSociosEnTabla(); actualizarSelectorSocios(); }
+        function guardarSocios(arr) { localStorage.setItem('jac_db_socios', JSON.stringify(arr)); mostrarSociosEnTabla(); actualizarSelectorSocios(); actualizarSelectorSociosMultas(); }
+        
         function obtenerAportes() { return JSON.parse(localStorage.getItem('jac_db_aportes')) || []; }
         function guardarAportes(arr) { localStorage.setItem('jac_db_aportes', JSON.stringify(arr)); mostrarAportesEnTablas(); }
+        
+        function obtenerMultas() { return JSON.parse(localStorage.getItem('jac_db_multas')) || []; }
+        function guardarMultas(arr) { localStorage.setItem('jac_db_multas', JSON.stringify(arr)); mostrarMultasEnTablas(); }
 
         // --- GESTIÓN DE SOCIOS ---
         function mostrarSociosEnTabla() {
@@ -344,9 +438,14 @@
                 socios.push({ nombre, documento });
             } else {
                 const docAnterior = socios[idx].documento;
+                
                 let aportes = obtenerAportes();
                 aportes.forEach(ap => { if(ap.documento === docAnterior) ap.documento = documento; });
                 localStorage.setItem('jac_db_aportes', JSON.stringify(aportes));
+
+                let multas = obtenerMultas();
+                multas.forEach(mu => { if(mu.documento === docAnterior) mu.documento = documento; });
+                localStorage.setItem('jac_db_multas', JSON.stringify(multas));
 
                 socios[idx] = { nombre, documento };
                 cancelarEdicion();
@@ -375,7 +474,7 @@
         }
 
         function eliminarSocio(idx) {
-            if(confirm('¿Desea eliminar este socio? No borrará sus aportes pero ya no aparecerá en el listado maestro.')) {
+            if(confirm('¿Desea eliminar este socio? No borrará sus datos históricos contables pero ya no aparecerá en el listado maestro.')) {
                 let socios = obtenerSocios();
                 socios.splice(idx, 1);
                 guardarSocios(socios);
@@ -394,10 +493,8 @@
             const select = document.getElementById('aporte-socio-select');
             if(!select) return;
             const socios = obtenerSocios();
-            
             const valorSeleccionado = select.value;
             select.innerHTML = '<option value="">-- Seleccione un socio registrado --</option>';
-            
             socios.forEach(socio => {
                 const opt = document.createElement('option');
                 opt.value = socio.documento;
@@ -410,17 +507,13 @@
         function mostrarAportesEnTablas() {
             const aportes = obtenerAportes();
             const socios = obtenerSocios();
-            
             const tbodyDetalle = document.getElementById('tabla-aportes-detallado-body');
             const tbodyResumen = document.getElementById('tabla-resumen-aportes-body');
             if(!tbodyDetalle || !tbodyResumen) return;
             
             let granTotal = 0;
-
-            // 1. RENDERIZAR HISTORIAL COMPACTADO (UNA FILA POR SOCIO)
             tbodyDetalle.innerHTML = '';
             
-            // Filtrar socios que tienen al menos un aporte para mostrar en este historial visual
             const sociosConAportes = socios.filter(s => aportes.some(ap => ap.documento === s.documento));
 
             if(sociosConAportes.length === 0) {
@@ -451,7 +544,6 @@
                 tbodyDetalle.appendChild(filaTotal);
             }
 
-            // 2. RENDERIZAR TABLA DE RESUMEN SUPERIOR (MAESTRA)
             tbodyResumen.innerHTML = '';
             if(socios.length === 0) {
                 tbodyResumen.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#999; padding:15px;">Registre socios para calcular acumulados.</td></tr>`;
@@ -495,14 +587,13 @@
 
             guardarAportes(aportes);
             document.getElementById('aporte-form').reset();
-            establecerFechaHoy();
+            establecerFechaHoy('aporte-fecha');
         }
 
         function prepararEdicionAporte(idx) {
-            cerrarModal(); // Cerrar el modal para enfocar el formulario principal
+            cerrarModal();
             const aportes = obtenerAportes();
             document.getElementById('aporte-edit-index').value = idx;
-            
             document.getElementById('aporte-fecha').value = aportes[idx].fecha || '';
             document.getElementById('aporte-valor').value = aportes[idx].valor;
             document.getElementById('aporte-concepto').value = aportes[idx].concepto;
@@ -514,7 +605,6 @@
             document.getElementById('aporte-form-title').innerText = "✏️ Modificando Datos de la Transacción";
             document.getElementById('btn-submit-aporte').innerText = "🔄 Actualizar Aporte";
             document.getElementById('btn-cancel-aporte-edit').style.display = "inline-block";
-            
             document.querySelector('.main-content').scrollTop = 0;
         }
 
@@ -525,7 +615,7 @@
             document.getElementById('aporte-form-title').innerText = "💰 Registrar Aporte de Socio";
             document.getElementById('btn-submit-aporte').innerText = "💾 Guardar Aporte";
             document.getElementById('btn-cancel-aporte-edit').style.display = "none";
-            establecerFechaHoy();
+            establecerFechaHoy('aporte-fecha');
         }
 
         function eliminarAporte(idx) {
@@ -538,15 +628,11 @@
             }
         }
 
-        // --- POP-UP MODAL (DESGLOSE COMPLETO POR SOCIO) ---
         function verHistorialSocio(documentoSocio) {
             const socios = obtenerSocios();
             const aportes = obtenerAportes();
-            
             const socio = socios.find(s => s.documento === documentoSocio);
             const nombreSocio = socio ? socio.nombre : "Socio no encontrado";
-            
-            // Buscar los aportes y guardar su índice original en LocalStorage para poder editar/eliminar correctamente
             const tbodyModal = document.getElementById('modal-tabla-body');
             tbodyModal.innerHTML = '';
 
@@ -557,7 +643,6 @@
                 if (ap.documento === documentoSocio) {
                     acumulado += parseFloat(ap.valor);
                     totalFilas++;
-
                     const fila = document.createElement('tr');
                     fila.innerHTML = `
                         <td><span style="background-color:#e1e8ed; padding:3px 6px; border-radius:4px; font-size:0.85rem;">${ap.fecha || 'Sin fecha'}</span></td>
@@ -576,85 +661,276 @@
             document.getElementById('modal-socio-doc').innerText = documentoSocio;
 
             if(totalFilas === 0) {
-                tbodyModal.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#999; padding:15px;">Este socio no registra ningún aporte contable vigente.</td></tr>`;
+                tbodyModal.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#999; padding:15px;">Este socio no registra ningún aporte contable.</td></tr>`;
             } else {
                 const filaTotal = document.createElement('tr');
                 filaTotal.className = "total-row";
                 filaTotal.innerHTML = `<td colspan="2" style="text-align:right;">TOTAL ACUMULADO VIGENTE:</td><td colspan="2" style="color:#8e44ad;">$${acumulado.toLocaleString()}</td>`;
                 tbodyModal.appendChild(filaTotal);
             }
-
             document.getElementById('historial-modal').style.display = "flex";
         }
 
-        function cerrarModal() {
-            document.getElementById('historial-modal').style.display = "none";
+        function cerrarModal() { document.getElementById('historial-modal').style.display = "none"; }
+
+
+        // --- GESTIÓN DEL MÓDULO DE MULTAS ---
+        function actualizarSelectorSociosMultas() {
+            const select = document.getElementById('multa-socio-select');
+            if(!select) return;
+            const socios = obtenerSocios();
+            const valorSeleccionado = select.value;
+            select.innerHTML = '<option value="">-- Seleccione un socio registrado --</option>';
+            socios.forEach(socio => {
+                const opt = document.createElement('option');
+                opt.value = socio.documento;
+                opt.innerText = `${socio.nombre} (${socio.documento})`;
+                select.appendChild(opt);
+            });
+            select.value = valorSeleccionado;
         }
 
-        window.onclick = function(event) {
-            const modal = document.getElementById('historial-modal');
-            if (event.target == modal) {
-                modal.style.display = "none";
+        function mostrarMultasEnTablas() {
+            const multas = obtenerMultas();
+            const socios = obtenerSocios();
+            const tbodyDetalle = document.getElementById('tabla-multas-detallado-body');
+            const tbodyResumen = document.getElementById('tabla-resumen-multas-body');
+            if(!tbodyDetalle || !tbodyResumen) return;
+
+            let granTotalMultas = 0;
+            tbodyDetalle.innerHTML = '';
+
+            const sociosConMultas = socios.filter(s => multas.some(m => m.documento === s.documento));
+
+            if(sociosConMultas.length === 0) {
+                tbodyDetalle.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#999; padding:15px;">No se han recaudado pagos de multas.</td></tr>`;
+            } else {
+                sociosConMultas.forEach((socio) => {
+                    const sumaSocio = multas
+                        .filter(m => m.documento === socio.documento)
+                        .reduce((sum, current) => sum + parseFloat(current.valor), 0);
+
+                    granTotalMultas += sumaSocio;
+
+                    const fila = document.createElement('tr');
+                    fila.innerHTML = `
+                        <td><strong>${socio.nombre}</strong></td>
+                        <td>${socio.documento}</td>
+                        <td><strong style="color:#e74c3c;">$${sumaSocio.toLocaleString()}</strong></td>
+                        <td>
+                            <button class="btn btn-actions btn-view" style="background-color:#d35400;" onclick="verHistorialMultasSocio('${socio.documento}')">👁️ Ver Detalles</button>
+                        </td>
+                    `;
+                    tbodyDetalle.appendChild(fila);
+                });
+
+                const filaTotal = document.createElement('tr');
+                filaTotal.className = "total-row";
+                filaTotal.innerHTML = `<td colspan="2" style="text-align:right;">TOTAL RECAUDADO MULTAS:</td><td colspan="2" style="color:#e74c3c;">$${granTotalMultas.toLocaleString()}</td>`;
+                tbodyDetalle.appendChild(filaTotal);
+            }
+
+            // Renderizar tabla resumen de saldos por socio con conceptos incluidos mentalmente
+            tbodyResumen.innerHTML = '';
+            if(socios.length === 0) {
+                tbodyResumen.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#999; padding:15px;">Registre socios para calcular estado de multas.</td></tr>`;
+            } else {
+                socios.forEach(socio => {
+                    const sumaAcumulada = multas
+                        .filter(m => m.documento === socio.documento)
+                        .reduce((sum, current) => sum + parseFloat(current.valor), 0);
+
+                    const filaRes = document.createElement('tr');
+                    filaRes.innerHTML = `
+                        <td><strong>${socio.nombre}</strong></td>
+                        <td>${socio.documento}</td>
+                        <td style="color:#c0392b; font-weight:bold;">$${sumaAcumulada.toLocaleString()}</td>
+                    `;
+                    tbodyResumen.appendChild(filaRes);
+                });
             }
         }
 
-        // --- EXPORTACIÓN MATRICIAL A EXCEL ---
+        function procesarFormularioMulta(e) {
+            e.preventDefault();
+            const idx = parseInt(document.getElementById('multa-edit-index').value);
+            const selectSocio = document.getElementById('multa-socio-select');
+            const fecha = document.getElementById('multa-fecha').value;
+            const valor = parseFloat(document.getElementById('multa-valor').value);
+            const concepto = document.getElementById('multa-concepto').value.trim();
+
+            let multas = obtenerMultas();
+
+            if(idx === -1) {
+                const documento = selectSocio.value;
+                const nombreSocio = selectSocio.options[selectSocio.selectedIndex].text.split(' (')[0];
+                multas.push({ nombre: nombreSocio, documento, fecha, valor, concepto });
+            } else {
+                multas[idx].fecha = fecha;
+                multas[idx].valor = valor;
+                multas[idx].concepto = concepto;
+                cancelarEdicionMulta();
+            }
+
+            guardarMultas(multas);
+            document.getElementById('multa-form').reset();
+            establecerFechaHoy('multa-fecha');
+        }
+
+        function prepararEdicionMulta(idx) {
+            cerrarModalMultas();
+            const multas = obtenerMultas();
+            document.getElementById('multa-edit-index').value = idx;
+            document.getElementById('multa-fecha').value = multas[idx].fecha || '';
+            document.getElementById('multa-valor').value = multas[idx].valor;
+            document.getElementById('multa-concepto').value = multas[idx].concepto;
+
+            const select = document.getElementById('multa-socio-select');
+            select.value = multas[idx].documento;
+            select.disabled = true;
+
+            document.getElementById('multa-form-title').innerText = "✏️ Modificando Boleta de Multa";
+            document.getElementById('btn-submit-multa').innerText = "🔄 Actualizar Recibo";
+            document.getElementById('btn-cancel-multa-edit').style.display = "inline-block";
+            document.querySelector('.main-content').scrollTop = 0;
+        }
+
+        function cancelarEdicionMulta() {
+            document.getElementById('multa-edit-index').value = "-1";
+            document.getElementById('multa-form').reset();
+            document.getElementById('multa-socio-select').disabled = false;
+            document.getElementById('multa-form-title').innerText = "⚠ Registrar Pago de Multa de Socio";
+            document.getElementById('btn-submit-multa').innerText = "💾 Guardar Multa";
+            document.getElementById('btn-cancel-multa-edit').style.display = "none";
+            establecerFechaHoy('multa-fecha');
+        }
+
+        function eliminarMulta(idx) {
+            if(confirm('¿Eliminar de forma permanente este registro de multa?')) {
+                let multas = obtenerMultas();
+                multas.splice(idx, 1);
+                guardarMultas(multas);
+                cancelarEdicionMulta();
+                cerrarModalMultas();
+            }
+        }
+
+        function verHistorialMultasSocio(documentoSocio) {
+            const socios = obtenerSocios();
+            const multas = obtenerMultas();
+            const socio = socios.find(s => s.documento === documentoSocio);
+            const nombreSocio = socio ? socio.nombre : "Socio no encontrado";
+            const tbodyModal = document.getElementById('modal-multas-tabla-body');
+            tbodyModal.innerHTML = '';
+
+            let acumulado = 0;
+            let totalFilas = 0;
+
+            multas.forEach((m, indexOriginal) => {
+                if (m.documento === documentoSocio) {
+                    acumulado += parseFloat(m.valor);
+                    totalFilas++;
+                    const fila = document.createElement('tr');
+                    fila.innerHTML = `
+                        <td><span style="background-color:#fadbd8; padding:3px 6px; border-radius:4px; font-size:0.85rem; color:#c0392b;">${m.fecha || 'Sin fecha'}</span></td>
+                        <td><strong>${m.concepto}</strong></td>
+                        <td><strong>$${parseFloat(m.valor).toLocaleString()}</strong></td>
+                        <td>
+                            <button class="btn btn-actions btn-edit" onclick="prepararEdicionMulta(${indexOriginal})">✏️ Editar</button>
+                            <button class="btn btn-actions btn-danger" onclick="eliminarMulta(${indexOriginal})">❌ Borrar</button>
+                        </td>
+                    `;
+                    tbodyModal.appendChild(fila);
+                }
+            });
+
+            document.getElementById('modal-multa-titulo').innerText = `📊 Historial de Multas: ${nombreSocio}`;
+            document.getElementById('modal-multa-doc').innerText = documentoSocio;
+
+            if(totalFilas === 0) {
+                tbodyModal.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#999; padding:15px;">Este socio no registra multas canceladas.</td></tr>`;
+            } else {
+                const filaTotal = document.createElement('tr');
+                filaTotal.className = "total-row";
+                filaTotal.innerHTML = `<td colspan="2" style="text-align:right;">TOTAL MULTAS PAGADAS:</td><td colspan="2" style="color:#c0392b;">$${acumulado.toLocaleString()}</td>`;
+                tbodyModal.appendChild(filaTotal);
+            }
+            document.getElementById('multas-modal').style.display = "flex";
+        }
+
+        function cerrarModalMultas() { document.getElementById('multas-modal').style.display = "none"; }
+
+
+        // --- EXPORTACIÓN A EXCEL (CONSOLIDADO APORTES) ---
         function exportarHistorialAportesExcel() {
             if (typeof XLSX === 'undefined') { alert("Función no disponible offline."); return; }
-            
             const aportes = obtenerAportes();
             const socios = obtenerSocios();
-
-            if(aportes.length === 0) {
-                alert("No hay transacciones en el historial para consolidar.");
-                return;
-            }
+            if(aportes.length === 0) { alert("No hay transacciones en el historial para consolidar."); return; }
 
             const conceptosUnicos = [...new Set(aportes.map(ap => ap.concepto))].sort();
-
             const filasExcel = socios.map(socio => {
-                let filaSocio = {
-                    "Socio / Nombre": socio.nombre,
-                    "Documento": socio.documento
-                };
-
+                let filaSocio = { "Socio / Nombre": socio.nombre, "Documento": socio.documento };
                 let totalSocio = 0;
-
                 conceptosUnicos.forEach(concepto => {
-                    const sumaConcepto = aportes
-                        .filter(ap => ap.documento === socio.documento && ap.concepto === concepto)
-                        .reduce((sum, item) => sum + parseFloat(item.valor), 0);
-                    
+                    const sumaConcepto = aportes.filter(ap => ap.documento === socio.documento && ap.concepto === concepto).reduce((sum, item) => sum + parseFloat(item.valor), 0);
                     filaSocio[concepto] = sumaConcepto;
                     totalSocio += sumaConcepto;
                 });
-
                 filaSocio["Total Aportado ($)"] = totalSocio;
                 return filaSocio;
             });
 
-            let filaTotalesGlobales = {
-                "Socio / Nombre": "TOTAL GENERAL RECAUDADO",
-                "Documento": ""
-            };
-
+            let filaTotalesGlobales = { "Socio / Nombre": "TOTAL GENERAL RECAUDADO", "Documento": "" };
             let granTotalSistema = 0;
             conceptosUnicos.forEach(concepto => {
-                const totalColumna = aportes
-                    .filter(ap => ap.concepto === concepto)
-                    .reduce((sum, item) => sum + parseFloat(item.valor), 0);
-                
+                const totalColumna = aportes.filter(ap => ap.concepto === concepto).reduce((sum, item) => sum + parseFloat(item.valor), 0);
                 filaTotalesGlobales[concepto] = totalColumna;
                 granTotalSistema += totalColumna;
             });
             filaTotalesGlobales["Total Aportado ($)"] = granTotalSistema;
-
             filasExcel.push(filaTotalesGlobales);
 
             const hoja = XLSX.utils.json_to_sheet(filasExcel);
             const libro = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(libro, hoja, "Consolidado de Aportes");
             XLSX.writeFile(libro, "Consolidado_Matriz_Aportes_San_Miguel.xlsx");
+        }
+
+        // --- EXPORTACIÓN A EXCEL (CONSOLIDADO MULTAS CON CONCEPTOS MAPPED) ---
+        function exportarHistorialMultasExcel() {
+            if (typeof XLSX === 'undefined') { alert("Función no disponible offline."); return; }
+            const multas = obtenerMultas();
+            const socios = obtenerSocios();
+            if(multas.length === 0) { alert("No hay registros de multas para consolidar."); return; }
+
+            const motivosUnicos = [...new Set(multas.map(m => m.concepto))].sort();
+            const filasExcel = socios.map(socio => {
+                let filaSocio = { "Socio / Nombre": socio.nombre, "Documento": socio.documento };
+                let totalSocio = 0;
+                motivosUnicos.forEach(motivo => {
+                    const sumaMotivo = multas.filter(m => m.documento === socio.documento && m.concepto === motivo).reduce((sum, item) => sum + parseFloat(item.valor), 0);
+                    filaSocio[motivo] = sumaMotivo;
+                    totalSocio += sumaMotivo;
+                });
+                filaSocio["Total Multas Canceladas ($)"] = totalSocio;
+                return filaSocio;
+            });
+
+            let filaTotalesGlobales = { "Socio / Nombre": "TOTAL GENERAL MULTAS", "Documento": "" };
+            let granTotalMultas = 0;
+            motivosUnicos.forEach(motivo => {
+                const totalColumna = multas.filter(m => m.concepto === motivo).reduce((sum, item) => sum + parseFloat(item.valor), 0);
+                filaTotalesGlobales[motivo] = totalColumna;
+                granTotalMultas += totalColumna;
+            });
+            filaTotalesGlobales["Total Multas Canceladas ($)"] = granTotalMultas;
+            filasExcel.push(filaTotalesGlobales);
+
+            const hoja = XLSX.utils.json_to_sheet(filasExcel);
+            const libro = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(libro, hoja, "Consolidado de Multas");
+            XLSX.writeFile(libro, "Consolidado_Matriz_Multas_San_Miguel.xlsx");
         }
 
         // --- PLANTILLAS EXCEL MASIVAS ---
@@ -716,11 +992,22 @@
             lector.readAsArrayBuffer(archivo);
         }
 
+        // CERRAR MODALES AL CLICKEAR FUERA
+        window.onclick = function(event) {
+            const modalAportes = document.getElementById('historial-modal');
+            const modalMultas = document.getElementById('multas-modal');
+            if (event.target == modalAportes) modalAportes.style.display = "none";
+            if (event.target == modalMultas) modalMultas.style.display = "none";
+        }
+
         function inicializarSistema() {
             mostrarSociosEnTabla();
             actualizarSelectorSocios();
+            actualizarSelectorSociosMultas();
             mostrarAportesEnTablas();
-            establecerFechaHoy();
+            mostrarMultasEnTablas();
+            establecerFechaHoy('aporte-fecha');
+            establecerFechaHoy('multa-fecha');
         }
 
         window.addEventListener("load", inicializarSistema);
