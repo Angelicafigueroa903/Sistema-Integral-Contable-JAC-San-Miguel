@@ -6,7 +6,7 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
-    <title>Sistema Central JAC San Miguel v2.0</title>
+    <title>Sistema Contable JAC San Miguel v3.0</title>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <style>
         :root {
@@ -17,175 +17,65 @@
             --sidebar-width: 260px;
         }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { display: flex; background-color: var(--bg-color); color: var(--text-color); height: 100vh; overflow: hidden; }
 
-        body {
-            display: flex;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            height: 100vh;
-            overflow: hidden;
-        }
-
-        /* --- MENÚ LATERAL --- */
-        .sidebar {
-            width: var(--sidebar-width);
-            background-color: var(--primary-color);
-            color: white;
-            display: flex;
-            flex-direction: column;
-            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
-        }
-
-        .sidebar-header {
-            padding: 20px;
-            background-color: #1a252f;
-            text-align: center;
-            font-size: 1.1rem;
-            font-weight: bold;
-            border-bottom: 1px solid #34495e;
-        }
-
-        .sidebar-menu {
-            list-style: none;
-            overflow-y: auto;
-            flex-grow: 1;
-        }
-
-        .sidebar-menu li a {
-            display: flex;
-            align-items: center;
-            padding: 14px 20px;
-            color: #ecf0f1;
-            text-decoration: none;
-            transition: all 0.3s ease;
-            border-left: 4px solid transparent;
-            cursor: pointer;
-        }
-
-        .sidebar-menu li a:hover, .sidebar-menu li a.active {
-            background-color: #34495e;
-            border-left-color: var(--secondary-color);
-            color: white;
-        }
-
+        /* MENÚ LATERAL */
+        .sidebar { width: var(--sidebar-width); background-color: var(--primary-color); color: white; display: flex; flex-direction: column; box-shadow: 2px 0 5px rgba(0,0,0,0.1); }
+        .sidebar-header { padding: 20px; background-color: #1a252f; text-align: center; font-size: 1.1rem; font-weight: bold; border-bottom: 1px solid #34495e; }
+        .sidebar-menu { list-style: none; overflow-y: auto; flex-grow: 1; }
+        .sidebar-menu li a { display: flex; align-items: center; padding: 14px 20px; color: #ecf0f1; text-decoration: none; transition: all 0.3s ease; border-left: 4px solid transparent; cursor: pointer; }
+        .sidebar-menu li a:hover, .sidebar-menu li a.active { background-color: #34495e; border-left-color: var(--secondary-color); color: white; }
         .menu-icon { margin-right: 15px; font-size: 1.2rem; }
 
-        /* --- CONTENIDO PRINCIPAL --- */
-        .main-content {
-            flex-grow: 1;
-            padding: 30px;
-            overflow-y: auto;
-            background-color: var(--bg-color);
-        }
-
-        .header-main {
-            background: white;
-            padding: 15px 30px;
-            margin: -30px -30px 30px -30px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            font-size: 1.3rem;
-            color: var(--primary-color);
-            font-weight: bold;
-        }
-
+        /* CONTENIDO PRINCIPAL */
+        .main-content { flex-grow: 1; padding: 30px; overflow-y: auto; background-color: var(--bg-color); }
+        .header-main { background: white; padding: 15px 30px; margin: -30px -30px 30px -30px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); font-size: 1.3rem; color: var(--primary-color); font-weight: bold; }
         .view-section { display: none; }
         .view-section.active { display: block; }
 
-        /* --- FORMULARIOS --- */
-        .form-container {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-            margin-bottom: 25px;
-            border-top: 4px solid var(--secondary-color);
-        }
-
+        /* FORMULARIOS Y TARJETAS */
+        .form-container { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 25px; border-top: 4px solid var(--secondary-color); }
         .form-container.excel-mode { border-top-color: #27ae60; }
-
-        .form-title {
-            font-size: 1.1rem;
-            color: var(--primary-color);
-            margin-bottom: 15px;
-            font-weight: 600;
-        }
-
-        .form-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-            gap: 15px;
-        }
-
+        .form-container.aportes-mode { border-top-color: #e67e22; }
+        .form-title { font-size: 1.1rem; color: var(--primary-color); margin-bottom: 15px; font-weight: 600; }
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; }
         .form-group { display: flex; flex-direction: column; margin-bottom: 5px; }
         .form-group label { font-size: 0.85rem; margin-bottom: 5px; color: #555; font-weight: 600; }
-        .form-group input { padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.9rem; outline: none; width: 100%; }
-        .form-group input:focus { border-color: var(--secondary-color); }
+        .form-group input, .form-group select { padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.9rem; outline: none; width: 100%; background: white; }
+        .form-group input:focus, .form-group select:focus { border-color: var(--secondary-color); }
+        .form-group input:disabled { background-color: #f1f2f6; color: #7f8c8d; cursor: not-allowed; }
 
-        .btn {
-            background-color: var(--secondary-color);
-            color: white;
-            border: none;
-            padding: 12px 20px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 0.95rem;
-            transition: background 0.2s;
-            margin-top: 15px;
-        }
+        /* BOTONES */
+        .btn { background-color: var(--secondary-color); color: white; border: none; padding: 12px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.95rem; transition: background 0.2s; margin-top: 15px; }
         .btn:hover { background-color: #149a80; }
         .btn-success { background-color: #27ae60; margin-top: 0; }
         .btn-success:hover { background-color: #219150; }
+        .btn-warning { background-color: #e67e22; }
+        .btn-warning:hover { background-color: #d35400; }
         .btn-actions { padding: 6px 12px; font-size: 0.8rem; margin-top: 0; margin-right: 5px; font-weight: normal; }
         .btn-edit { background-color: #2980b9; }
         .btn-edit:hover { background-color: #1f618d; }
         .btn-danger { background-color: #e74c3c; }
         .btn-danger:hover { background-color: #c0392b; }
 
-        /* --- TABLAS --- */
-        .data-table {
-            width: 100%;
-            border-collapse: collapse;
-            background: white;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-            margin-top: 15px;
-        }
-
+        /* TABLAS */
+        .data-table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-top: 15px; margin-bottom: 30px; }
         .data-table th, .data-table td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #eeeeee; }
         .data-table th { background-color: var(--primary-color); color: white; }
+        .total-row { background-color: #eaeded; font-weight: bold; font-size: 1.05rem; }
         .offline-badge { background-color: #27ae60; color: white; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; float: right; }
-        
-        .instructions {
-            background-color: #f8f9fa;
-            padding: 15px;
-            border-left: 4px solid #27ae60;
-            margin-bottom: 15px;
-            font-size: 0.85rem;
-            color: #555;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+        .instructions { background-color: #f8f9fa; padding: 15px; border-left: 4px solid #27ae60; margin-bottom: 15px; font-size: 0.85rem; color: #555; display: flex; justify-content: space-between; align-items: center; }
     </style>
 </head>
 <body>
 
     <nav class="sidebar">
-        <div class="sidebar-header">
-            JAC San Miguel <span class="offline-badge">Maestro v2</span>
-        </div>
+        <div class="sidebar-header">JAC San Miguel <span class="offline-badge">v3.0</span></div>
         <ul class="sidebar-menu">
             <li><a onclick="switchView('inicio')" id="btn-inicio"><span class="menu-icon">🏠</span> Inicio</a></li>
             <li><a onclick="switchView('socios')" id="btn-socios" class="active"><span class="menu-icon">👥</span> Socios</a></li>
-            <li><a onclick="switchView('aportes')"><span class="menu-icon">💰</span> Aportes</a></li>
+            <li><a onclick="switchView('aportes')" id="btn-aportes"><span class="menu-icon">💰</span> Aportes</a></li>
             <li><a onclick="switchView('multas')"><span class="menu-icon">⚠</span> Multas</a></li>
             <li><a onclick="switchView('deportes')"><span class="menu-icon">🏆</span> Comité Deportes</a></li>
             <li><a onclick="switchView('salud')"><span class="menu-icon">❤️</span> Comité Salud</a></li>
@@ -198,26 +88,23 @@
     </nav>
 
     <main class="main-content">
-        <div class="header-main" id="view-title">👥 Base de Datos Central de Socios</div>
+        <div class="header-main" id="view-title">👥 Sistema San Miguel</div>
 
         <section id="view-socios" class="view-section active">
-            
             <div class="form-container">
                 <div class="form-title" id="form-action-title">Forma 1: Registro Individual de Socio</div>
                 <form id="socio-form" onsubmit="procesarFormularioSocio(event)">
                     <input type="hidden" id="edit-index" value="-1">
-                    
                     <div class="form-grid">
                         <div class="form-group">
                             <label for="nombre">Nombre Completo del Socio</label>
                             <input type="text" id="nombre" required placeholder="Ej: Juan Carlos Pérez">
                         </div>
                         <div class="form-group">
-                            <label for="documento">Número de Documento (C.C. / T.I.)</label>
+                            <label for="documento">Número de Documento (Único)</label>
                             <input type="text" id="documento" required placeholder="Ej: 1075123456">
                         </div>
                     </div>
-
                     <button type="submit" class="btn" id="btn-submit-form">💾 Guardar Socio</button>
                     <button type="button" class="btn btn-danger btn-actions" id="btn-cancel-edit" style="display:none; margin-top:15px; height:43px;" onclick="cancelarEdicion()">Cancelar Edición</button>
                 </form>
@@ -226,132 +113,187 @@
             <div class="form-container excel-mode">
                 <div class="form-title">Forma 2: Carga Masiva de Socios desde Excel (.xlsx)</div>
                 <div class="instructions">
-                    <div>
-                        <strong>¿No tiene la plantilla centralizada?</strong> Descargue este formato limpio de solo 2 columnas.
-                    </div>
-                    <button class="btn btn-success" onclick="descargarPlantillaExcel()">📥 Descargar Plantilla Limpia</button>
+                    <div><strong>Evite duplicaciones:</strong> El sistema filtrará automáticamente documentos ya existentes.</div>
+                    <button class="btn btn-success" onclick="descargarPlantillaExcel()">📥 Descargar Plantilla</button>
                 </div>
                 <div class="form-group">
-                    <label for="excel-file">Seleccione el archivo de Excel para subir la lista:</label>
+                    <label for="excel-file">Seleccione el archivo de Excel:</label>
                     <input type="file" id="excel-file" accept=".xlsx, .xls" onchange="cargarDesdeExcel(event)">
                 </div>
             </div>
 
             <div style="display: flex; justify-content: space-between; align-items: center; margin-top:20px;">
-                <h3>Listado Oficial de Socios Registrados</h3>
-                <button class="btn btn-danger btn-actions" onclick="borrarTodosLosSocios()">⚠️ Eliminar Todos los Socios</button>
+                <h3>Base Maestro de Socios Únicos</h3>
+                <button class="btn btn-danger btn-actions" onclick="borrarTodosLosSocios()">⚠️ Eliminar Base de Datos</button>
             </div>
-            
             <table class="data-table">
                 <thead>
                     <tr>
                         <th style="width: 50%;">Nombre del Socio</th>
-                        <th style="width: 30%;">Número de Documento</th>
-                        <th style="width: 20%;">Acciones</th>
+                        <th style="width: 35%;">Número de Documento</th>
+                        <th style="width: 15%;">Acciones</th>
                     </tr>
                 </thead>
-                <tbody id="tabla-socios-body">
-                    </tbody>
+                <tbody id="tabla-socios-body"></tbody>
             </table>
         </section>
 
-        <section id="view-aportes" class="view-section"><h2>Módulo de Aportes</h2></section>
-        <section id="view-financiero" class="view-section"><h2>Estado Financiero</h2></section>
-        <section id="view-inicio" class="view-section"><h2>Bienvenido</h2></section>
-        <section id="view-multas" class="view-section"><h2>Multas</h2></section>
+        <section id="view-aportes" class="view-section">
+            <div class="form-container aportes-mode">
+                <div class="form-title" id="aporte-form-title">💰 Registrar Aporte de Socio</div>
+                <form id="aporte-form" onsubmit="procesarFormularioAporte(event)">
+                    <input type="hidden" id="aporte-edit-index" value="-1">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="aporte-socio-select">Seleccione el Socio</label>
+                            <select id="aporte-socio-select" required>
+                                <option value="">-- Seleccione un socio registrado --</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="aporte-valor">Valor del Aporte ($)</label>
+                            <input type="number" id="aporte-valor" required min="0" placeholder="Ej: 50000">
+                        </div>
+                        <div class="form-group">
+                            <label for="aporte-concepto">Concepto / Motivo</label>
+                            <input type="text" id="aporte-concepto" required placeholder="Ej: Cuota mensual ordinaria">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-warning" id="btn-submit-aporte">💾 Guardar Aporte</button>
+                    <button type="button" class="btn btn-danger btn-actions" id="btn-cancel-aporte-edit" style="display:none; margin-top:15px; height:43px;" onclick="cancelarEdicionAporte()">Cancelar Edición</button>
+                </form>
+            </div>
+
+            <h3>📊 Resumen de Saldos y Totales por Socio</h3>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Nombre del Socio</th>
+                        <th>Número de Documento</th>
+                        <th>Total Aportado Acumulado</th>
+                    </tr>
+                </thead>
+                <tbody id="tabla-resumen-aportes-body"></tbody>
+            </table>
+
+            <h3>📋 Historial Detallado de Transacciones (Aportes Separados)</h3>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Socio</th>
+                        <th>Documento</th>
+                        <th>Valor Aporte</th>
+                        <th>Concepto / Descripción</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="tabla-aportes-detallado-body"></tbody>
+            </table>
+        </section>
+
+        <section id="view-inicio" class="view-section"><h2>Bienvenido al Sistema Contable</h2></section>
+        <section id="view-multas" class="view-section"><h2>Módulo de Multas</h2></section>
         <section id="view-deportes" class="view-section"><h2>Comité Deportes</h2></section>
         <section id="view-salud" class="view-section"><h2>Comité Salud</h2></section>
         <section id="view-gastos" class="view-section"><h2>Gastos</h2></section>
         <section id="view-caja" class="view-section"><h2>Caja</h2></section>
+        <section id="view-financiero" class="view-section"><h2>Estado Financiero</h2></section>
         <section id="view-reportes" class="view-section"><h2>Reportes</h2></section>
         <section id="view-configuracion" class="view-section"><h2>Configuración</h2></section>
-
     </main>
 
     <script>
+        // CONTROL DE VISTAS Y NAVEGACIÓN
         function switchView(viewId) {
-            document.querySelectorAll('.view-section').forEach(section => section.classList.remove('active'));
-            document.querySelectorAll('.sidebar-menu li a').forEach(link => link.classList.remove('active'));
+            document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.sidebar-menu li a').forEach(l => l.classList.remove('active'));
+            
             const targetSection = document.getElementById('view-' + viewId);
+            const targetLink = document.getElementById('btn-' + viewId);
+            
             if(targetSection) targetSection.classList.add('active');
-        }
+            if(targetLink) targetLink.classList.add('active');
 
-        function obtenerSocios() {
-            try {
-                const almacenados = localStorage.getItem('jac_socios_db');
-                return almacenados ? JSON.parse(almacenados) : [];
-            } catch (e) {
-                return [];
+            const titulos = { socios: "👥 Base de Datos de Socios", aportes: "💰 Control y Registro de Aportes", inicio: "🏠 Inicio" };
+            document.getElementById('view-title').innerText = titulos[viewId] || "JAC San Miguel";
+
+            if(viewId === 'aportes') {
+                actualizarSelectorSocios();
+                mostrarAportesEnTablas();
             }
         }
 
-        function guardarSocios(arreglo) {
-            try {
-                localStorage.setItem('jac_socios_db', JSON.stringify(arreglo));
-            } catch(e) {
-                alert("Error al almacenar.");
-            }
-            mostrarSociosEnTabla();
-        }
+        // --- LÓGICA DEL ALMACENAMIENTO (LOCALSTORAGE) ---
+        function obtenerSocios() { return JSON.parse(localStorage.getItem('jac_db_socios')) || []; }
+        function guardarSocios(arr) { localStorage.setItem('jac_db_socios', JSON.stringify(arr)); mostrarSociosEnTabla(); actualizarSelectorSocios(); }
+        function obtenerAportes() { return JSON.parse(localStorage.getItem('jac_db_aportes')) || []; }
+        function guardarAportes(arr) { localStorage.setItem('jac_db_aportes', JSON.stringify(arr)); mostrarAportesEnTablas(); }
 
+        // --- GESTIÓN DE SOCIOS (CON FILTRO ANTI-DUPLICADOS) ---
         function mostrarSociosEnTabla() {
             const socios = obtenerSocios();
             const tbody = document.getElementById('tabla-socios-body');
             if(!tbody) return;
-            
             tbody.innerHTML = '';
 
             if(socios.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#999; padding: 20px;">No hay socios registrados en el maestro.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#999; padding:20px;">No hay socios creados.</td></tr>`;
                 return;
             }
 
-            socios.forEach((socio, index) => {
+            socios.forEach((socio, idx) => {
                 const fila = document.createElement('tr');
                 fila.innerHTML = `
-                    <td><strong>${socio.nombre || ''}</strong></td>
-                    <td>${socio.documento || ''}</td>
+                    <td><strong>${socio.nombre}</strong></td>
+                    <td>${socio.documento}</td>
                     <td>
-                        <button class="btn btn-actions btn-edit" onclick="prepararEdicion(${index})">✏️ Editar</button>
-                        <button class="btn btn-actions btn-danger" onclick="eliminarSocio(${index})">❌ Eliminar</button>
+                        <button class="btn btn-actions btn-edit" onclick="prepararEdicionSocio(${idx})">✏️</button>
+                        <button class="btn btn-actions btn-danger" onclick="eliminarSocio(${idx})">❌</button>
                     </td>
                 `;
                 tbody.appendChild(fila);
             });
         }
 
-        function procesarFormularioSocio(event) {
-            event.preventDefault();
-            const index = parseInt(document.getElementById('edit-index').value);
+        function procesarFormularioSocio(e) {
+            e.preventDefault();
+            const idx = parseInt(document.getElementById('edit-index').value);
             const nombre = document.getElementById('nombre').value.trim();
             const documento = document.getElementById('documento').value.trim();
+            let socios = obtenerSocios();
 
-            const socioEstructura = { nombre, documento };
-            let lista = obtenerSocios();
+            // CONTROL REPETIDOS: Verificar si la cédula ya existe en otro registro
+            const existeDuplicado = socios.some((s, i) => s.documento === documento && i !== idx);
+            if(existeDuplicado) {
+                alert(`🚨 ERROR: Ya existe un socio registrado con el número de documento: ${documento}. Ingrese un valor diferente.`);
+                return;
+            }
 
-            if (index === -1) {
-                lista.push(socioEstructura);
+            if(idx === -1) {
+                socios.push({ nombre, documento });
             } else {
-                lista[index] = socioEstructura;
+                // Al editar, actualizamos también en cascada el documento en el historial antiguo de aportes si cambió
+                const docAnterior = socios[idx].documento;
+                let aportes = obtenerAportes();
+                aportes.forEach(ap => { if(ap.documento === docAnterior) ap.documento = documento; });
+                localStorage.setItem('jac_db_aportes', JSON.stringify(aportes));
+
+                socios[idx] = { nombre, documento };
                 cancelarEdicion();
             }
 
-            guardarSocios(lista);
+            guardarSocios(socios);
             document.getElementById('socio-form').reset();
         }
 
-        function prepararEdicion(index) {
-            const lista = obtenerSocios();
-            const socio = lista[index];
-
-            document.getElementById('edit-index').value = index;
-            document.getElementById('nombre').value = socio.nombre;
-            document.getElementById('documento').value = socio.documento;
-
-            document.getElementById('form-action-title').innerText = "✏️ Modificando Datos del Socio";
-            document.getElementById('btn-submit-form').innerText = "🔄 Actualizar Socio";
+        function prepararEdicionSocio(idx) {
+            const socios = obtenerSocios();
+            document.getElementById('edit-index').value = idx;
+            document.getElementById('nombre').value = socios[idx].nombre;
+            document.getElementById('documento').value = socios[idx].documento;
+            document.getElementById('form-action-title').innerText = "✏️ Modificando Datos de Socio";
+            document.getElementById('btn-submit-form').innerText = "🔄 Actualizar";
             document.getElementById('btn-cancel-edit').style.display = "inline-block";
-            document.querySelector('.main-content').scrollTop = 0;
         }
 
         function cancelarEdicion() {
@@ -362,84 +304,223 @@
             document.getElementById('btn-cancel-edit').style.display = "none";
         }
 
-        function eliminarSocio(index) {
-            if(confirm('¿Está seguro de eliminar este socio?')) {
-                let lista = obtenerSocios();
-                lista.splice(index, 1);
-                guardarSocios(lista);
-                cancelarEdicion();
+        function eliminarSocio(idx) {
+            if(confirm('¿Desea eliminar este socio? Esto no borrará sus aportes del historial pero ya no aparecerá en el listado maestro.')) {
+                let socios = obtenerSocios();
+                socios.splice(idx, 1);
+                guardarSocios(socios);
             }
         }
 
-        // Esta función remueve los datos viejos que puedan estar interfiriendo
         function borrarTodosLosSocios() {
-            if(confirm('🚨 ¡ALERTA! Esto limpiará la base de datos de socios. ¿Continuar?')) {
-                localStorage.removeItem('jac_socios_db');
-                mostrarSociosEnTabla();
-                cancelarEdicion();
+            if(confirm('🚨 ¿Seguro que desea vaciar por completo el maestro de socios?')) {
+                localStorage.removeItem('jac_db_socios');
+                guardarSocios([]);
             }
         }
 
-        function descargarPlantillaExcel() {
-            if (typeof XLSX === 'undefined') {
-                alert("🚨 Cargue la página usando su dirección web de GitHub Pages para descargar la plantilla.");
-                return;
+        // --- GESTIÓN DE APORTES (VALOR, CONCEPTO, SUMATORIAS) ---
+        function actualizarSelectorSocios() {
+            const select = document.getElementById('aporte-socio-select');
+            if(!select) return;
+            const socios = obtenerSocios();
+            
+            // Guardar selección actual para no perder el foco si está editando
+            const valorSeleccionado = select.value;
+            select.innerHTML = '<option value="">-- Seleccione un socio registrado --</option>';
+            
+            socios.forEach(socio => {
+                const opt = document.createElement('option');
+                opt.value = socio.documento; // Vinculación por documento único
+                opt.innerText = `${socio.nombre} (${socio.documento})`;
+                select.appendChild(opt);
+            });
+            select.value = valorSeleccionado;
+        }
+
+        function mostrarAportesEnTablas() {
+            const aportes = obtenerAportes();
+            const socios = obtenerSocios();
+            
+            const tbodyDetalle = document.getElementById('tabla-aportes-detallado-body');
+            const tbodyResumen = document.getElementById('tabla-resumen-aportes-body');
+            
+            let granTotal = 0;
+
+            // 1. RENDERIZAR HISTORIAL DETALLADO (APORTES SEPARADOS)
+            tbodyDetalle.innerHTML = '';
+            if(aportes.length === 0) {
+                tbodyDetalle.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#999; padding:15px;">No se han registrado aportes contables.</td></tr>`;
+            } else {
+                aportes.forEach((ap, index) => {
+                    granTotal += parseFloat(ap.valor);
+                    const fila = document.createElement('tr');
+                    fila.innerHTML = `
+                        <td>${ap.nombre}</td>
+                        <td>${ap.documento}</td>
+                        <td><strong>$${parseFloat(ap.valor).toLocaleString()}</strong></td>
+                        <td>${ap.concepto}</td>
+                        <td>
+                            <button class="btn btn-actions btn-edit" onclick="prepararEdicionAporte(${index})">✏️ Editar Cobro</button>
+                            <button class="btn btn-actions btn-danger" onclick="eliminarAporte(${index})">❌</button>
+                        </td>
+                    `;
+                    tbodyDetalle.appendChild(fila);
+                });
+                
+                // Fila Final del Gran Total de la JAC
+                const filaTotal = document.createElement('tr');
+                filaTotal.className = "total-row";
+                filaTotal.innerHTML = `<td colspan="2" style="text-align:right;">TOTAL RECAUDADO JAC:</td><td colspan="3" style="color:#27ae60;">$${granTotal.toLocaleString()}</td>`;
+                tbodyDetalle.appendChild(filaTotal);
             }
-            const plantillaDatos = [
+
+            // 2. RENDERIZAR TABLA DE SUMATORIAS ACUMULADAS POR SOCIO
+            tbodyResumen.innerHTML = '';
+            if(socios.length === 0) {
+                tbodyResumen.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#999; padding:15px;">Registre socios en el maestro para calcular sus acumulados.</td></tr>`;
+            } else {
+                socios.forEach(socio => {
+                    // Sumar todos los aportes de este socio en específico
+                    const sumaAcumulada = aportes
+                        .filter(ap => ap.documento === socio.documento)
+                        .reduce((sum, current) => sum + parseFloat(current.valor), 0);
+
+                    const filaRes = document.createElement('tr');
+                    filaRes.innerHTML = `
+                        <td><strong>${socio.nombre}</strong></td>
+                        <td>${socio.documento}</td>
+                        <td style="color:#2c3e50; font-weight:bold;">$${sumaAcumulada.toLocaleString()}</td>
+                    `;
+                    tbodyResumen.appendChild(filaRes);
+                });
+            }
+        }
+
+        function procesarFormularioAporte(e) {
+            e.preventDefault();
+            const idx = parseInt(document.getElementById('aporte-edit-index').value);
+            const selectSocio = document.getElementById('aporte-socio-select');
+            const valor = parseFloat(document.getElementById('aporte-valor').value);
+            const concepto = document.getElementById('aporte-concepto').value.trim();
+            
+            let aportes = obtenerAportes();
+
+            if(idx === -1) {
+                // Registrar nuevo aporte
+                const documento = selectSocio.value;
+                const nombreSocio = selectSocio.options[selectSocio.selectedIndex].text.split(' (')[0];
+                aportes.push({ nombre: nombreSocio, documento, valor, concepto });
+            } else {
+                // Modificar aporte existente (SOLO MODIFICA VALOR Y CONCEPTO, el socio no cambia)
+                aportes[idx].valor = valor;
+                aportes[idx].concepto = concepto;
+                cancelarEdicionAporte();
+            }
+
+            guardarAportes(aportes);
+            document.getElementById('aporte-form').reset();
+        }
+
+        function prepararEdicionAporte(idx) {
+            const aportes = obtenerAportes();
+            document.getElementById('aporte-edit-index').value = idx;
+            
+            // Fijar los campos editables
+            document.getElementById('aporte-valor').value = aportes[idx].valor;
+            document.getElementById('aporte-concepto').value = aportes[idx].concepto;
+
+            // Forzar y bloquear el selector del socio para que no sea alterado el nombre ni el documento
+            const select = document.getElementById('aporte-socio-select');
+            select.value = aportes[idx].documento;
+            select.disabled = true;
+
+            document.getElementById('aporte-form-title').innerText = "✏️ Modificando Valor y Concepto del Aporte";
+            document.getElementById('btn-submit-aporte').innerText = "🔄 Actualizar Aporte";
+            document.getElementById('btn-cancel-aporte-edit').style.display = "inline-block";
+            
+            document.querySelector('.main-content').scrollTop = 0;
+        }
+
+        function cancelarEdicionAporte() {
+            document.getElementById('aporte-edit-index').value = "-1";
+            document.getElementById('aporte-form').reset();
+            document.getElementById('aporte-socio-select').disabled = false;
+            document.getElementById('aporte-form-title').innerText = "💰 Registrar Aporte de Socio";
+            document.getElementById('btn-submit-aporte').innerText = "💾 Guardar Aporte";
+            document.getElementById('btn-cancel-aporte-edit').style.display = "none";
+        }
+
+        function eliminarAporte(idx) {
+            if(confirm('¿Eliminar esta boleta de aporte del historial contable?')) {
+                let aportes = obtenerAportes();
+                aportes.splice(idx, 1);
+                guardarAportes(aportes);
+                cancelarEdicionAporte();
+            }
+        }
+
+        // --- MANEJO DE EXCEL (SOCIOS CON CONTROL DE REPETIDOS) ---
+        function descargarPlantillaExcel() {
+            if (typeof XLSX === 'undefined') { alert("Función no disponible offline."); return; }
+            const plantilla = [
                 { "Nombre del Socio": "Pedro Alcántara Pérez", "Numero de Documento": "1075123456" },
                 { "Nombre del Socio": "María Ofelia Rojas", "Numero de Documento": "26543210" }
             ];
-            const hoja = XLSX.utils.json_to_sheet(plantillaDatos);
+            const hoja = XLSX.utils.json_to_sheet(plantilla);
             const libro = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(libro, hoja, "Lista Socios");
             XLSX.writeFile(libro, "Plantilla_Maestro_Socios.xlsx");
         }
 
-        function cargarDesdeExcel(event) {
-            if (typeof XLSX === 'undefined') {
-                alert("🚨 Use el enlace de GitHub Pages en línea para procesar archivos de Excel.");
-                document.getElementById('excel-file').value = '';
-                return;
-            }
-            const archivo = event.target.files[0];
+        function cargarDesdeExcel(e) {
+            if (typeof XLSX === 'undefined') { alert("Función no disponible offline."); return; }
+            const archivo = e.target.files[0];
             if (!archivo) return;
 
             const lector = new FileReader();
-            lector.onload = function(e) {
+            lector.onload = function(evt) {
                 try {
-                    const datos = new Uint8Array(e.target.result);
-                    const libroTrabajo = XLSX.read(datos, { type: 'array' });
-                    const hoja = libroTrabajo.Sheets[libroTrabajo.SheetNames[0]];
-                    const datosJson = XLSX.utils.sheet_to_json(hoja);
-
-                    if(datosJson.length === 0) return;
+                    const datos = new Uint8Array(evt.target.result);
+                    const libro = XLSX.read(datos, { type: 'array' });
+                    const hoja = libro.Sheets[libro.SheetNames[0]];
+                    const json = XLSX.utils.sheet_to_json(hoja);
 
                     let listaActual = obtenerSocios();
                     let agregados = 0;
+                    let duplicadosSaltados = 0;
 
-                    datosJson.forEach(fila => {
+                    json.forEach(fila => {
                         const nombre = fila["Nombre del Socio"] || fila["nombre"] || fila["Nombre"] || '';
-                        const documento = fila["Numero de Documento"] || fila["documento"] || fila["Documento"] || '';
+                        const documento = (fila["Numero de Documento"] || fila["documento"] || fila["Documento"] || '').toString().trim();
 
                         if (nombre !== '' && documento !== '') {
-                            listaActual.push({ 
-                                nombre: nombre.toString().trim(), 
-                                documento: documento.toString().trim() 
-                            });
-                            agregados++;
+                            // Validar que no se repita antes de meterlo a la lista
+                            const yaExiste = listaActual.some(s => s.documento === documento);
+                            if(!yaExiste) {
+                                listaActual.push({ nombre: nombre.toString().trim(), documento });
+                                agregados++;
+                            } else {
+                                duplicadosSaltados++;
+                            }
                         }
                     });
 
                     guardarSocios(listaActual);
-                    alert(`¡Éxito! Importados ${agregados} socios.`);
+                    if(duplicadosSaltados > 0) {
+                        alert(`¡Carga finalizada! Se agregaron ${agregados} socios nuevos. Se omitieron ${duplicadosSaltados} registros porque sus números de documento ya existían.`);
+                    } else {
+                        alert(`¡Éxito! Se han importado de forma masiva ${agregados} socios.`);
+                    }
                 } catch(err) {
-                    alert("Error en la lectura del Excel.");
+                    alert("Error al procesar el Excel.");
                 }
                 document.getElementById('excel-file').value = '';
             };
             lector.readAsArrayBuffer(archivo);
         }
 
+        // CARGA INICIAL
         window.addEventListener("load", function() {
             mostrarSociosEnTabla();
         });
