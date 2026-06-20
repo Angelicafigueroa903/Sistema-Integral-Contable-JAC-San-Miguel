@@ -1309,22 +1309,6 @@ function procesarCaja() {
     document.getElementById('resultado-caja').innerHTML = html;
 }
 
-function descargarCajaExcel() {
-    const mes = document.getElementById('caja-mes-filtro').value;
-    if (!mes) return alert("Seleccione un mes.");
-    
-    const wb = XLSX.utils.book_new();
-    const fuentes = ['aportes', 'multas', 'deporte', 'salud', 'gastos'];
-
-    fuentes.forEach(f => {
-        const datos = JSON.parse(localStorage.getItem(f) || '[]');
-        const filtrados = datos.filter(d => d.fecha && d.fecha.startsWith(mes));
-        if (filtrados.length > 0) {
-            XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(filtrados), f.toUpperCase());
-        }
-    });
-    XLSX.writeFile(wb, `Caja_${mes}.xlsx`);
-}
         function procesarCaja() {
     const mes = document.getElementById('caja-mes-filtro').value;
     if (!mes) return;
@@ -1380,24 +1364,59 @@ function descargarCajaExcel() {
     const mes = document.getElementById('caja-mes-filtro').value;
     if (!mes) return alert("Por favor seleccione un mes primero.");
 
-    const wb = XLSX.utils.book_new();
-    const módulos = [
+    const modulos = [
         { nombre: 'Aportes', datos: obtenerAportes() },
         { nombre: 'Multas', datos: obtenerMultas() },
         { nombre: 'Deportes', datos: obtenerDeportes() },
         { nombre: 'Salud', datos: obtenerSalud() },
-        { nombre: 'Gastos', datos: obtenerGastos() }
+        { nombre: 'Gastos J.A.C.', datos: obtenerGastos() }
     ];
 
-    módulos.forEach(mod => {
+    let datosParaExcel = [];
+    let totalIngresosGeneral = 0;
+    let totalEgresosGeneral = 0;
+
+    // Calculamos los mismos valores que en la tabla
+    modulos.forEach(mod => {
         const filtrados = mod.datos.filter(item => item.fecha && item.fecha.startsWith(mes));
-        if (filtrados.length > 0) {
-            const ws = XLSX.utils.json_to_sheet(filtrados);
-            XLSX.utils.book_append_sheet(wb, ws, mod.nombre);
-        }
+        let ingresos = 0, egresos = 0;
+
+        filtrados.forEach(item => {
+            const valor = parseFloat(item.valor || 0);
+            // Mantenemos la misma lógica de clasificación
+            if (item.tipo === 'ingreso' || mod.nombre === 'Aportes' || mod.nombre === 'Multas') {
+                ingresos += valor;
+            } else {
+                egresos += valor;
+            }
+        });
+
+        // Agregamos la fila al reporte
+        datosParaExcel.push({
+            "Módulo": mod.nombre,
+            "Ingresos": ingresos,
+            "Egresos": egresos,
+            "Saldo": (ingresos - egresos)
+        });
+
+        totalIngresosGeneral += ingresos;
+        totalEgresosGeneral += egresos;
     });
 
-    XLSX.writeFile(wb, `Reporte_Caja_${mes}.xlsx`);
+    // Agregamos la fila de TOTAL
+    datosParaExcel.push({
+        "Módulo": "TOTAL MENSUAL",
+        "Ingresos": totalIngresosGeneral,
+        "Egresos": totalEgresosGeneral,
+        "Saldo": (totalIngresosGeneral - totalEgresosGeneral)
+    });
+
+    // Creamos el Excel con este resumen
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.json_to_sheet(datosParaExcel);
+    XLSX.utils.book_append_sheet(wb, ws, "Resumen_" + mes);
+
+    XLSX.writeFile(wb, `Resumen_Caja_${mes}.xlsx`);
 }
         // CIERRE POPUPS EXTERNOS
         window.onclick = function(e) {
