@@ -526,7 +526,17 @@
             </table>
         </section>
 
-        <section id="view-caja" class="view-section"><h2>🏦 Control de Caja</h2><p style="margin-top:15px;">Sección para arqueos y saldos en efectivo.</p></section>
+        <section id="view-caja" class="view-section" style="display:none;">
+    <h2>🏦 Control de Caja Mensual</h2>
+    <div class="form-container">
+        <label>Seleccione el mes a consultar:</label>
+        <input type="month" id="caja-mes-filtro" onchange="procesarCaja()">
+        <button class="btn btn-primary" onclick="descargarCajaExcel()">📥 Descargar Excel Mensual</button>
+    </div>
+    <div id="resultado-caja" style="margin-top: 20px;">
+        <p>Seleccione un mes para generar el arqueo.</p>
+    </div>
+</section>
         <section id="view-financiero" class="view-section"><h2>📈 Estado Financiero General</h2><p style="margin-top:15px;">Sección para balances e informes consolidados.</p></section>
         <section id="view-reportes" class="view-section"><h2>📄 Módulo de Reportes</h2><p style="margin-top:15px;">Sección para exportación de PDF y actas.</p></section>
         <section id="view-configuracion" class="view-section"><h2>⚙ Configuración del Sistema</h2><p style="margin-top:15px;">Sección para parámetros generales de la JAC.</p></section>
@@ -1264,7 +1274,50 @@
                 guardarSocios(actual); alert("¡Carga masiva finalizada!");
             }; lector.readAsArrayBuffer(file);
         }
+// --- LÓGICA DE CAJA INTEGRADA ---
+function procesarCaja() {
+    const mes = document.getElementById('caja-mes-filtro').value;
+    if (!mes) return;
 
+    // Ajusta estos nombres según los que usas en tu localStorage
+    const fuentes = [
+        { nombre: 'Aportes', datos: JSON.parse(localStorage.getItem('aportes') || '[]') },
+        { nombre: 'Multas', datos: JSON.parse(localStorage.getItem('multas') || '[]') },
+        { nombre: 'Deporte', datos: JSON.parse(localStorage.getItem('deporte') || '[]') },
+        { nombre: 'Salud', datos: JSON.parse(localStorage.getItem('salud') || '[]') },
+        { nombre: 'Gastos', datos: JSON.parse(localStorage.getItem('gastos') || '[]') }
+    ];
+
+    let html = `<table class="data-table"><thead><tr><th>Módulo</th><th>Ingresos</th><th>Egresos</th><th>Saldo</th></tr></thead><tbody>`;
+    
+    fuentes.forEach(fuente => {
+        const filtrados = fuente.datos.filter(d => d.fecha && d.fecha.startsWith(mes));
+        const ingresos = filtrados.filter(d => d.tipo === 'ingreso').reduce((s, d) => s + Number(d.valor), 0);
+        const egresos = filtrados.filter(d => d.tipo === 'salida').reduce((s, d) => s + Number(d.valor), 0);
+        
+        html += `<tr><td>${fuente.nombre}</td><td>$${ingresos}</td><td>$${egresos}</td><td>$${ingresos - egresos}</td></tr>`;
+    });
+
+    html += `</tbody></table>`;
+    document.getElementById('resultado-caja').innerHTML = html;
+}
+
+function descargarCajaExcel() {
+    const mes = document.getElementById('caja-mes-filtro').value;
+    if (!mes) return alert("Seleccione un mes.");
+    
+    const wb = XLSX.utils.book_new();
+    const fuentes = ['aportes', 'multas', 'deporte', 'salud', 'gastos'];
+
+    fuentes.forEach(f => {
+        const datos = JSON.parse(localStorage.getItem(f) || '[]');
+        const filtrados = datos.filter(d => d.fecha && d.fecha.startsWith(mes));
+        if (filtrados.length > 0) {
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(filtrados), f.toUpperCase());
+        }
+    });
+    XLSX.writeFile(wb, `Caja_${mes}.xlsx`);
+}
         // CIERRE POPUPS EXTERNOS
         window.onclick = function(e) {
             if (e.target == document.getElementById('historial-modal')) cerrarModal();
