@@ -119,21 +119,10 @@
             gap: 15px;
         }
 
-        .form-group { display: flex; flex-direction: column; margin-bottom: 5px; }
+        .form-group { display: flex; flex-direction: column; }
         .form-group label { font-size: 0.85rem; margin-bottom: 5px; color: #555; font-weight: 600; }
-        .form-group input, .form-group select { padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.9rem; outline: none; width: 100%; }
+        .form-group input, .form-group select { padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.9rem; outline: none; }
         .form-group input:focus, .form-group select:focus { border-color: var(--secondary-color); }
-
-        /* Contenedor del campo personalizado */
-        .dynamic-field-block {
-            margin-top: 15px;
-            background-color: #f8f9fa;
-            padding: 15px;
-            border-radius: 6px;
-            border-left: 4px solid var(--secondary-color);
-            display: none;
-            width: 100%;
-        }
 
         .btn {
             background-color: var(--secondary-color);
@@ -234,23 +223,15 @@
                         </div>
                         <div class="form-group">
                             <label for="concepto">Concepto de Pago</label>
-                            <select id="concepto" required onchange="evaluarConceptoDesplegable(this.value)">
+                            <select id="concepto" required>
                                 <option value="">-- Seleccione --</option>
                                 <option value="Cuota Mensual">Cuota Mensual</option>
                                 <option value="Cuota Extraordinaria">Cuota Extraordinaria</option>
                                 <option value="Inscripción">Inscripción como Socio</option>
-                                <option value="Otro">Otro (Escribir concepto...)</option>
+                                <option value="Otro">Otro concepto</option>
                             </select>
                         </div>
                     </div>
-
-                    <div id="wrapper-concepto-abierto" class="dynamic-field-block">
-                        <div class="form-group">
-                            <label for="concepto-abierto" style="color:var(--primary-color); font-weight: bold; margin-bottom: 8px;">✍️ Escriba el concepto personalizado:</label>
-                            <input type="text" id="concepto-abierto" placeholder="Ej: Aporte Pro-Pavimentación Veredal">
-                        </div>
-                    </div>
-
                     <button type="submit" class="btn" id="btn-submit-form">💾 Guardar Socio</button>
                     <button type="button" class="btn btn-danger btn-actions" id="btn-cancel-edit" style="display:none; margin-top:15px; height:43px;" onclick="cancelarEdicion()">Cancelar Edición</button>
                 </form>
@@ -310,47 +291,29 @@
             document.querySelectorAll('.sidebar-menu li a').forEach(link => link.classList.remove('active'));
             const targetSection = document.getElementById('view-' + viewId);
             if(targetSection) targetSection.classList.add('active');
+            const eventTarget = window.event?.currentTarget;
+            if(eventTarget) eventTarget.classList.add('active');
         }
 
-        // Evaluar cambio en el menú desplegable (NATIVO, independiente de librerías)
-        function evaluarConceptoDesplegable(valor) {
-            const wrapper = document.getElementById('wrapper-concepto-abierto');
-            const inputAbierto = document.getElementById('concepto-abierto');
-            
-            if(valor === 'Otro') {
-                wrapper.style.display = 'block';
-                inputAbierto.setAttribute('required', 'true');
-                inputAbierto.focus();
-            } else {
-                wrapper.style.display = 'none';
-                inputAbierto.removeAttribute('required');
-                inputAbierto.value = '';
-            }
-        }
-
+        // Recuperar datos con validación estricta de persistencia
         function obtenerSocios() {
             try {
                 const almacenados = localStorage.getItem('jac_socios_db');
                 return almacenados ? JSON.parse(almacenados) : [];
             } catch (e) {
+                console.error("Error leyendo base de datos local", e);
                 return [];
             }
         }
 
         function guardarSocios(arreglo) {
-            try {
-                localStorage.setItem('jac_socios_db', JSON.stringify(arreglo));
-            } catch(e) {
-                alert("Error de espacio en almacenamiento local.");
-            }
+            localStorage.setItem('jac_socios_db', JSON.stringify(arreglo));
             mostrarSociosEnTabla();
         }
 
         function mostrarSociosEnTabla() {
             const socios = obtenerSocios();
             const tbody = document.getElementById('tabla-socios-body');
-            if(!tbody) return;
-            
             tbody.innerHTML = '';
 
             if(socios.length === 0) {
@@ -375,6 +338,7 @@
             });
         }
 
+        // Procesar Formulario unificado (Sirve para Registrar NUEVO o guardar EDICIÓN)
         function procesarFormularioSocio(event) {
             event.preventDefault();
             
@@ -383,30 +347,25 @@
             const documento = document.getElementById('documento').value;
             const fecha = document.getElementById('fecha').value;
             const valor = document.getElementById('valor').value;
-            
-            const seleccionMenu = document.getElementById('concepto').value;
-            let conceptoFinal = seleccionMenu;
-            
-            if(seleccionMenu === 'Otro') {
-                conceptoFinal = document.getElementById('concepto-abierto').value.trim();
-                if(!conceptoFinal) conceptoFinal = 'Otro';
-            }
+            const concepto = document.getElementById('concepto').value;
 
-            const socioEstructura = { nombre, documento, fecha, valor, concepto: conceptoFinal };
+            const socioEstructura = { nombre, documento, fecha, valor, concepto };
             let lista = obtenerSocios();
 
             if (index === -1) {
+                // Es un socio NUEVO
                 lista.push(socioEstructura);
             } else {
+                // Es la MODIFICACIÓN de un socio existente
                 lista[index] = socioEstructura;
-                cancelarEdicion();
+                cancelarEdicion(); // Restaurar entorno visual
             }
 
             guardarSocios(lista);
             document.getElementById('socio-form').reset();
-            evaluarConceptoDesplegable('');
         }
 
+        // Cargar datos al formulario para editar
         function prepararEdicion(index) {
             const lista = obtenerSocios();
             const socio = lista[index];
@@ -416,29 +375,20 @@
             document.getElementById('documento').value = socio.documento;
             document.getElementById('fecha').value = socio.fecha;
             document.getElementById('valor').value = socio.valor;
+            document.getElementById('concepto').value = socio.concepto;
 
-            const selectConcepto = document.getElementById('concepto');
-            
-            if(socio.concepto === 'Cuota Mensual' || socio.concepto === 'Cuota Extraordinaria' || socio.concepto === 'Inscripción') {
-                selectConcepto.value = socio.concepto;
-                evaluarConceptoDesplegable(socio.concepto);
-            } else {
-                selectConcepto.value = 'Otro';
-                evaluarConceptoDesplegable('Otro');
-                document.getElementById('concepto-abierto').value = socio.concepto;
-            }
-
+            // Cambios de diseño interactivos
             document.getElementById('form-action-title').innerText = "✏️ Modificando Información del Socio";
             document.getElementById('btn-submit-form').innerText = "🔄 Actualizar Datos del Socio";
             document.getElementById('btn-cancel-edit').style.display = "inline-block";
             
+            // Subir el scroll de la pantalla automáticamente al formulario
             document.querySelector('.main-content').scrollTop = 0;
         }
 
         function cancelarEdicion() {
             document.getElementById('edit-index').value = "-1";
             document.getElementById('socio-form').reset();
-            evaluarConceptoDesplegable('');
             document.getElementById('form-action-title').innerText = "Forma 1: Registro Individual de Socio";
             document.getElementById('btn-submit-form').innerText = "💾 Guardar Socio";
             document.getElementById('btn-cancel-edit').style.display = "none";
@@ -454,80 +404,77 @@
         }
 
         function borrarTodosLosSocios() {
-            if(confirm('🚨 ¡ALERTA! Esto eliminará permanentemente todos los socios. ¿Continuar?')) {
+            if(confirm('🚨 ¡ALERTA CRÍTICA! Esto eliminará permanentemente la base de datos de socios de este dispositivo. ¿Continuar?')) {
                 localStorage.removeItem('jac_socios_db');
                 mostrarSociosEnTabla();
                 cancelarEdicion();
             }
         }
 
-        // CONTROL DE ERRORES PARA EXCEL EN ENTORNOS RESTRINGIDOS LOCALES
+        // --- EXCEL FORMA 2: DESCARGAR PLANTILLA FORMATEADA ---
         function descargarPlantillaExcel() {
-            if (typeof XLSX === 'undefined') {
-                alert("🚨 El navegador bloqueó temporalmente la extensión de Excel debido a políticas locales del sistema. Para usar la carga masiva de Excel, abre la aplicación usando tu dirección web generada por GitHub Pages en lugar del archivo local.");
-                return;
-            }
+            // Estructura idéntica que solicita el analizador de código
             const plantillaDatos = [
                 { "Nombre": "Ejemplo Pedro Pérez", "Documento": "1075123456", "Fecha": "2026-06-20", "Valor": 25000, "Concepto": "Cuota Mensual" }
             ];
+            
             const hoja = XLSX.utils.json_to_sheet(plantillaDatos);
             const libro = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(libro, hoja, "Plantilla Socios");
+            
+            // Generar descarga local inmediata libre de red
             XLSX.writeFile(libro, "Plantilla_Carga_Masiva_JAC.xlsx");
         }
 
+        // --- EXCEL FORMA 2: LEER Y CARGAR EXCEL ---
         function cargarDesdeExcel(event) {
-            if (typeof XLSX === 'undefined') {
-                alert("🚨 El navegador no permite procesar el archivo Excel localmente por seguridad en archivos de disco rígido. Por favor, accede mediante el link de tu entorno web en línea (GitHub Pages).");
-                document.getElementById('excel-file').value = '';
-                return;
-            }
             const archivo = event.target.files[0];
             if (!archivo) return;
 
             const lector = new FileReader();
             lector.onload = function(e) {
-                try {
-                    const datos = new Uint8Array(e.target.result);
-                    const libroTrabajo = XLSX.read(datos, { type: 'array' });
-                    const hoja = libroTrabajo.Sheets[libroTrabajo.SheetNames[0]];
-                    const datosJson = XLSX.utils.sheet_to_json(hoja);
+                const datos = new Uint8Array(e.target.result);
+                const libroTrabajo = XLSX.read(datos, { type: 'array' });
+                const hoja = libroTrabajo.Sheets[libroTrabajo.SheetNames[0]];
+                const datosJson = XLSX.utils.sheet_to_json(hoja);
 
-                    if(datosJson.length === 0) return;
-
-                    let listaActual = obtenerSocios();
-                    let agregados = 0;
-
-                    datosJson.forEach(fila => {
-                        const nombre = fila.Nombre || fila.nombre || fila.NOMBRE || '';
-                        const documento = fila.Documento || fila.documento || fila.DOCUMENTO || '';
-                        let fecha = fila.Fecha || fila.fecha || fila.FECHA || '';
-                        const valor = fila.Valor || fila.valor || fila.VALOR || 0;
-                        const concepto = fila.Concepto || fila.concepto || fila.CONCEPTO || 'Cuota Mensual';
-
-                        if (typeof fecha === 'number') {
-                            const dateObj = XLSX.utils.parse_date(fecha);
-                            fecha = dateObj.toISOString().split('T')[0];
-                        }
-
-                        if (nombre !== '' && documento !== '') {
-                            listaActual.push({ nombre, documento, fecha, valor, concepto });
-                            agregados++;
-                        }
-                    });
-
-                    guardarSocios(listaActual);
-                    alert(`¡Éxito! Se cargaron ${agregados} socios.`);
-                } catch(err) {
-                    alert("Error leyendo la estructura del archivo.");
+                if(datosJson.length === 0) {
+                    alert("El documento Excel se encuentra vacío.");
+                    return;
                 }
+
+                let listaActual = obtenerSocios();
+                let agregados = 0;
+
+                datosJson.forEach(fila => {
+                    const nombre = fila.Nombre || fila.nombre || fila.NOMBRE || '';
+                    const documento = fila.Documento || fila.documento || fila.DOCUMENTO || '';
+                    let fecha = fila.Fecha || fila.fecha || fila.FECHA || '';
+                    const valor = fila.Valor || fila.valor || fila.VALOR || 0;
+                    const concepto = fila.Concepto || fila.concepto || fila.CONCEPTO || 'Cuota Mensual';
+
+                    // Corrección técnica si Excel procesa las fechas como números internos de serie
+                    if (typeof fecha === 'number') {
+                        const dateObj = XLSX.utils.parse_date(fecha);
+                        fecha = dateObj.toISOString().split('T')[0];
+                    }
+
+                    if (nombre !== '' && documento !== '') {
+                        listaActual.push({ nombre, documento, fecha, valor, concepto });
+                        agregados++;
+                    }
+                });
+
+                guardarSocios(listaActual);
+                alert(`¡Proceso Exitoso! Se han incorporado de forma masiva ${agregados} socios al listado.`);
                 document.getElementById('excel-file').value = '';
             };
             lector.readAsArrayBuffer(archivo);
         }
 
-        // Carga forzada segura
-        window.addEventListener("load", function() {
+        // Ejecución de renderizado limpia controlando asincronía del navegador
+        document.addEventListener("DOMContentLoaded", function() {
+            switchView('socios');
             mostrarSociosEnTabla();
         });
     </script>
