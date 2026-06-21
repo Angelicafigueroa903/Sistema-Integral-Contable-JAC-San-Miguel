@@ -143,7 +143,7 @@
             <li><a onclick="switchView('salud')" id="btn-salud"><span class="menu-icon">❤️</span> Comité Salud</a></li>
             <li><a onclick="switchView('gastos')" id="btn-gastos"><span class="menu-icon">💸</span> Gastos Generales J.A.C.</a></li>
             <li><a onclick="switchView('caja')" id="btn-caja"><span class="menu-icon">🏦</span> Caja</a></li>
-            <li><a onclick="switchView('view-estados'); calcularEstadoFinanciero();" id="btn-financiero"><span class="menu-icon">📈</span> Estado Financiero</a></li>
+            <li><a onclick="switchView('estados')" id="btn-estados"><span class="menu-icon">📈</span> Estado Financiero</a></li>
             <li><a onclick="switchView('reportes')" id="btn-reportes"><span class="menu-icon">📄</span> Reportes</a></li>
             <li><a onclick="switchView('configuracion')" id="btn-configuracion"><span class="menu-icon">⚙</span> Configuración</a></li>
         </ul>
@@ -691,7 +691,7 @@
                 mostrarGastosEnTabla();
                 establecerFechaHoy('gas-fecha');
             }
-            else if(viewId === 'financiero') {
+            else if(viewId === 'estados') {
             calcularEstadoFinanciero();
         }
         }
@@ -1401,49 +1401,41 @@ function descargarCajaExcel() {
 }
         
 function calcularEstadoFinanciero() {
-    const tipo = document.getElementById('ef-tipo').value; // 'mensual' o 'general'
+    const tabla = document.getElementById('tabla-estado');
+    const tipo = document.getElementById('ef-tipo').value;
     const mes = document.getElementById('ef-mes').value;
     
-    // Función para obtener valores filtrados
-    const getDatos = (fn, esIngreso) => {
-        let lista = fn();
-        if (tipo === 'mensual' && mes) {
-            lista = lista.filter(d => d.fecha && d.fecha.startsWith(mes));
-        }
-        return lista.filter(d => (esIngreso ? d.tipo !== 'salida' : d.tipo === 'salida'))
-                    .reduce((sum, d) => sum + parseFloat(d.valor || 0), 0);
-    };
+    // 1. Obtener todas las fuentes de datos
+    const rawAportes = obtenerAportes();
+    const rawGastos = obtenerGastos();
+    const rawMultas = obtenerMultas();
+    const rawDeportes = obtenerDeportes();
+    const rawSalud = obtenerSalud();
 
-    const modulos = {
-        aportes: { ing: getDatos(obtenerAportes, true), egr: getDatos(obtenerGastos, false) },
-        multas: { ing: getDatos(obtenerMultas, true), egr: getDatos(obtenerMultas, false) },
-        deporte: { ing: getDatos(obtenerDeportes, true), egr: getDatos(obtenerDeportes, false) },
-        salud: { ing: getDatos(obtenerSalud, true), egr: getDatos(obtenerSalud, false) }
-    };
+    // 2. Unificar y filtrar movimientos
+    let movimientos = [
+        ...rawAportes.map(i => ({...i, tipo: 'Ingreso', categoria: 'Aporte'})),
+        ...rawMultas.map(i => ({...i, tipo: 'Ingreso', categoria: 'Multa'})),
+        ...rawDeportes.filter(d => d.tipo === 'ingreso').map(i => ({...i, tipo: 'Ingreso', categoria: 'Deporte'})),
+        ...rawSalud.filter(s => s.tipo === 'ingreso').map(i => ({...i, tipo: 'Ingreso', categoria: 'Salud'})),
+        ...rawGastos.map(i => ({...i, tipo: 'Gasto', categoria: 'Gasto'})),
+        ...rawDeportes.filter(d => d.tipo === 'salida').map(i => ({...i, tipo: 'Gasto', categoria: 'Deporte'})),
+        ...rawSalud.filter(s => s.tipo === 'salida').map(i => ({...i, tipo: 'Gasto', categoria: 'Salud'}))
+    ];
 
-    renderizarEstado(modulos);
-}
-        
-function calcularEstadoFinanciero() {
-        const tabla = document.getElementById('tabla-estado');
-        if(!tabla) return;
-        
-        const aportes = obtenerAportes();
-        const gastos = obtenerGastos();
-        const multas = obtenerMultas();
-        
+    // Aplicar filtro de fecha si es necesario
+    if (tipo === 'mensual' && mes) {
+        movimientos = movimientos.filter(d => d.fecha && d.fecha.startsWith(mes));
+    }
+
+    // 3. Pintar la tabla
+    if (tabla) {
         let html = `<thead><tr><th>Fecha</th><th>Concepto</th><th>Tipo</th><th>Valor</th></tr></thead><tbody>`;
         let totalIngresos = 0;
         let totalGastos = 0;
 
-        const movimientos = [
-            ...aportes.map(i => ({...i, tipo: 'Ingreso', categoria: 'Aporte'})),
-            ...multas.map(i => ({...i, tipo: 'Ingreso', categoria: 'Multa'})),
-            ...gastos.map(i => ({...i, tipo: 'Gasto', categoria: 'Gasto'}))
-        ];
-
         movimientos.sort((a,b) => new Date(b.fecha) - new Date(a.fecha)).forEach(mov => {
-            const valor = parseFloat(mov.valor);
+            const valor = parseFloat(mov.valor || 0);
             if(mov.tipo === 'Ingreso') totalIngresos += valor;
             else totalGastos += valor;
 
@@ -1461,6 +1453,7 @@ function calcularEstadoFinanciero() {
         </tr></tbody>`;
         tabla.innerHTML = html;
     }
+}
         
         // CIERRE POPUPS EXTERNOS
         window.onclick = function(e) {
