@@ -579,6 +579,11 @@
             </div>
         </div>
     </div>
+    <div style="text-align: right; margin-bottom: 10px;">
+        <button onclick="descargarExcelFinanciero()" style="background: #27ae60; color: white; border: none; padding: 10px 20px; cursor: pointer; border-radius: 4px; font-weight: bold;">
+            📥 Descargar Reporte en Excel
+        </button>
+    </div>
     <table class="estado-financiero" id="tabla-estado">
         </table>
 </section>
@@ -1520,6 +1525,45 @@ function calcularEstadoFinanciero() {
     tbody.innerHTML = datos.map(i => `<tr><td>${i.fecha}</td><td>${i.concepto}</td><td>${i.nombre || i.socio || 'N/A'}</td><td>$${parseFloat(i.valor).toLocaleString()}</td></tr>`).join('');
     
     modal.style.display = 'block';
+}    
+
+    function descargarExcelFinanciero() {
+    // 1. Obtener valores actuales (usando las mismas variables que definimos antes)
+    // Nota: Debes asegurarte de que estas variables (d, totIng, totEgr) 
+    // estén disponibles o ejecutarlas de nuevo aquí.
+    
+    // Si ya calculaste los valores, los usamos:
+    const mes = document.getElementById('ef-mes') ? document.getElementById('ef-mes').value : 'General';
+
+    // Construimos la estructura de filas igual a tu imagen
+    const filas = [
+        ["ESTADOS FINANCIEROS - JAC SAN MIGUEL"],
+        ["PERIODO", mes],
+        [],
+        ["DESCRIPCIÓN", "MONTO"],
+        ["INGRESOS", ""],
+        ["Aportes de Socios", d.aportes],
+        ["Multas", d.multas],
+        ["Comité Deportes (Ingresos)", d.depIng],
+        ["Comité Salud (Ingresos)", d.salIng],
+        ["TOTAL DE INGRESOS", totIng],
+        [],
+        ["GASTOS", ""],
+        ["Gastos Generales J.A.C.", d.gastosGen],
+        ["Comité Deportes (Egresos)", d.depEgr],
+        ["Comité Salud (Egresos)", d.salEgr],
+        ["TOTAL DE GASTOS", totEgr],
+        [],
+        ["SALDO NETO FINAL", (totIng - totEgr)]
+    ];
+
+    // 2. Crear el libro y la hoja
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.aoa_to_sheet(filas);
+    
+    // 3. Estilo básico (automático de XLSX) y descarga
+    XLSX.utils.book_append_sheet(wb, ws, "Estado Financiero");
+    XLSX.writeFile(wb, `Estado_Financiero_${mes}.xlsx`);
 }    
         
         // CIERRE POPUPS EXTERNOS
