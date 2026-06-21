@@ -1517,7 +1517,7 @@ function calcularEstadoFinanciero() {
     }
     
     titulo.innerText = "Detalle de: " + (grupo ? grupo.nombre : categoria);
-    tbody.innerHTML = datos.map(i => `<tr><td>${i.fecha}</td><td>${i.concepto}</td><td>${i.nombre || i.socio || 'N/A'}</td><td>$${parseFloat(i.valor).toLocaleString()}</td></tr>`).join('');
+    tbody.innerHTML = datos.map(i => `<tr><td>${i.fecha}</td><td>${i.concepto}</td><td>${i.nombreSocio || i.socio || 'N/A'}</td><td>$${parseFloat(i.valor).toLocaleString()}</td></tr>`).join('');
     
     modal.style.display = 'block';
 }    
