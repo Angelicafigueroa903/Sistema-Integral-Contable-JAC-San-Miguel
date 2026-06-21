@@ -1497,7 +1497,7 @@ function calcularEstadoFinanciero() {
     const modal = document.getElementById('detalle-modal');
     const tbody = document.getElementById('contenido-detalle');
     const titulo = document.getElementById('detalle-titulo');
-    const mesFiltro = document.getElementById('ef-mes').value; // Captura el mes elegido
+    const mesFiltro = document.getElementById('ef-mes') ? document.getElementById('ef-mes').value : '';
     
     // Obtener todas las listas (Asegúrate de que tus funciones obtener... estén disponibles)
     const listas = [
@@ -1517,7 +1517,7 @@ function calcularEstadoFinanciero() {
     }
     
     titulo.innerText = "Detalle de: " + (grupo ? grupo.nombre : categoria);
-    tbody.innerHTML = datos.map(i => `<tr><td>${i.fecha}</td><td>${i.concepto}</td><td>$${parseFloat(i.valor).toLocaleString()}</td></tr>`).join('');
+    tbody.innerHTML = datos.map(i => `<tr><td>${i.fecha}</td><td>${i.concepto}</td><td>${i.nombre || i.socio || 'N/A'}</td><td>$${parseFloat(i.valor).toLocaleString()}</td></tr>`).join('');
     
     modal.style.display = 'block';
 }    
