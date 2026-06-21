@@ -639,7 +639,18 @@
             </div>
         </div>
     </div>
-
+    
+<div id="detalle-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000;">
+    <div style="background:white; width:80%; margin:50px auto; padding:20px; border-radius:8px; max-height:80vh; overflow-y:auto;">
+        <h3 id="detalle-titulo">Detalle</h3>
+        <table id="tabla-detalle" class="table" style="width:100%; margin-top:15px; border-collapse: collapse;">
+            <thead><tr><th>Fecha</th><th>Concepto</th><th>Valor</th></tr></thead>
+            <tbody id="contenido-detalle"></tbody>
+        </table>
+        <button onclick="document.getElementById('detalle-modal').style.display='none'" style="margin-top:15px; padding:8px 15px;">Cerrar</button>
+    </div>
+</div>
+    
     <script>
         // CONTROL DE VISTAS
         function switchView(viewId) {
@@ -1467,19 +1478,49 @@ function calcularEstadoFinanciero() {
         <thead><tr style="background:#2c3e50; color:white;"><th>DESCRIPCIÓN</th><th>MONTO</th></tr></thead>
         <tbody>
             <tr style="background:#ecf0f1;"><td><b>INGRESOS</b></td><td></td></tr>
-            <tr><td>Aportes</td><td>$${d.aportes.toLocaleString()}</td></tr>
-            <tr><td>Multas</td><td>$${d.multas.toLocaleString()}</td></tr>
-            <tr><td>Deportes (Ing)</td><td>$${d.depIng.toLocaleString()}</td></tr>
-            <tr><td>Salud (Ing)</td><td>$${d.salIng.toLocaleString()}</td></tr>
+            <tr><td>Aportes <button onclick="verDetalle('aportes')" style="font-size:10px; cursor:pointer;">Ver</button></td><td>$${d.aportes.toLocaleString()}</td></tr>
+            <tr><td>Multas <button onclick="verDetalle('multas')" style="font-size:10px; cursor:pointer;">Ver</button></td><td>$${d.multas.toLocaleString()}</td></tr>
+            <tr><td>Deportes (Ing) <button onclick="verDetalle('deportes')" style="font-size:10px; cursor:pointer;">Ver</button></td><td>$${d.depIng.toLocaleString()}</td></tr>
+            <tr><td>Salud (Ing) <button onclick="verDetalle('salud')" style="font-size:10px; cursor:pointer;">Ver</button></td><td>$${d.salIng.toLocaleString()}</td></tr>
             <tr style="border-top:2px solid #000;"><td><b>TOTAL INGRESOS</b></td><td><b>$${totIng.toLocaleString()}</b></td></tr>
+            
             <tr style="background:#ecf0f1;"><td><b>GASTOS</b></td><td></td></tr>
-            <tr><td>Gastos Generales</td><td>$${d.gastosGen.toLocaleString()}</td></tr>
-            <tr><td>Deportes (Egr)</td><td>$${d.depEgr.toLocaleString()}</td></tr>
-            <tr><td>Salud (Egr)</td><td>$${d.salEgr.toLocaleString()}</td></tr>
+            <tr><td>Gastos Generales <button onclick="verDetalle('gastos')" style="font-size:10px; cursor:pointer;">Ver</button></td><td>$${d.gastosGen.toLocaleString()}</td></tr>
+            <tr><td>Deportes (Egr) <button onclick="verDetalle('deportes')" style="font-size:10px; cursor:pointer;">Ver</button></td><td>$${d.depEgr.toLocaleString()}</td></tr>
+            <tr><td>Salud (Egr) <button onclick="verDetalle('salud')" style="font-size:10px; cursor:pointer;">Ver</button></td><td>$${d.salEgr.toLocaleString()}</td></tr>
             <tr style="border-top:2px solid #000;"><td><b>TOTAL GASTOS</b></td><td><b>$${totEgr.toLocaleString()}</b></td></tr>
             <tr style="background:#27ae60; color:white;"><td><b>SALDO NETO</b></td><td><b>$${(totIng - totEgr).toLocaleString()}</b></td></tr>
         </tbody>`;
 }
+        
+    function verDetalle(categoria) {
+    const modal = document.getElementById('detalle-modal');
+    const tbody = document.getElementById('contenido-detalle');
+    const titulo = document.getElementById('detalle-titulo');
+    const mesFiltro = document.getElementById('ef-mes').value; // Captura el mes elegido
+    
+    // Obtener todas las listas (Asegúrate de que tus funciones obtener... estén disponibles)
+    const listas = [
+        {data: obtenerAportes(), cat: 'aportes', nombre: 'Aportes'},
+        {data: obtenerMultas(), cat: 'multas', nombre: 'Multas'},
+        {data: obtenerGastos(), cat: 'gastos', nombre: 'Gastos Generales'},
+        {data: obtenerDeportes(), cat: 'deportes', nombre: 'Comité Deportes'},
+        {data: obtenerSalud(), cat: 'salud', nombre: 'Comité Salud'}
+    ];
+
+    const grupo = listas.find(g => g.cat === categoria);
+    let datos = grupo ? grupo.data : [];
+
+    // Filtro por mes si el usuario seleccionó uno
+    if (mesFiltro) {
+        datos = datos.filter(i => i.fecha && i.fecha.startsWith(mesFiltro));
+    }
+    
+    titulo.innerText = "Detalle de: " + (grupo ? grupo.nombre : categoria);
+    tbody.innerHTML = datos.map(i => `<tr><td>${i.fecha}</td><td>${i.concepto}</td><td>$${parseFloat(i.valor).toLocaleString()}</td></tr>`).join('');
+    
+    modal.style.display = 'block';
+}    
         
         // CIERRE POPUPS EXTERNOS
         window.onclick = function(e) {
