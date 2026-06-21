@@ -1442,10 +1442,12 @@ function calcularEstadoFinanciero() {
     const procesar = (lista, esGasto, esModuloSimple) => {
         let filtrada = lista;
         
-        // 1. Filtrar por mes si es necesario
+        // 1. Filtrar solo si es tipo 'mensual' Y hay un mes seleccionado
         if (tipo === 'mensual' && mesSeleccionado) {
             filtrada = filtrada.filter(item => item.fecha && item.fecha.startsWith(mesSeleccionado));
         }
+        // Si el tipo es 'general', no hacemos nada, por lo tanto 'filtrada' 
+        // contiene todos los registros (suma el acumulado total).
 
         // 2. Sumar
         return filtrada.reduce((sum, item) => {
