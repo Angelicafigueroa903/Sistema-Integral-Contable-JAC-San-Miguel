@@ -584,9 +584,9 @@
             📥 Descargar Reporte en Excel
         </button>
 
-        <button onclick="descargarReporteAportes()" style="background: #e67e22; color: white; border: none; padding: 10px 20px; cursor: pointer; border-radius: 4px; font-weight: bold; margin-left: 10px;">
-            📊 Descargar Resumen General de Aportes
-        </button>
+        <button onclick="descargarReporteAportesDetallado()" style="background: #e67e22; color: white; border: none; padding: 10px 20px; cursor: pointer; border-radius: 4px; font-weight: bold; margin-left: 10px;">
+    📊 Descargar Detalle por Socio
+</button>
     </div>
     <table class="estado-financiero" id="tabla-estado">
         </table>
@@ -1574,41 +1574,43 @@ let totEgr = 0;
     XLSX.writeFile(wb, `Estado_Financiero_${mes}.xlsx`);
 }    
 
-function descargarReporteAportes() {
-    const aportes = obtenerAportes(); // Tu función que trae todos los aportes
+function descargarReporteAportesDetallado() {
+    const aportes = obtenerAportes(); // Asegúrate que esta función devuelva el array completo
+    const socios = obtenerSocios();   // Asegúrate que esta función devuelva el array completo
     
-    // 1. Agrupar aportes por concepto (Rubro)
-    const resumen = aportes.reduce((acc, item) => {
-        const concepto = item.concepto || "Sin concepto";
-        const valor = parseFloat(item.valor) || 0;
-        acc[concepto] = (acc[concepto] || 0) + valor;
-        return acc;
-    }, {});
-
-    // 2. Preparar los datos para el Excel
-    const datosExcel = [
-        ["RUBRO", "VALOR TOTAL"], // Encabezados
-    ];
-
-    let totalGeneral = 0;
+    // 1. Identificar todos los rubros (conceptos) únicos para crear las columnas
+    const rubros = [...new Set(aportes.map(a => a.concepto))].sort();
     
-    // Agregar cada rubro y su suma
-    Object.keys(resumen).forEach(rubro => {
-        datosExcel.push([rubro, resumen[rubro]]);
-        totalGeneral += resumen[rubro];
+    // 2. Construir la cabecera: # | Nombre | Documento | [Rubro 1, Rubro 2...] | TOTAL
+    const cabecera = ["#", "Nombre Socio", "Documento", ...rubros, "TOTAL APORTADO"];
+    const datosExcel = [cabecera];
+
+    // 3. Procesar cada socio
+    socios.forEach((socio, index) => {
+        let fila = [index + 1, socio.nombre, socio.documento];
+        let totalSocio = 0;
+
+        rubros.forEach(rubro => {
+            // Sumar aportes de este socio para este rubro
+            const sumaRubro = aportes
+                .filter(a => a.documento == socio.documento && a.concepto === rubro)
+                .reduce((sum, a) => sum + parseFloat(a.valor || 0), 0);
+            
+            fila.push(sumaRubro);
+            totalSocio += sumaRubro;
+        });
+
+        fila.push(totalSocio); // Columna total del socio
+        datosExcel.push(fila);
     });
 
-    // 3. Fila final de Total General
-    datosExcel.push(["TOTAL APORTADO", totalGeneral]);
-
-    // 4. Crear el Excel
+    // 4. Crear el archivo Excel
     const wb = XLSX.utils.book_new();
     const ws = XLSX.utils.aoa_to_sheet(datosExcel);
     
-    // Opcional: Estilo simple
-    XLSX.utils.book_append_sheet(wb, ws, "Resumen Aportes");
-    XLSX.writeFile(wb, "Reporte_Aportes_General.xlsx");
-}   
+    XLSX.utils.book_append_sheet(wb, ws, "Aportes Detallados");
+    XLSX.writeFile(wb, "Reporte_Detallado_Socios.xlsx");
+}  
         
         // CIERRE POPUPS EXTERNOS
         window.onclick = function(e) {
