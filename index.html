@@ -1532,8 +1532,14 @@ let totIng = 0;
 let totEgr = 0;        
         
     function descargarExcelFinanciero() {
-   // Si los totales son 0, quizás es porque no se ha ejecutado el cálculo
+    const tabla = document.getElementById('tabla-estado');
     const mes = document.getElementById('ef-mes') ? document.getElementById('ef-mes').value : 'General';
+    
+    // Obtenemos los valores directamente de las celdas de la tabla (evitamos usar variables globales)
+    const obtenerValor = (fila, col) => {
+        const row = tabla.rows[fila];
+        return row ? row.cells[col].innerText.replace('$', '').replace(/,/g, '').trim() : 0;
+    };
 
     const filas = [
         ["ESTADOS FINANCIEROS - JAC SAN MIGUEL"],
@@ -1541,26 +1547,23 @@ let totEgr = 0;
         [],
         ["DESCRIPCIÓN", "MONTO"],
         ["INGRESOS", ""],
-        ["Aportes de Socios", d.aportes],
-        ["Multas", d.multas],
-        ["Comité Deportes (Ingresos)", d.depIng],
-        ["Comité Salud (Ingresos)", d.salIng],
-        ["TOTAL DE INGRESOS", totIng],
+        ["Aportes de Socios", obtenerValor(2, 1)],
+        ["Multas", obtenerValor(3, 1)],
+        ["Comité Deportes (Ingresos)", obtenerValor(4, 1)],
+        ["Comité Salud (Ingresos)", obtenerValor(5, 1)],
+        ["TOTAL DE INGRESOS", obtenerValor(6, 1)],
         [],
         ["GASTOS", ""],
-        ["Gastos Generales J.A.C.", d.gastosGen],
-        ["Comité Deportes (Egresos)", d.depEgr],
-        ["Comité Salud (Egresos)", d.salEgr],
-        ["TOTAL DE GASTOS", totEgr],
+        ["Gastos Generales J.A.C.", obtenerValor(8, 1)],
+        ["Comité Deportes (Egresos)", obtenerValor(9, 1)],
+        ["Comité Salud (Egresos)", obtenerValor(10, 1)],
+        ["TOTAL DE GASTOS", obtenerValor(11, 1)],
         [],
-        ["SALDO NETO FINAL", (totIng - totEgr)]
+        ["SALDO NETO FINAL", obtenerValor(12, 1)]
     ];
 
-    // 2. Crear el libro y la hoja
     const wb = XLSX.utils.book_new();
     const ws = XLSX.utils.aoa_to_sheet(filas);
-    
-    // 3. Estilo básico (automático de XLSX) y descarga
     XLSX.utils.book_append_sheet(wb, ws, "Estado Financiero");
     XLSX.writeFile(wb, `Estado_Financiero_${mes}.xlsx`);
 }    
