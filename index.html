@@ -1416,9 +1416,17 @@ function calcularEstadoFinanciero() {
     const salud = obtenerSalud();
 
     // 2. Funciones de ayuda para sumar
-    const sumar = (lista, esGasto) => lista
-        .filter(i => esGasto ? i.tipo === 'salida' : i.tipo !== 'salida')
-        .reduce((sum, i) => sum + parseFloat(i.valor || 0), 0);
+const sumar = (lista, esGasto) => lista
+    .filter(i => {
+        // Verifica si el tipo de movimiento coincide con lo que buscamos
+        const esSalida = i.tipo === 'salida' || i.tipo === 'Gasto';
+        return esGasto ? esSalida : !esSalida;
+    })
+    .reduce((sum, i) => {
+        // Aseguramos que valor sea un número real, limpiando posibles comas o puntos
+        const valor = parseFloat(i.valor) || 0;
+        return sum + valor;
+    }, 0);
 
     // 3. Organizar los montos según el ejemplo
     const datos = {
