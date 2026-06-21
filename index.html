@@ -691,6 +691,9 @@
                 mostrarGastosEnTabla();
                 establecerFechaHoy('gas-fecha');
             }
+            else if(viewId === 'financiero') {
+            calcularEstadoFinanciero();
+        }
         }
 
         function establecerFechaHoy(idInput) {
@@ -1422,54 +1425,42 @@ function calcularEstadoFinanciero() {
 }
         
 function calcularEstadoFinanciero() {
-    const tabla = document.getElementById('tabla-estado');
-    const tipo = document.getElementById('ef-tipo').value;
-    const mesFiltro = document.getElementById('ef-mes').value; // Formato YYYY-MM
-    
-    // 1. Recuperar todos los datos (Ajusta los nombres según cómo los guardas en tu localstorage)
-    const aportes = JSON.parse(localStorage.getItem('aportes') || '[]');
-    const gastos = JSON.parse(localStorage.getItem('gastos') || '[]');
-    const multas = JSON.parse(localStorage.getItem('multas') || '[]');
+        const tabla = document.getElementById('tabla-estado');
+        if(!tabla) return;
+        
+        const aportes = obtenerAportes();
+        const gastos = obtenerGastos();
+        const multas = obtenerMultas();
+        
+        let html = `<thead><tr><th>Fecha</th><th>Concepto</th><th>Tipo</th><th>Valor</th></tr></thead><tbody>`;
+        let totalIngresos = 0;
+        let totalGastos = 0;
 
-    let html = `<thead><tr><th>Fecha</th><th>Concepto</th><th>Tipo</th><th>Valor</th></tr></thead><tbody>`;
-    let totalIngresos = 0;
-    let totalGastos = 0;
+        const movimientos = [
+            ...aportes.map(i => ({...i, tipo: 'Ingreso', categoria: 'Aporte'})),
+            ...multas.map(i => ({...i, tipo: 'Ingreso', categoria: 'Multa'})),
+            ...gastos.map(i => ({...i, tipo: 'Gasto', categoria: 'Gasto'}))
+        ];
 
-    // 2. Procesar datos (Unificando los tres módulos)
-    const movimientos = [
-        ...aportes.map(i => ({...i, tipo: 'Ingreso', categoria: 'Aporte'})),
-        ...multas.map(i => ({...i, tipo: 'Ingreso', categoria: 'Multa'})),
-        ...gastos.map(i => ({...i, tipo: 'Gasto', categoria: 'Gasto'}))
-    ];
+        movimientos.sort((a,b) => new Date(b.fecha) - new Date(a.fecha)).forEach(mov => {
+            const valor = parseFloat(mov.valor);
+            if(mov.tipo === 'Ingreso') totalIngresos += valor;
+            else totalGastos += valor;
 
-    // 3. Filtrar por fecha si es necesario
-    const filtrados = (tipo === 'mensual' && mesFiltro) 
-        ? movimientos.filter(m => m.fecha.startsWith(mesFiltro))
-        : movimientos;
+            html += `<tr style="color: ${mov.tipo === 'Ingreso' ? '#27ae60' : '#c0392b'}">
+                <td>${mov.fecha}</td>
+                <td>${mov.concepto} (${mov.categoria})</td>
+                <td>${mov.tipo}</td>
+                <td>$${valor.toLocaleString()}</td>
+            </tr>`;
+        });
 
-    // 4. Dibujar filas
-    filtrados.sort((a,b) => new Date(b.fecha) - new Date(a.fecha)).forEach(mov => {
-        const valor = parseFloat(mov.valor);
-        if(mov.tipo === 'Ingreso') totalIngresos += valor;
-        else totalGastos += valor;
-
-        html += `<tr class="${mov.tipo === 'Ingreso' ? 'fila-ingreso' : 'fila-gasto'}">
-            <td>${mov.fecha}</td>
-            <td>${mov.concepto} (${mov.categoria})</td>
-            <td>${mov.tipo}</td>
-            <td>$${valor.toLocaleString()}</td>
-        </tr>`;
-    });
-
-    // 5. Fila de Saldo final
-    const saldo = totalIngresos - totalGastos;
-    html += `<tr class="fila-saldo">
-        <td colspan="3" style="text-align:right">SALDO TOTAL:</td>
-        <td>$${saldo.toLocaleString()}</td>
-    </tr></tbody>`;
-
-    tabla.innerHTML = html;
-}
+        html += `<tr style="background:#f4f4f4; font-weight:bold;">
+            <td colspan="3" style="text-align:right">SALDO FINAL:</td>
+            <td>$${(totalIngresos - totalGastos).toLocaleString()}</td>
+        </tr></tbody>`;
+        tabla.innerHTML = html;
+    }
         
         // CIERRE POPUPS EXTERNOS
         window.onclick = function(e) {
