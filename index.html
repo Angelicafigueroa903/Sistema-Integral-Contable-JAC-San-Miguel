@@ -1525,17 +1525,16 @@ function calcularEstadoFinanciero() {
     tbody.innerHTML = datos.map(i => `<tr><td>${i.fecha}</td><td>${i.concepto}</td><td>${i.nombre || i.socio || 'N/A'}</td><td>$${parseFloat(i.valor).toLocaleString()}</td></tr>`).join('');
     
     modal.style.display = 'block';
-}    
-
+}   
+// VARIABLES GLOBALES (BIEN UBICADAS AQUÍ)
+let d = { aportes: 0, multas: 0, gastosGen: 0, depIng: 0, depEgr: 0, salIng: 0, salEgr: 0 };
+let totIng = 0;
+let totEgr = 0;        
+        
     function descargarExcelFinanciero() {
-    // 1. Obtener valores actuales (usando las mismas variables que definimos antes)
-    // Nota: Debes asegurarte de que estas variables (d, totIng, totEgr) 
-    // estén disponibles o ejecutarlas de nuevo aquí.
-    
-    // Si ya calculaste los valores, los usamos:
+   // Si los totales son 0, quizás es porque no se ha ejecutado el cálculo
     const mes = document.getElementById('ef-mes') ? document.getElementById('ef-mes').value : 'General';
 
-    // Construimos la estructura de filas igual a tu imagen
     const filas = [
         ["ESTADOS FINANCIEROS - JAC SAN MIGUEL"],
         ["PERIODO", mes],
