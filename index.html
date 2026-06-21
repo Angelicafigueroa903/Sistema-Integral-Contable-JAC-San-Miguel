@@ -666,8 +666,12 @@
                 configuracion: "⚙ Configuración"
             };
             
-            document.getElementById('view-title').innerText = titulos[viewId] || "JAC San Miguel";
-
+            // Si el ID es 'estados', el título será vacío. Si no, usa el título definido o el nombre general.
+if (viewId === 'estados') {
+    document.getElementById('view-title').innerText = ""; 
+} else {
+    document.getElementById('view-title').innerText = titulos[viewId] || "JAC San Miguel";
+}
             if(viewId === 'aportes') {
                 actualizarSelectorSocios();
                 mostrarAportesEnTablas();
