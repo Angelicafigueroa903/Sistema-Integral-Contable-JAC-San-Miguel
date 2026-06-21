@@ -1406,57 +1406,60 @@ function descargarCajaExcel() {
         
 function calcularEstadoFinanciero() {
     const tabla = document.getElementById('tabla-estado');
-    const tipo = document.getElementById('ef-tipo').value;
-    const mes = document.getElementById('ef-mes').value;
-    
-    // 1. Obtener todas las fuentes de datos
-    const rawAportes = obtenerAportes();
-    const rawGastos = obtenerGastos();
-    const rawMultas = obtenerMultas();
-    const rawDeportes = obtenerDeportes();
-    const rawSalud = obtenerSalud();
+    if (!tabla) return;
 
-    // 2. Unificar y filtrar movimientos
-    let movimientos = [
-        ...rawAportes.map(i => ({...i, tipo: 'Ingreso', categoria: 'Aporte'})),
-        ...rawMultas.map(i => ({...i, tipo: 'Ingreso', categoria: 'Multa'})),
-        ...rawDeportes.filter(d => d.tipo === 'ingreso').map(i => ({...i, tipo: 'Ingreso', categoria: 'Deporte'})),
-        ...rawSalud.filter(s => s.tipo === 'ingreso').map(i => ({...i, tipo: 'Ingreso', categoria: 'Salud'})),
-        ...rawGastos.map(i => ({...i, tipo: 'Gasto', categoria: 'Gasto'})),
-        ...rawDeportes.filter(d => d.tipo === 'salida').map(i => ({...i, tipo: 'Gasto', categoria: 'Deporte'})),
-        ...rawSalud.filter(s => s.tipo === 'salida').map(i => ({...i, tipo: 'Gasto', categoria: 'Salud'}))
-    ];
+    // 1. Obtener datos
+    const aportes = obtenerAportes();
+    const gastos = obtenerGastos();
+    const multas = obtenerMultas();
+    const deportes = obtenerDeportes();
+    const salud = obtenerSalud();
 
-    // Aplicar filtro de fecha si es necesario
-    if (tipo === 'mensual' && mes) {
-        movimientos = movimientos.filter(d => d.fecha && d.fecha.startsWith(mes));
-    }
+    // 2. Funciones de ayuda para sumar
+    const sumar = (lista, esGasto) => lista
+        .filter(i => esGasto ? i.tipo === 'salida' : i.tipo !== 'salida')
+        .reduce((sum, i) => sum + parseFloat(i.valor || 0), 0);
 
-    // 3. Pintar la tabla
-    if (tabla) {
-        let html = `<thead><tr><th>Fecha</th><th>Concepto</th><th>Tipo</th><th>Valor</th></tr></thead><tbody>`;
-        let totalIngresos = 0;
-        let totalGastos = 0;
+    // 3. Organizar los montos según el ejemplo
+    const datos = {
+        aportes: sumar(aportes, false),
+        multas: sumar(multas, false),
+        deportesIng: sumar(deportes, false),
+        saludIng: sumar(salud, false),
+        gastosGen: sumar(gastos, true),
+        deportesEgr: sumar(deportes, true),
+        saludEgr: sumar(salud, true)
+    };
 
-        movimientos.sort((a,b) => new Date(b.fecha) - new Date(a.fecha)).forEach(mov => {
-            const valor = parseFloat(mov.valor || 0);
-            if(mov.tipo === 'Ingreso') totalIngresos += valor;
-            else totalGastos += valor;
+    const totalIngresos = datos.aportes + datos.multas + datos.deportesIng + datos.saludIng;
+    const totalGastos = datos.gastosGen + datos.deportesEgr + datos.saludEgr;
+    const ingresoNeto = totalIngresos - totalGastos;
 
-            html += `<tr style="color: ${mov.tipo === 'Ingreso' ? '#27ae60' : '#c0392b'}">
-                <td>${mov.fecha}</td>
-                <td>${mov.concepto} (${mov.categoria})</td>
-                <td>${mov.tipo}</td>
-                <td>$${valor.toLocaleString()}</td>
-            </tr>`;
-        });
-
-        html += `<tr style="background:#f4f4f4; font-weight:bold;">
-            <td colspan="3" style="text-align:right">SALDO FINAL:</td>
-            <td>$${(totalIngresos - totalGastos).toLocaleString()}</td>
-        </tr></tbody>`;
-        tabla.innerHTML = html;
-    }
+    // 4. Dibujar la estructura profesional
+    tabla.innerHTML = `
+        <thead style="background: #2c3e50; color: white;">
+            <tr><th>DESCRIPCIÓN</th><th>MONTO</th></tr>
+        </thead>
+        <tbody>
+            <tr style="background: #ecf0f1; font-weight: bold;"><td colspan="2">INGRESOS</td></tr>
+            <tr><td>Aportes de Socios</td><td>$${datos.aportes.toLocaleString()}</td></tr>
+            <tr><td>Multas</td><td>$${datos.multas.toLocaleString()}</td></tr>
+            <tr><td>Comité Deportes (Ingresos)</td><td>$${datos.deportesIng.toLocaleString()}</td></tr>
+            <tr><td>Comité Salud (Ingresos)</td><td>$${datos.saludIng.toLocaleString()}</td></tr>
+            <tr style="font-weight: bold; border-top: 2px solid #ddd;"><td>TOTAL DE INGRESOS</td><td>$${totalIngresos.toLocaleString()}</td></tr>
+            
+            <tr style="background: #ecf0f1; font-weight: bold;"><td colspan="2">GASTOS</td></tr>
+            <tr><td>Gastos Generales J.A.C.</td><td>$${datos.gastosGen.toLocaleString()}</td></tr>
+            <tr><td>Comité Deportes (Egresos)</td><td>$${datos.deportesEgr.toLocaleString()}</td></tr>
+            <tr><td>Comité Salud (Egresos)</td><td>$${datos.saludEgr.toLocaleString()}</td></tr>
+            <tr style="font-weight: bold; border-top: 2px solid #ddd;"><td>TOTAL DE GASTOS</td><td>$${totalGastos.toLocaleString()}</td></tr>
+            
+            <tr style="background: #27ae60; color: white; font-weight: bold; font-size: 1.2em;">
+                <td>INGRESO NETO FINAL</td>
+                <td>$${ingresoNeto.toLocaleString()}</td>
+            </tr>
+        </tbody>
+    `;
 }
         
         // CIERRE POPUPS EXTERNOS
