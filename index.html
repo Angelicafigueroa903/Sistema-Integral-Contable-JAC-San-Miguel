@@ -572,6 +572,7 @@
                     <option value="mensual">Reporte Mensual</option>
                     <option value="general">Acumulado General</option>
                 </select>
+            <input type="month" id="ef-mes" onchange="calcularEstadoFinanciero()">
             </div>
             <div class="form-group">
                 <label>Mes</label>
@@ -1406,22 +1407,34 @@ function descargarCajaExcel() {
         
 function calcularEstadoFinanciero() {
     const tabla = document.getElementById('tabla-estado');
-    if (!tabla) return;
+    const tipo = document.getElementById('ef-tipo').value;
+    const mesSeleccionado = document.getElementById('ef-mes').value; // Ejemplo: "2026-06"
+    
+    // Función para filtrar por mes si aplica
+    const aplicarFiltroFecha = (lista) => {
+        if (tipo === 'mensual' && mesSeleccionado) {
+            return lista.filter(item => item.fecha && item.fecha.startsWith(mesSeleccionado));
+        }
+        return lista;
+    };
 
-    // 1. Obtener datos
-    const aportes = obtenerAportes();
-    const gastos = obtenerGastos();
-    const multas = obtenerMultas();
-    const deportes = obtenerDeportes();
-    const salud = obtenerSalud();
+    // 1. Obtener y filtrar datos
+    const aportes = aplicarFiltroFecha(obtenerAportes());
+    const multas = aplicarFiltroFecha(obtenerMultas());
+    const gastos = aplicarFiltroFecha(obtenerGastos());
+    const deportes = aplicarFiltroFecha(obtenerDeportes());
+    const salud = aplicarFiltroFecha(obtenerSalud());
 
-    // 2. Funciones de ayuda para sumar corregidas
-const sumar = (lista, esGasto, moduloNombre = '') => {
-    // Si es Aportes o Multas, sumamos todo sin filtrar por tipo, 
-    // porque esos módulos no suelen tener la propiedad 'tipo'
-    if (moduloNombre === 'aportes' || moduloNombre === 'multas') {
-        return lista.reduce((sum, i) => sum + (parseFloat(i.valor) || 0), 0);
-    }
+    // 2. Sumar usando la lógica corregida que definimos antes
+    const datos = {
+        aportes: sumar(aportes, false, 'aportes'),
+        multas: sumar(multas, false, 'multas'),
+        deportesIng: sumar(deportes, false, 'deportes'),
+        saludIng: sumar(salud, false, 'salud'),
+        gastosGen: sumar(gastos, true, 'gastos'),
+        deportesEgr: sumar(deportes, true, 'deportes'),
+        saludEgr: sumar(salud, true, 'salud')
+    };
     
     // Si es Gastos, sumamos todo (como ya tenías)
     if (moduloNombre === 'gastos') {
