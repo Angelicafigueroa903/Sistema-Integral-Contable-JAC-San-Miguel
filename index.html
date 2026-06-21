@@ -1407,86 +1407,79 @@ function descargarCajaExcel() {
         
 function calcularEstadoFinanciero() {
     const tabla = document.getElementById('tabla-estado');
-    const tipo = document.getElementById('ef-tipo').value;
-    const mesSeleccionado = document.getElementById('ef-mes').value; // Ejemplo: "2026-06"
-    
-    // Función para filtrar por mes si aplica
-    const aplicarFiltroFecha = (lista) => {
-        if (tipo === 'mensual' && mesSeleccionado) {
-            return lista.filter(item => item.fecha && item.fecha.startsWith(mesSeleccionado));
+    if (!tabla) return;
+
+    // Obtenemos los valores de los selectores de forma segura
+    const tipo = document.getElementById('ef-tipo') ? document.getElementById('ef-tipo').value : 'general';
+    const mesSeleccionado = document.getElementById('ef-mes') ? document.getElementById('ef-mes').value : '';
+
+    // Función auxiliar para obtener datos de forma segura
+    const getDatos = (fn) => {
+        try {
+            const data = fn();
+            return Array.isArray(data) ? data : [];
+        } catch (e) {
+            return [];
         }
-        return lista;
     };
 
-    // 1. Obtener y filtrar datos
-    const aportes = aplicarFiltroFecha(obtenerAportes());
-    const multas = aplicarFiltroFecha(obtenerMultas());
-    const gastos = aplicarFiltroFecha(obtenerGastos());
-    const deportes = aplicarFiltroFecha(obtenerDeportes());
-    const salud = aplicarFiltroFecha(obtenerSalud());
+    // Función para filtrar y sumar
+    const procesar = (lista, esGasto, esModuloSimple) => {
+        let filtrada = lista;
+        
+        // 1. Filtrar por mes si es necesario
+        if (tipo === 'mensual' && mesSeleccionado) {
+            filtrada = filtrada.filter(item => item.fecha && item.fecha.startsWith(mesSeleccionado));
+        }
 
-    // 2. Sumar usando la lógica corregida que definimos antes
-    const datos = {
-        aportes: sumar(aportes, false, 'aportes'),
-        multas: sumar(multas, false, 'multas'),
-        deportesIng: sumar(deportes, false, 'deportes'),
-        saludIng: sumar(salud, false, 'salud'),
-        gastosGen: sumar(gastos, true, 'gastos'),
-        deportesEgr: sumar(deportes, true, 'deportes'),
-        saludEgr: sumar(salud, true, 'salud')
-    };
-    
-    // Si es Gastos, sumamos todo (como ya tenías)
-    if (moduloNombre === 'gastos') {
-        return lista.reduce((sum, i) => sum + (parseFloat(i.valor) || 0), 0);
-    }
-
-    // Para Deportes y Salud, sí filtramos por tipo
-    return lista
-        .filter(i => esGasto ? (i.tipo === 'salida' || i.tipo === 'gasto') : (i.tipo === 'ingreso'))
-        .reduce((sum, i) => sum + (parseFloat(i.valor) || 0), 0);
-};
-
-    // 3. Organizar los montos según el ejemplo
-    const datos = {
-    aportes: sumar(aportes, false, 'aportes'),    // <-- Agregado 'aportes'
-    multas: sumar(multas, false, 'multas'),       // <-- Agregado 'multas'
-    deportesIng: sumar(deportes, false, 'deportes'),
-    saludIng: sumar(salud, false, 'salud'),
-    gastosGen: sumar(gastos, true, 'gastos'),
-    deportesEgr: sumar(deportes, true, 'deportes'),
-    saludEgr: sumar(salud, true, 'salud')
+        // 2. Sumar
+        return filtrada.reduce((sum, item) => {
+            const val = parseFloat(item.valor) || 0;
+            // Si es módulo simple (Aportes/Multas/Gastos), suma todo. Si es complejo, filtra por tipo.
+            if (esModuloSimple) return sum + val;
+            const esSalida = (item.tipo === 'salida' || item.tipo === 'gasto' || item.tipo === 'Gasto');
+            return esGasto ? (esSalida ? sum + val : sum) : (!esSalida ? sum + val : sum);
+        }, 0);
     };
 
-    const totalIngresos = datos.aportes + datos.multas + datos.deportesIng + datos.saludIng;
-    const totalGastos = datos.gastosGen + datos.deportesEgr + datos.saludEgr;
-    const ingresoNeto = totalIngresos - totalGastos;
+    // Obtenemos listas
+    const aportes = getDatos(obtenerAportes);
+    const multas = getDatos(obtenerMultas);
+    const gastos = getDatos(obtenerGastos);
+    const dep = getDatos(obtenerDeportes);
+    const sal = getDatos(obtenerSalud);
 
-    // 4. Dibujar la estructura profesional
+    // Cálculos
+    const d = {
+        aportes: procesar(aportes, false, true),
+        multas: procesar(multas, false, true),
+        gastosGen: procesar(gastos, true, true),
+        depIng: procesar(dep, false, false),
+        depEgr: procesar(dep, true, false),
+        salIng: procesar(sal, false, false),
+        salEgr: procesar(sal, true, false)
+    };
+
+    const totIng = d.aportes + d.multas + d.depIng + d.salIng;
+    const totEgr = d.gastosGen + d.depEgr + d.salEgr;
+
+    // Pintar tabla
     tabla.innerHTML = `
-        <thead style="background: #2c3e50; color: white;">
-            <tr><th>DESCRIPCIÓN</th><th>MONTO</th></tr>
-        </thead>
+        <thead><tr style="background:#2c3e50; color:white;"><th>DESCRIPCIÓN</th><th>MONTO</th></tr></thead>
         <tbody>
-            <tr style="background: #ecf0f1; font-weight: bold;"><td colspan="2">INGRESOS</td></tr>
-            <tr><td>Aportes de Socios</td><td>$${datos.aportes.toLocaleString()}</td></tr>
-            <tr><td>Multas</td><td>$${datos.multas.toLocaleString()}</td></tr>
-            <tr><td>Comité Deportes (Ingresos)</td><td>$${datos.deportesIng.toLocaleString()}</td></tr>
-            <tr><td>Comité Salud (Ingresos)</td><td>$${datos.saludIng.toLocaleString()}</td></tr>
-            <tr style="font-weight: bold; border-top: 2px solid #ddd;"><td>TOTAL DE INGRESOS</td><td>$${totalIngresos.toLocaleString()}</td></tr>
-            
-            <tr style="background: #ecf0f1; font-weight: bold;"><td colspan="2">GASTOS</td></tr>
-            <tr><td>Gastos Generales J.A.C.</td><td>$${datos.gastosGen.toLocaleString()}</td></tr>
-            <tr><td>Comité Deportes (Egresos)</td><td>$${datos.deportesEgr.toLocaleString()}</td></tr>
-            <tr><td>Comité Salud (Egresos)</td><td>$${datos.saludEgr.toLocaleString()}</td></tr>
-            <tr style="font-weight: bold; border-top: 2px solid #ddd;"><td>TOTAL DE GASTOS</td><td>$${totalGastos.toLocaleString()}</td></tr>
-            
-            <tr style="background: #27ae60; color: white; font-weight: bold; font-size: 1.2em;">
-                <td>INGRESO NETO FINAL</td>
-                <td>$${ingresoNeto.toLocaleString()}</td>
-            </tr>
-        </tbody>
-    `;
+            <tr style="background:#ecf0f1;"><td><b>INGRESOS</b></td><td></td></tr>
+            <tr><td>Aportes</td><td>$${d.aportes.toLocaleString()}</td></tr>
+            <tr><td>Multas</td><td>$${d.multas.toLocaleString()}</td></tr>
+            <tr><td>Deportes (Ing)</td><td>$${d.depIng.toLocaleString()}</td></tr>
+            <tr><td>Salud (Ing)</td><td>$${d.salIng.toLocaleString()}</td></tr>
+            <tr style="border-top:2px solid #000;"><td><b>TOTAL INGRESOS</b></td><td><b>$${totIng.toLocaleString()}</b></td></tr>
+            <tr style="background:#ecf0f1;"><td><b>GASTOS</b></td><td></td></tr>
+            <tr><td>Gastos Generales</td><td>$${d.gastosGen.toLocaleString()}</td></tr>
+            <tr><td>Deportes (Egr)</td><td>$${d.depEgr.toLocaleString()}</td></tr>
+            <tr><td>Salud (Egr)</td><td>$${d.salEgr.toLocaleString()}</td></tr>
+            <tr style="border-top:2px solid #000;"><td><b>TOTAL GASTOS</b></td><td><b>$${totEgr.toLocaleString()}</b></td></tr>
+            <tr style="background:#27ae60; color:white;"><td><b>SALDO NETO</b></td><td><b>$${(totIng - totEgr).toLocaleString()}</b></td></tr>
+        </tbody>`;
 }
         
         // CIERRE POPUPS EXTERNOS
