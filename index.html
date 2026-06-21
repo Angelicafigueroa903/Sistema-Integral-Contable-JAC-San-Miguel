@@ -1416,32 +1416,16 @@ function calcularEstadoFinanciero() {
     const salud = obtenerSalud();
 
     // 2. Funciones de ayuda para sumar
-// Función universal: suma todo lo que encuentre en la lista recibida
-const sumarLista = (lista) => {
-    return lista.reduce((sum, i) => sum + (parseFloat(i.valor) || 0), 0);
-};
-
-// Función filtrada: suma solo si es un tipo específico
-const sumarPorTipo = (lista, esGasto) => {
-    return lista
-        .filter(i => {
-            const esSalida = (i.tipo === 'salida' || i.tipo === 'Gasto' || i.tipo === 'gasto');
-            return esGasto ? esSalida : !esSalida;
-        })
-        .reduce((sum, i) => sum + (parseFloat(i.valor) || 0), 0);
-};
-
-const datos = {
-    // Para Aportes y Multas, sumamos todo directamente
-    aportes: sumarLista(obtenerAportes()),
-    multas: sumarLista(obtenerMultas()),
+const sumar = (lista, esGasto, moduloNombre = '') => {
+    // Si es el módulo de gastos generales, sumamos todo lo que haya en la lista
+    if (moduloNombre === 'gastos') {
+        return lista.reduce((sum, i) => sum + (parseFloat(i.valor) || 0), 0);
+    }
     
-    // Para los demás, filtramos por tipo
-    deportesIng: sumarPorTipo(obtenerDeportes(), false),
-    saludIng: sumarPorTipo(obtenerSalud(), false),
-    gastosGen: sumarLista(obtenerGastos()), // Suma todos los gastos generales
-    deportesEgr: sumarPorTipo(obtenerDeportes(), true),
-    saludEgr: sumarPorTipo(obtenerSalud(), true)
+    // Para otros módulos (deportes/salud), sí filtramos por tipo
+    return lista
+        .filter(i => esGasto ? (i.tipo === 'salida' || i.tipo === 'gasto') : (i.tipo === 'ingreso'))
+        .reduce((sum, i) => sum + (parseFloat(i.valor) || 0), 0);
 };
 
     // 3. Organizar los montos según el ejemplo
