@@ -107,6 +107,24 @@
         .modal-title { font-size: 1.25rem; color: var(--primary-color); font-weight: bold; }
         .close-modal { font-size: 1.5rem; font-weight: bold; color: #999; cursor: pointer; transition: color 0.2s; }
         .close-modal:hover { color: #333; }
+
+        /* --- ESTILOS PARA ESTADO FINANCIERO INTEGRAL --- */
+        .estado-financiero { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin-top: 20px; 
+            background: white; 
+            border-radius: 8px; 
+            overflow: hidden; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05); 
+        }
+        .estado-financiero th { background-color: var(--primary-color); color: white; padding: 14px; text-align: left; }
+        .estado-financiero td { padding: 12px; border-bottom: 1px solid #eeeeee; }
+        
+        .fila-ingreso { background-color: #d4edda !important; font-weight: bold; color: #155724; }
+        .fila-gasto { background-color: #f8d7da !important; font-weight: bold; color: #721c24; }
+        .fila-saldo { background-color: #cce5ff !important; font-weight: bold; color: #004085; }
+        .total-fila { background-color: #eaeded !important; font-weight: bold; font-size: 1.05rem; border-top: 2px solid var(--primary-color); }
     </style>
 </head>
 <body>
@@ -125,7 +143,7 @@
             <li><a onclick="switchView('salud')" id="btn-salud"><span class="menu-icon">❤️</span> Comité Salud</a></li>
             <li><a onclick="switchView('gastos')" id="btn-gastos"><span class="menu-icon">💸</span> Gastos Generales J.A.C.</a></li>
             <li><a onclick="switchView('caja')" id="btn-caja"><span class="menu-icon">🏦</span> Caja</a></li>
-            <li><a onclick="switchView('financiero')" id="btn-financiero"><span class="menu-icon">📈</span> Estado Financiero</a></li>
+            <li><a onclick="showSection('view-estados'); calcularEstadoFinanciero();" id="btn-financiero"><span class="menu-icon">📈</span> Estado Financiero</a></li>
             <li><a onclick="switchView('reportes')" id="btn-reportes"><span class="menu-icon">📄</span> Reportes</a></li>
             <li><a onclick="switchView('configuracion')" id="btn-configuracion"><span class="menu-icon">⚙</span> Configuración</a></li>
         </ul>
@@ -544,7 +562,26 @@
         <p style="text-align:center; color:#7f8c8d; margin-top:20px;">Seleccione un mes para visualizar el arqueo detallado.</p>
     </div>
 </section>
-        <section id="view-financiero" class="view-section"><h2>📈 Estado Financiero General</h2><p style="margin-top:15px;">Sección para balances e informes consolidados.</p></section>
+        <section id="view-estados" class="view-section">
+    <div class="header-main">📊 Estado Financiero Integral</div>
+    <div class="form-container">
+        <div class="form-grid">
+            <div class="form-group">
+                <label>Tipo de Reporte</label>
+                <select id="ef-tipo" onchange="calcularEstadoFinanciero()">
+                    <option value="mensual">Reporte Mensual</option>
+                    <option value="general">Acumulado General</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Mes</label>
+                <input type="month" id="ef-mes" onchange="calcularEstadoFinanciero()">
+            </div>
+        </div>
+    </div>
+    <table class="estado-financiero" id="tabla-estado">
+        </table>
+</section>
         <section id="view-reportes" class="view-section"><h2>📄 Módulo de Reportes</h2><p style="margin-top:15px;">Sección para exportación de PDF y actas.</p></section>
         <section id="view-configuracion" class="view-section"><h2>⚙ Configuración del Sistema</h2><p style="margin-top:15px;">Sección para parámetros generales de la JAC.</p></section>
     </main>
@@ -1359,6 +1396,31 @@ function descargarCajaExcel() {
     XLSX.utils.book_append_sheet(wb, ws, "Resumen_" + mes);
     XLSX.writeFile(wb, `Resumen_Caja_${mes}.xlsx`);
 }
+        
+function calcularEstadoFinanciero() {
+    const tipo = document.getElementById('ef-tipo').value; // 'mensual' o 'general'
+    const mes = document.getElementById('ef-mes').value;
+    
+    // Función para obtener valores filtrados
+    const getDatos = (fn, esIngreso) => {
+        let lista = fn();
+        if (tipo === 'mensual' && mes) {
+            lista = lista.filter(d => d.fecha && d.fecha.startsWith(mes));
+        }
+        return lista.filter(d => (esIngreso ? d.tipo !== 'salida' : d.tipo === 'salida'))
+                    .reduce((sum, d) => sum + parseFloat(d.valor || 0), 0);
+    };
+
+    const modulos = {
+        aportes: { ing: getDatos(obtenerAportes, true), egr: getDatos(obtenerGastos, false) },
+        multas: { ing: getDatos(obtenerMultas, true), egr: getDatos(obtenerMultas, false) },
+        deporte: { ing: getDatos(obtenerDeportes, true), egr: getDatos(obtenerDeportes, false) },
+        salud: { ing: getDatos(obtenerSalud, true), egr: getDatos(obtenerSalud, false) }
+    };
+
+    renderizarEstado(modulos);
+}
+        
         // CIERRE POPUPS EXTERNOS
         window.onclick = function(e) {
             if (e.target == document.getElementById('historial-modal')) cerrarModal();
