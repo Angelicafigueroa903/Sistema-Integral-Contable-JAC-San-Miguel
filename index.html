@@ -583,6 +583,10 @@
         <button onclick="descargarExcelFinanciero()" style="background: #27ae60; color: white; border: none; padding: 10px 20px; cursor: pointer; border-radius: 4px; font-weight: bold;">
             📥 Descargar Reporte en Excel
         </button>
+
+        <button onclick="descargarReporteAportes()" style="background: #e67e22; color: white; border: none; padding: 10px 20px; cursor: pointer; border-radius: 4px; font-weight: bold; margin-left: 10px;">
+            📊 Descargar Resumen General de Aportes
+        </button>
     </div>
     <table class="estado-financiero" id="tabla-estado">
         </table>
@@ -1569,6 +1573,42 @@ let totEgr = 0;
     XLSX.utils.book_append_sheet(wb, ws, "Estado Financiero");
     XLSX.writeFile(wb, `Estado_Financiero_${mes}.xlsx`);
 }    
+
+function descargarReporteAportes() {
+    const aportes = obtenerAportes(); // Tu función que trae todos los aportes
+    
+    // 1. Agrupar aportes por concepto (Rubro)
+    const resumen = aportes.reduce((acc, item) => {
+        const concepto = item.concepto || "Sin concepto";
+        const valor = parseFloat(item.valor) || 0;
+        acc[concepto] = (acc[concepto] || 0) + valor;
+        return acc;
+    }, {});
+
+    // 2. Preparar los datos para el Excel
+    const datosExcel = [
+        ["RUBRO", "VALOR TOTAL"], // Encabezados
+    ];
+
+    let totalGeneral = 0;
+    
+    // Agregar cada rubro y su suma
+    Object.keys(resumen).forEach(rubro => {
+        datosExcel.push([rubro, resumen[rubro]]);
+        totalGeneral += resumen[rubro];
+    });
+
+    // 3. Fila final de Total General
+    datosExcel.push(["TOTAL APORTADO", totalGeneral]);
+
+    // 4. Crear el Excel
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.aoa_to_sheet(datosExcel);
+    
+    // Opcional: Estilo simple
+    XLSX.utils.book_append_sheet(wb, ws, "Resumen Aportes");
+    XLSX.writeFile(wb, "Reporte_Aportes_General.xlsx");
+}   
         
         // CIERRE POPUPS EXTERNOS
         window.onclick = function(e) {
