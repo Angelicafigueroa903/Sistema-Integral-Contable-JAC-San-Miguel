@@ -1659,27 +1659,11 @@ function cargarInventario() {
             <td style="padding: 10px;">${item.cantidad}</td>
             <td style="padding: 10px;">${item.estado}</td>
             <td style="padding: 10px;">
+                <button onclick="prepararEdicion(${index})" style="background: #2980b9; color: white; border: none; padding: 5px 10px; cursor: pointer; margin-right: 5px;">Editar</button>
                 <button onclick="eliminarArticulo(${index})" style="background: #e74c3c; color: white; border: none; padding: 5px 10px; cursor: pointer;">Eliminar</button>
             </td>
         </tr>
     `).join('');
-}
-
-function agregarArticulo() {
-    const nombre = document.getElementById('inv-nombre').value;
-    const cantidad = document.getElementById('inv-cantidad').value;
-    const estado = document.getElementById('inv-estado').value;
-    
-    if(!nombre || !cantidad) return alert("Por favor, rellena los campos básicos.");
-
-    const inv = JSON.parse(localStorage.getItem('inventarioJac') || '[]');
-    inv.push({ nombre, cantidad, estado });
-    localStorage.setItem('inventarioJac', JSON.stringify(inv));
-    
-    document.getElementById('inv-nombre').value = '';
-    document.getElementById('inv-cantidad').value = '';
-    document.getElementById('inv-estado').value = '';
-    cargarInventario();
 }
 
 function eliminarArticulo(index) {
@@ -1688,6 +1672,57 @@ function eliminarArticulo(index) {
     localStorage.setItem('inventarioJac', JSON.stringify(inv));
     cargarInventario();
 }   
+
+ // Variable para saber qué estamos editando
+let indiceEdicion = -1;
+
+function prepararEdicion(index) {
+    const inv = JSON.parse(localStorage.getItem('inventarioJac') || '[]');
+    const item = inv[index];
+    
+    // Pasamos los datos a los inputs
+    document.getElementById('inv-nombre').value = item.nombre;
+    document.getElementById('inv-cantidad').value = item.cantidad;
+    document.getElementById('inv-estado').value = item.estado;
+    
+    indiceEdicion = index; // Guardamos el índice
+    
+    // Cambiamos el texto del botón de agregar a "Actualizar"
+    const btn = document.querySelector('button[onclick="agregarArticulo()"]');
+    btn.innerText = "Actualizar Artículo";
+    btn.style.backgroundColor = "#27ae60"; // Cambiamos color a verde
+}
+
+function agregarArticulo() {
+    const nombre = document.getElementById('inv-nombre').value;
+    const cantidad = document.getElementById('inv-cantidad').value;
+    const estado = document.getElementById('inv-estado').value;
+    
+    if(!nombre || !cantidad) return alert("Por favor, rellena los campos.");
+
+    const inv = JSON.parse(localStorage.getItem('inventarioJac') || '[]');
+    
+    if (indiceEdicion > -1) {
+        // Actualizar existente
+        inv[indiceEdicion] = { nombre, cantidad, estado };
+        indiceEdicion = -1; // Reset
+        const btn = document.querySelector('button[onclick="agregarArticulo()"]');
+        btn.innerText = "Agregar";
+        btn.style.backgroundColor = "#3498db";
+    } else {
+        // Nuevo artículo
+        inv.push({ nombre, cantidad, estado });
+    }
+    
+    localStorage.setItem('inventarioJac', JSON.stringify(inv));
+    
+    // Limpiar campos
+    document.getElementById('inv-nombre').value = '';
+    document.getElementById('inv-cantidad').value = '';
+    document.getElementById('inv-estado').value = '';
+    
+    cargarInventario();
+}       
         
         // CIERRE POPUPS EXTERNOS
         window.onclick = function(e) {
