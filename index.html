@@ -1779,55 +1779,49 @@ function descargarModuloPDF(key, titulo) {
     const doc = new jsPDF();
     
     const llavesReales = {
-        'aportes': 'jac_db_aportes',       
-        'multas': 'jac_db_multas',     
-        'deportes': 'jac_db_deportes',         
-        'salud': 'jac_db_salud',             
-        'gastos': 'jac_db_gastos',     
-        'caja': 'jac_db_caja',                 
-        'estados': 'jac_db_estadoFinanciero',  
-        'inventario': 'inventarioJac'   
+        'aportes': 'jac_db_aportes',
+        'multas': 'jac_db_multas',
+        'deportes': 'jac_db_deportes',
+        'salud': 'jac_db_salud',
+        'gastos': 'jac_db_gastos',
+        'caja': 'jac_db_caja',
+        'estados': 'jac_db_estadoFinanciero',
+        'inventario': 'inventarioJac'
     };
 
     const nombreReal = llavesReales[key] || key;
     const datosGuardados = localStorage.getItem(nombreReal);
     
     if (!datosGuardados) {
-        alert("El módulo " + titulo + " no tiene datos registrados todavía.");
+        alert("El módulo " + titulo + " no tiene datos registrados.");
         return;
     }
 
     let datos = JSON.parse(datosGuardados);
-    
-    // --- NUEVO: ORDENAMIENTO ---
+
+    // 1. Ordenar (si tienen nombre y fecha)
     datos.sort((a, b) => {
-        let nombreA = (a.nombre || '').toLowerCase();
-        let nombreB = (b.nombre || '').toLowerCase();
-        if (nombreA !== nombreB) return nombreA.localeCompare(nombreB);
-        return new Date(b.fecha) - new Date(a.fecha); // Fecha más reciente primero
+        let nA = (a.nombre || '').toLowerCase();
+        let nB = (b.nombre || '').toLowerCase();
+        if (nA !== nB) return nA.localeCompare(nB);
+        return new Date(b.fecha || 0) - new Date(a.fecha || 0);
     });
 
-    // --- NUEVO: FECHA DE GENERACIÓN ---
+    // 2. Generar encabezado y fecha
     doc.setFontSize(18);
     doc.text("Reporte de " + titulo + " - JAC San Miguel", 14, 20);
-    
     doc.setFontSize(10);
     const fechaGen = new Date().toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric' });
     doc.text("Fecha de generación: " + fechaGen, 14, 27);
 
-    // Limpieza de datos
-    const datosLimpios = datos.map(item => ({
-        nombre: item.nombre || '',
-        documento: item.documento || '',
-        valor: item.valor || 0,
-        concepto: item.concepto || '',
-        fecha: item.fecha || ''
-    }));
+    // 3. Obtener columnas dinámicamente según el objeto
+    const encabezados = Object.keys(datos[0]).map(h => h.toUpperCase());
+    const cuerpo = datos.map(item => Object.values(item));
 
-    // Generar tabla
+    // 4. Generar tabla
     doc.autoTable({
-        head: [['NOMBRE', 'DOCUMENTO', 'VALOR', 'CONCEPTO', 'FECHA']],
-        body: datosLimpios.map(d => [d.nombre, d.documento, d.valor, d.concepto, d.fecha]),
+        head: [encabezados],
+        body: cuerpo,
         startY: 35,
         theme: 'striped',
         headStyles: { fillColor: [44, 62, 80] }
