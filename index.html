@@ -8,6 +8,10 @@
     <meta http-equiv="Expires" content="0" />
     <title>Sistema Integral Contable JAC San Miguel</title>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <style>
         :root {
             --primary-color: #2c3e50;
@@ -624,6 +628,10 @@
         </thead>
         <tbody id="lista-inventario"></tbody>
     </table>
+<button onclick="descargarInventarioPDF()" style="background: #e74c3c; color: white; border: none; padding: 12px 25px; cursor: pointer; border-radius: 4px; font-weight: bold; margin-top: 15px;">
+        📥 Descargar Inventario en PDF
+    </button>
+           
 </section> 
         
         <section id="view-configuracion" class="view-section"><h2>⚙ Configuración del Sistema</h2><p style="margin-top:15px;">Sección para parámetros generales de la JAC.</p></section>
@@ -1721,6 +1729,34 @@ function agregarArticulo() {
     document.getElementById('inv-estado').value = '';
     
     cargarInventario();
+}       
+
+ function descargarInventarioPDF() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    const inv = JSON.parse(localStorage.getItem('inventarioJac') || '[]');
+
+    if (inv.length === 0) {
+        return alert("No hay artículos para exportar.");
+    }
+
+    doc.setFontSize(18);
+    doc.text("Inventario de la Comunidad - J.A.C. San Miguel", 14, 20);
+    doc.setFontSize(10);
+    doc.text("Fecha de reporte: " + new Date().toLocaleDateString(), 14, 30);
+
+    const columns = ["Artículo", "Cantidad", "Estado"];
+    const rows = inv.map(item => [item.nombre, item.cantidad, item.estado]);
+
+    doc.autoTable({
+        head: [columns],
+        body: rows,
+        startY: 40,
+        theme: 'striped',
+        headStyles: { fillColor: [44, 62, 80] }
+    });
+
+    doc.save("Inventario_JAC_San_Miguel.pdf");
 }       
         
         // CIERRE POPUPS EXTERNOS
