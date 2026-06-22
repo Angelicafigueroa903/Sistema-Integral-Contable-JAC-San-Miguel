@@ -635,7 +635,6 @@
 </section> 
         
         <section id="view-configuracion" class="view-section"><h2>⚙ Configuración del Sistema</h2><p style="margin-top:15px;">Sección para parámetros generales de la JAC.</p></section>
-    <h2>⚙ Configuración del Sistema</h2>
     <p style="margin-top:15px; margin-bottom: 20px;">Sección para parámetros generales de la JAC.</p>
 
     <div class="form-container">
@@ -1780,6 +1779,38 @@ function agregarArticulo() {
 
     doc.save("Inventario_JAC_San_Miguel.pdf");
 }       
+        
+  function descargarRespaldoGeneral() {
+    try {
+        // 1. Recopilar datos
+        const respaldo = {
+            fechaRespaldo: new Date().toLocaleString(),
+            socios: JSON.parse(localStorage.getItem('socios') || '[]'),
+            aportes: JSON.parse(localStorage.getItem('aportes') || '[]'),
+            multas: JSON.parse(localStorage.getItem('multas') || '[]'),
+            deportes: JSON.parse(localStorage.getItem('deportes') || '[]'),
+            salud: JSON.parse(localStorage.getItem('salud') || '[]'),
+            gastos: JSON.parse(localStorage.getItem('gastos') || '[]'),
+            inventario: JSON.parse(localStorage.getItem('inventarioJac') || '[]')
+        };
+
+        // 2. Crear archivo
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(respaldo, null, 2));
+        const downloadAnchorNode = document.createElement('a');
+        downloadAnchorNode.setAttribute("href", dataStr);
+        downloadAnchorNode.setAttribute("download", "Respaldo_JAC_San_Miguel.json");
+        document.body.appendChild(downloadAnchorNode);
+        
+        // 3. Forzar clic
+        downloadAnchorNode.click();
+        downloadAnchorNode.remove();
+        
+        alert("¡Respaldo descargado con éxito!");
+    } catch (error) {
+        console.error("Error al generar respaldo:", error);
+        alert("Hubo un error al intentar generar el respaldo. Revisa la consola.");
+    }
+}
         
         // CIERRE POPUPS EXTERNOS
         window.onclick = function(e) {
