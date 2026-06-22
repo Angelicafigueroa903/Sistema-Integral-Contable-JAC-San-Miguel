@@ -1797,6 +1797,12 @@ function descargarModuloPDF(key, titulo) {
 
     doc.save(titulo + "_JAC.pdf");
 }
+
+function verificarLlaves() {
+    console.log("Llaves disponibles en el sistema:", Object.keys(localStorage));
+}
+verificarLlaves(); // Esto se ejecutará al cargar la página   
+
         
         // CIERRE POPUPS EXTERNOS
         window.onclick = function(e) {
