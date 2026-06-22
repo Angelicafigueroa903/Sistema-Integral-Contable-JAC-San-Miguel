@@ -591,7 +591,41 @@
     <table class="estado-financiero" id="tabla-estado">
         </table>
 </section>
-        <section id="view-inventario" class="view-section"><h2>📦 Módulo de Inventario</h2><p style="margin-top:15px;">Sección para exportación de PDF y actas.</p></section>
+
+       <section id="view-inventario" class="view-section" style="display:none;">
+    <h2>📦 Módulo de Inventario</h2>
+    
+    <div class="form-container" style="background: #f4f4f4; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+        <div class="form-grid" style="display: flex; gap: 10px; align-items: end;">
+            <div style="flex: 1;">
+                <label>Nombre Artículo</label>
+                <input type="text" id="inv-nombre" style="width: 100%; padding: 8px;">
+            </div>
+            <div style="flex: 1;">
+                <label>Cantidad</label>
+                <input type="number" id="inv-cantidad" style="width: 100%; padding: 8px;">
+            </div>
+            <div style="flex: 1;">
+                <label>Estado</label>
+                <input type="text" id="inv-estado" style="width: 100%; padding: 8px;">
+            </div>
+            <button onclick="agregarArticulo()" style="background: #3498db; color: white; border: none; padding: 10px 20px; cursor: pointer; border-radius: 4px;">Agregar</button>
+        </div>
+    </div>
+
+    <table style="width: 100%; border-collapse: collapse; background: white;">
+        <thead>
+            <tr style="background: #2c3e50; color: white;">
+                <th style="padding: 10px;">Artículo</th>
+                <th style="padding: 10px;">Cantidad</th>
+                <th style="padding: 10px;">Estado</th>
+                <th style="padding: 10px;">Acción</th>
+            </tr>
+        </thead>
+        <tbody id="lista-inventario"></tbody>
+    </table>
+</section> 
+        
         <section id="view-configuracion" class="view-section"><h2>⚙ Configuración del Sistema</h2><p style="margin-top:15px;">Sección para parámetros generales de la JAC.</p></section>
     </main>
 
@@ -718,6 +752,9 @@ if (viewId === 'estados') {
             else if(viewId === 'estados') {
             calcularEstadoFinanciero();
         }
+            else if(viewId === 'inventario') {
+                cargarInventario();
+            }
         }
 
         function establecerFechaHoy(idInput) {
@@ -1611,6 +1648,45 @@ function descargarReporteAportesDetallado() {
     XLSX.utils.book_append_sheet(wb, ws, "Aportes Detallados");
     XLSX.writeFile(wb, "Reporte_Detallado_Socios.xlsx");
 }  
+
+function cargarInventario() {
+    const inv = JSON.parse(localStorage.getItem('inventarioJac') || '[]');
+    const tbody = document.getElementById('lista-inventario');
+    tbody.innerHTML = inv.map((item, index) => `
+        <tr style="border-bottom: 1px solid #ddd;">
+            <td style="padding: 10px;">${item.nombre}</td>
+            <td style="padding: 10px;">${item.cantidad}</td>
+            <td style="padding: 10px;">${item.estado}</td>
+            <td style="padding: 10px;">
+                <button onclick="eliminarArticulo(${index})" style="background: #e74c3c; color: white; border: none; padding: 5px 10px; cursor: pointer;">Eliminar</button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function agregarArticulo() {
+    const nombre = document.getElementById('inv-nombre').value;
+    const cantidad = document.getElementById('inv-cantidad').value;
+    const estado = document.getElementById('inv-estado').value;
+    
+    if(!nombre || !cantidad) return alert("Por favor, rellena los campos básicos.");
+
+    const inv = JSON.parse(localStorage.getItem('inventarioJac') || '[]');
+    inv.push({ nombre, cantidad, estado });
+    localStorage.setItem('inventarioJac', JSON.stringify(inv));
+    
+    document.getElementById('inv-nombre').value = '';
+    document.getElementById('inv-cantidad').value = '';
+    document.getElementById('inv-estado').value = '';
+    cargarInventario();
+}
+
+function eliminarArticulo(index) {
+    const inv = JSON.parse(localStorage.getItem('inventarioJac') || '[]');
+    inv.splice(index, 1);
+    localStorage.setItem('inventarioJac', JSON.stringify(inv));
+    cargarInventario();
+}   
         
         // CIERRE POPUPS EXTERNOS
         window.onclick = function(e) {
