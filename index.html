@@ -256,52 +256,57 @@
             </table>
         </section>
 
-        <section id="view-multas" class="view-section">
-            <div class="form-container multas-mode">
-                <div class="form-title" id="multa-form-title">⚠ Registrar Pago de Multa de Socio</div>
-                <form id="multa-form" onsubmit="procesarFormularioMulta(event)">
-                    <input type="hidden" id="multa-edit-index" value="-1">
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label for="multa-socio-select">Seleccione el Socio</label>
-                            <select id="multa-socio-select" required>
-                                <option value="">-- Seleccione un socio registrado --</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="multa-fecha">Fecha de Pago</label>
-                            <input type="date" id="multa-fecha" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="multa-valor">Valor de la Multa ($)</label>
-                            <input type="number" id="multa-valor" required min="0" placeholder="Ej: 20000">
-                        </div>
-                        <div class="form-group">
-                            <label for="multa-concepto">Motivo / Concepto de la Multa</label>
-                            <input type="text" id="multa-concepto" required placeholder="Ej: Inasistencia Asamblea 20-Junio">
-                        </div>
-                    </div>
-                    <button type="submit" class="btn btn-danger" id="btn-submit-multa">💾 Guardar Multa</button>
-                    <button type="button" class="btn btn-danger btn-actions" id="btn-cancel-multa-edit" style="display:none; margin-top:15px; height:43px;" onclick="cancelarEdicionMulta()">Cancelar Edición</button>
-                </form>
+  <section id="view-multas" class="view-section">
+    <div class="form-container">
+        <div class="form-title">📥 Registrar INGRESO (Multa Cobrada)</div>
+        <form id="multa-ingreso-form" onsubmit="procesarMultaMovimiento(event, 'ingreso')">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Socio</label>
+                    <select id="multa-ingreso-socio" required><option value="">-- Seleccione --</option></select>
+                </div>
+                <div class="form-group">
+                    <label>Fecha</label>
+                    <input type="date" id="multa-ingreso-fecha" required>
+                </div>
+                <div class="form-group">
+                    <label>Valor ($)</label>
+                    <input type="number" id="multa-ingreso-valor" required min="0">
+                </div>
+                <div class="form-group">
+                    <label>Concepto</label>
+                    <input type="text" id="multa-ingreso-concepto" required>
+                </div>
             </div>
+            <button type="submit" class="btn" style="background-color: #27ae60;">💾 Guardar Ingreso</button>
+        </form>
+    </div>
 
-            <div class="section-header-flex">
-                <h3>📋 Socios con Pagos de Multas Registrados</h3>
-                <button class="btn btn-success" style="margin-top:0;" onclick="exportarHistorialMultasExcel()">📊 Descargar Consolidado de Multas a Excel</button>
+    <div class="form-container" style="margin-top: 20px;">
+        <div class="form-title">📤 Registrar SALIDA (Gasto/Devolución)</div>
+        <form id="multa-salida-form" onsubmit="procesarMultaMovimiento(event, 'salida')">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Socio (Responsable)</label>
+                    <select id="multa-salida-socio" required><option value="">-- Seleccione --</option></select>
+                </div>
+                <div class="form-group">
+                    <label>Fecha</label>
+                    <input type="date" id="multa-salida-fecha" required>
+                </div>
+                <div class="form-group">
+                    <label>Valor ($)</label>
+                    <input type="number" id="multa-salida-valor" required min="0">
+                </div>
+                <div class="form-group">
+                    <label>Concepto</label>
+                    <input type="text" id="multa-salida-concepto" required>
+                </div>
             </div>
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th>Socio</th>
-                        <th>Documento</th>
-                        <th>Valor Total Multas</th>
-                        <th style="width: 150px;">Acciones</th>
-                    </tr>
-                </thead>
-                <tbody id="tabla-multas-detallado-body"></tbody>
-            </table>
-        </section>
+            <button type="submit" class="btn" style="background-color: #c0392b;">💾 Guardar Salida</button>
+        </form>
+    </div>
+</section>
 
         <section id="view-deportes" class="view-section">
             <div class="balance-card">
