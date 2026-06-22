@@ -1039,6 +1039,32 @@ if (viewId === 'estados') {
         }
         function cerrarModal() { document.getElementById('historial-modal').style.display = "none"; }
 
+        function procesarMultaMovimiento(event, tipo) {
+    event.preventDefault();
+    
+    // Obtener valores según el tipo
+    const socio = document.getElementById(`multa-${tipo}-socio`).value;
+    const fecha = document.getElementById(`multa-${tipo}-fecha`).value;
+    const valor = parseFloat(document.getElementById(`multa-${tipo}-valor`).value);
+    const concepto = document.getElementById(`multa-${tipo}-concepto`).value;
+
+    const nuevaMulta = {
+        nombre: socio,
+        valor: valor,
+        concepto: concepto,
+        fecha: fecha,
+        tipo: tipo // Esto es clave para el reporte
+    };
+
+    // Aquí obtienes tus datos actuales y haces el .push(nuevaMulta)
+    let multas = JSON.parse(localStorage.getItem('jac_db_multas') || '[]');
+    multas.push(nuevaMulta);
+    localStorage.setItem('jac_db_multas', JSON.stringify(multas));
+
+    alert("Movimiento de multa registrado correctamente.");
+    location.reload(); // Recargar para ver cambios
+}
+        
         // --- COMITÉ DE DEPORTES ---
         function mostrarDeportesEnTabla() {
             const deportes = obtenerDeportes(); const socios = obtenerSocios();
