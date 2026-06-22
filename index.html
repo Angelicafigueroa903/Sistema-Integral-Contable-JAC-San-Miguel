@@ -1793,13 +1793,13 @@ function descargarModuloPDF(key, titulo) {
     const datosGuardados = localStorage.getItem(nombreReal);
     
     if (!datosGuardados) {
-        alert("El módulo " + titulo + " no tiene datos registrados.");
+        alert("El módulo " + titulo + " no tiene datos.");
         return;
     }
 
     let datos = JSON.parse(datosGuardados);
 
-    // 1. Ordenar (si tienen nombre y fecha)
+    // 1. Ordenamiento
     datos.sort((a, b) => {
         let nA = (a.nombre || '').toLowerCase();
         let nB = (b.nombre || '').toLowerCase();
@@ -1807,21 +1807,36 @@ function descargarModuloPDF(key, titulo) {
         return new Date(b.fecha || 0) - new Date(a.fecha || 0);
     });
 
-    // 2. Generar encabezado y fecha
+    // 2. Encabezado
     doc.setFontSize(18);
     doc.text("Reporte de " + titulo + " - JAC San Miguel", 14, 20);
     doc.setFontSize(10);
     const fechaGen = new Date().toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric' });
     doc.text("Fecha de generación: " + fechaGen, 14, 27);
 
-    // 3. Obtener columnas dinámicamente según el objeto
-    const encabezados = Object.keys(datos[0]).map(h => h.toUpperCase());
-    const cuerpo = datos.map(item => Object.values(item));
+    // 3. SELECCIÓN MANUAL DE COLUMNAS (La clave para arreglar Aportes)
+    let cabeceras = [];
+    let filas = [];
+
+    if (key === 'inventario') {
+        cabeceras = ['NOMBRE', 'CANTIDAD', 'ESTADO'];
+        filas = datos.map(d => [d.nombre || '', d.cantidad || '', d.estado || '']);
+    } else {
+        // Para Aportes, Gastos, Multas, etc., forzamos estas 5 columnas
+        cabeceras = ['NOMBRE', 'DOCUMENTO', 'VALOR', 'CONCEPTO', 'FECHA'];
+        filas = datos.map(d => [
+            d.nombre || '', 
+            d.documento || '', 
+            d.valor || 0, 
+            d.concepto || '', 
+            d.fecha || ''
+        ]);
+    }
 
     // 4. Generar tabla
     doc.autoTable({
-        head: [encabezados],
-        body: cuerpo,
+        head: [cabeceras],
+        body: filas,
         startY: 35,
         theme: 'striped',
         headStyles: { fillColor: [44, 62, 80] }
