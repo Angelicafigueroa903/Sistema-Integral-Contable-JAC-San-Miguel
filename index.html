@@ -645,6 +645,8 @@
         <button onclick="descargarModuloPDF('salud', 'Salud')" class="btn" style="background-color: #9b59b6;">📥 Salud (PDF)</button>
         <button onclick="descargarModuloPDF('gastos', 'Gastos')" class="btn" style="background-color: #7f8c8d;">📥 Gastos (PDF)</button>
         <button onclick="descargarModuloPDF('inventario', 'Inventario')" class="btn" style="background-color: #27ae60;">📥 Inventario (PDF)</button>
+        <button onclick="descargarModuloPDF('caja', 'Caja')" class="btn" style="background-color: #f1c40f; color: black;">📥 Caja (PDF)</button>
+        <button onclick="descargarModuloPDF('estados', 'Estado Financiero')" class="btn" style="background-color: #34495e;">📥 Estado Financiero (PDF)</button>
     </div>
 </section>   
     </main>
@@ -1774,19 +1776,40 @@ function agregarArticulo() {
 function descargarModuloPDF(key, titulo) {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
-    const datos = JSON.parse(localStorage.getItem(key) || '[]');
+    
+    // AQUÍ ES DONDE DEBES PEGAR EL OBJETO:
+    const llavesPosibles = {
+        'aportes': ['aportes', 'lista-aportes', 'registroAportes'],
+        'multas': ['multas', 'lista-multas', 'registroMultas'],
+        'deportes': ['deportes', 'lista-deportes', 'registroDeportes'],
+        'salud': ['salud', 'lista-salud', 'registroSalud'],
+        'gastos': ['gastos', 'lista-gastos', 'registroGastos'],
+        'inventario': ['inventario', 'inventarioJac', 'lista-inventario'],
+        'caja': ['caja', 'registros-caja', 'movimientosCaja'],
+        'estados': ['estados', 'estadoFinanciero', 'reporteFinanciero']
+    };
 
-    if (datos.length === 0) return alert("No hay datos en " + titulo + " para exportar.");
+    let datos = null;
+    const posibles = llavesPosibles[key] || [key];
+    
+    for (let p of posibles) {
+        let val = localStorage.getItem(p);
+        if (val) {
+            datos = JSON.parse(val);
+            break;
+        }
+    }
+
+    if (!datos || datos.length === 0) {
+        return alert("No se encontraron datos registrados para: " + titulo);
+    }
 
     doc.setFontSize(18);
     doc.text("Reporte de " + titulo + " - JAC San Miguel", 14, 20);
     doc.setFontSize(10);
     doc.text("Fecha: " + new Date().toLocaleDateString(), 14, 30);
 
-    // Convertir los datos a una lista de arrays para la tabla
-    // Nota: Esto asume que tus objetos tienen propiedades. 
-    // Ajusta las cabeceras según los datos que tenga cada módulo.
-    const keys = Object.keys(datos[0]); 
+    const keys = Object.keys(datos[0]);
     const rows = datos.map(item => Object.values(item));
 
     doc.autoTable({
