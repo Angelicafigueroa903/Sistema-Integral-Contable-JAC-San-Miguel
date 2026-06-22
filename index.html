@@ -1777,12 +1777,10 @@ function descargarModuloPDF(key, titulo) {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
     
-    // Lista exacta basada en tu consola
- 
     const llavesReales = {
-    'aportes': 'aportes',        
+    'aportes': 'jac_db_aportes',        
     'multas': 'jac_db_multas',     
-    'deportes': 'deportes',         
+    'deportes': 'jac_db_deportes',         
     'salud': 'salud',             
     'gastos': 'jac_db_gastos',      
     'caja': 'caja',                 
@@ -1794,14 +1792,14 @@ function descargarModuloPDF(key, titulo) {
     const datosGuardados = localStorage.getItem(nombreReal);
     
     if (!datosGuardados) {
-        alert("No encontré datos para: " + nombreReal);
+        alert("El módulo " + titulo + " no tiene datos registrados todavía.");
         return;
     }
 
     const datos = JSON.parse(datosGuardados);
     
     doc.setFontSize(18);
-    doc.text("Reporte de " + titulo, 14, 20);
+    doc.text("Reporte de " + titulo + " - JAC San Miguel", 14, 20);
     
     const keys = Object.keys(datos[0]);
     const rows = datos.map(item => Object.values(item));
@@ -1812,7 +1810,7 @@ function descargarModuloPDF(key, titulo) {
         startY: 30
     });
 
-    doc.save(titulo + ".pdf");
+    doc.save(titulo + "_JAC.pdf");
 }
 
 function diagnosticarLlaves() {
