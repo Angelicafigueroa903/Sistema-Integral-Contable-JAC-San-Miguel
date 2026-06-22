@@ -1802,13 +1802,24 @@ function descargarModuloPDF(key, titulo) {
     doc.setFontSize(18);
     doc.text("Reporte de " + titulo + " - JAC San Miguel", 14, 20);
     
-    const keys = Object.keys(datos[0]);
-    const rows = datos.map(item => Object.values(item));
+    // 1. Limpiamos y ordenamos los datos antes de enviarlos a la tabla
+    const datosLimpios = datos.map(item => {
+        return {
+            nombre: item.nombre || '',
+            documento: item.documento || '',
+            valor: item.valor || 0,
+            concepto: item.concepto || '',
+            fecha: item.fecha || ''
+        };
+    });
 
+    // 2. Definimos las columnas exactas (esto evita que el código invente columnas extra)
     doc.autoTable({
-        head: [keys.map(k => k.toUpperCase())],
-        body: rows,
-        startY: 30
+        head: [['NOMBRE', 'DOCUMENTO', 'VALOR', 'CONCEPTO', 'FECHA']],
+        body: datosLimpios.map(d => [d.nombre, d.documento, d.valor, d.concepto, d.fecha]),
+        startY: 35,
+        theme: 'striped',
+        headStyles: { fillColor: [44, 62, 80] }
     });
 
     doc.save(titulo + "_JAC.pdf");
