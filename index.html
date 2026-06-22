@@ -1779,15 +1779,15 @@ function descargarModuloPDF(key, titulo) {
     const doc = new jsPDF();
     
     const llavesReales = {
-    'aportes': 'jac_db_aportes',        
-    'multas': 'jac_db_multas',     
-    'deportes': 'jac_db_deportes',         
-    'salud': 'jac_db_salud',             
-    'gastos': 'jac_db_gastos',      
-    'caja': 'jac_db_caja',                 
-    'estados': 'jac_db_estadoFinanciero',  
-    'inventario': 'inventarioJac'   
-};
+        'aportes': 'jac_db_aportes',       
+        'multas': 'jac_db_multas',     
+        'deportes': 'jac_db_deportes',         
+        'salud': 'jac_db_salud',             
+        'gastos': 'jac_db_gastos',     
+        'caja': 'jac_db_caja',                 
+        'estados': 'jac_db_estadoFinanciero',  
+        'inventario': 'inventarioJac'   
+    };
 
     const nombreReal = llavesReales[key] || key;
     const datosGuardados = localStorage.getItem(nombreReal);
@@ -1797,23 +1797,34 @@ function descargarModuloPDF(key, titulo) {
         return;
     }
 
-    const datos = JSON.parse(datosGuardados);
+    let datos = JSON.parse(datosGuardados);
     
+    // --- NUEVO: ORDENAMIENTO ---
+    datos.sort((a, b) => {
+        let nombreA = (a.nombre || '').toLowerCase();
+        let nombreB = (b.nombre || '').toLowerCase();
+        if (nombreA !== nombreB) return nombreA.localeCompare(nombreB);
+        return new Date(b.fecha) - new Date(a.fecha); // Fecha más reciente primero
+    });
+
+    // --- NUEVO: FECHA DE GENERACIÓN ---
     doc.setFontSize(18);
     doc.text("Reporte de " + titulo + " - JAC San Miguel", 14, 20);
     
-    // 1. Limpiamos y ordenamos los datos antes de enviarlos a la tabla
-    const datosLimpios = datos.map(item => {
-        return {
-            nombre: item.nombre || '',
-            documento: item.documento || '',
-            valor: item.valor || 0,
-            concepto: item.concepto || '',
-            fecha: item.fecha || ''
-        };
-    });
+    doc.setFontSize(10);
+    const fechaGen = new Date().toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric' });
+    doc.text("Fecha de generación: " + fechaGen, 14, 27);
 
-    // 2. Definimos las columnas exactas (esto evita que el código invente columnas extra)
+    // Limpieza de datos
+    const datosLimpios = datos.map(item => ({
+        nombre: item.nombre || '',
+        documento: item.documento || '',
+        valor: item.valor || 0,
+        concepto: item.concepto || '',
+        fecha: item.fecha || ''
+    }));
+
+    // Generar tabla
     doc.autoTable({
         head: [['NOMBRE', 'DOCUMENTO', 'VALOR', 'CONCEPTO', 'FECHA']],
         body: datosLimpios.map(d => [d.nombre, d.documento, d.valor, d.concepto, d.fecha]),
