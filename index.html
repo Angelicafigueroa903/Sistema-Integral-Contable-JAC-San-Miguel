@@ -1774,27 +1774,32 @@ function agregarArticulo() {
 }       
         
 function descargarModuloPDF(key, titulo) {
-    console.log("Intentando buscar la llave:", key); // Esto nos dirá si el botón hace click
-    
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
     
-    // Obtenemos los datos directamente sin complicaciones
-    const datosGuardados = localStorage.getItem(key);
+    // Lista exacta basada en tu consola
+ 
+    const llavesReales = {
+    'aportes': 'aportes',        
+    'multas': 'jac_db_multas',     
+    'deportes': 'deportes',         
+    'salud': 'salud',             
+    'gastos': 'jac_db_gastos',      
+    'caja': 'caja',                 
+    'estados': 'estadoFinanciero',  
+    'inventario': 'inventarioJac'   
+};
+
+    const nombreReal = llavesReales[key] || key;
+    const datosGuardados = localStorage.getItem(nombreReal);
     
     if (!datosGuardados) {
-        alert("El sistema no encontró datos con el nombre: " + key);
+        alert("No encontré datos para: " + nombreReal);
         return;
     }
 
     const datos = JSON.parse(datosGuardados);
     
-    if (datos.length === 0) {
-        alert("La base de datos '" + key + "' está vacía.");
-        return;
-    }
-
-    // Si llega aquí, es porque SÍ encontró datos
     doc.setFontSize(18);
     doc.text("Reporte de " + titulo, 14, 20);
     
