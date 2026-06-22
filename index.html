@@ -644,9 +644,9 @@
         <button onclick="descargarModuloPDF('deportes', 'Deportes')" class="btn" style="background-color: #2980b9;">📥 Deportes (PDF)</button>
         <button onclick="descargarModuloPDF('salud', 'Salud')" class="btn" style="background-color: #9b59b6;">📥 Salud (PDF)</button>
         <button onclick="descargarModuloPDF('gastos', 'Gastos')" class="btn" style="background-color: #7f8c8d;">📥 Gastos (PDF)</button>
-        <button onclick="descargarModuloPDF('inventario', 'Inventario')" class="btn" style="background-color: #27ae60;">📥 Inventario (PDF)</button>
         <button onclick="descargarModuloPDF('caja', 'Caja')" class="btn" style="background-color: #f1c40f; color: black;">📥 Caja (PDF)</button>
         <button onclick="descargarModuloPDF('estados', 'Estado Financiero')" class="btn" style="background-color: #34495e;">📥 Estado Financiero (PDF)</button>
+        <button onclick="descargarModuloPDF('inventario', 'Inventario')" class="btn" style="background-color: #27ae60;">📥 Inventario (PDF)</button>        
     </div>
 </section>   
     </main>
@@ -1774,57 +1774,51 @@ function agregarArticulo() {
 }       
         
 function descargarModuloPDF(key, titulo) {
+    console.log("Intentando buscar la llave:", key); // Esto nos dirá si el botón hace click
+    
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
     
-    // AQUÍ ES DONDE DEBES PEGAR EL OBJETO:
-    const llavesPosibles = {
-        'aportes': ['aportes', 'lista-aportes', 'registroAportes'],
-        'multas': ['multas', 'lista-multas', 'registroMultas'],
-        'deportes': ['deportes', 'lista-deportes', 'registroDeportes'],
-        'salud': ['salud', 'lista-salud', 'registroSalud'],
-        'gastos': ['gastos', 'lista-gastos', 'registroGastos'],
-        'inventario': ['inventario', 'inventarioJac', 'lista-inventario'],
-        'caja': ['caja', 'registros-caja', 'movimientosCaja'],
-        'estados': ['estados', 'estadoFinanciero', 'reporteFinanciero']
-    };
-
-    let datos = null;
-    const posibles = llavesPosibles[key] || [key];
+    // Obtenemos los datos directamente sin complicaciones
+    const datosGuardados = localStorage.getItem(key);
     
-    for (let p of posibles) {
-        let val = localStorage.getItem(p);
-        if (val) {
-            datos = JSON.parse(val);
-            break;
-        }
+    if (!datosGuardados) {
+        alert("El sistema no encontró datos con el nombre: " + key);
+        return;
     }
 
-    if (!datos || datos.length === 0) {
-        return alert("No se encontraron datos registrados para: " + titulo);
+    const datos = JSON.parse(datosGuardados);
+    
+    if (datos.length === 0) {
+        alert("La base de datos '" + key + "' está vacía.");
+        return;
     }
 
+    // Si llega aquí, es porque SÍ encontró datos
     doc.setFontSize(18);
-    doc.text("Reporte de " + titulo + " - JAC San Miguel", 14, 20);
-    doc.setFontSize(10);
-    doc.text("Fecha: " + new Date().toLocaleDateString(), 14, 30);
-
+    doc.text("Reporte de " + titulo, 14, 20);
+    
     const keys = Object.keys(datos[0]);
     const rows = datos.map(item => Object.values(item));
 
     doc.autoTable({
         head: [keys.map(k => k.toUpperCase())],
         body: rows,
-        startY: 40
+        startY: 30
     });
 
-    doc.save(titulo + "_JAC.pdf");
+    doc.save(titulo + ".pdf");
 }
 
-function verificarLlaves() {
-    console.log("Llaves disponibles en el sistema:", Object.keys(localStorage));
+function diagnosticarLlaves() {
+    console.log("--- DIAGNÓSTICO DE DATOS ---");
+    const llaves = Object.keys(localStorage);
+    console.log("Llaves encontradas en tu sistema:", llaves);
+    llaves.forEach(key => {
+        console.log("Llave: " + key + " | Datos:", localStorage.getItem(key));
+    });
 }
-verificarLlaves(); // Esto se ejecutará al cargar la página   
+diagnosticarLlaves();   
 
         
         // CIERRE POPUPS EXTERNOS
