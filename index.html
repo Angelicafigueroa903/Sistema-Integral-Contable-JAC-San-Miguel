@@ -257,9 +257,18 @@
         </section>
 
   <section id="view-multas" class="view-section">
-    <div class="form-container">
-        <div class="form-title">📥 Registrar INGRESO (Multa Cobrada)</div>
+    <div class="balance-card" style="border-color: #f1948a; background: #fdedec;">
+        <div>
+            <h3>Estado del Fondo del Comité de Multas</h3>
+            <p style="font-size:0.85rem; color:#c0392b; margin-top:3px;">Cálculo automático de Ingresos menos Salidas</p>
+        </div>
+        <div class="balance-value" id="multas-saldo-disponible" style="color: #c0392b;">$0</div>
+    </div>
+
+    <div class="form-container multas-mode">
+        <div class="form-title"> 📥 Registrar INGRESO (Multa Cobrada)</div>
         <form id="multa-ingreso-form" onsubmit="procesarMultaMovimiento(event, 'ingreso')">
+            <input type="hidden" id="multa-ingreso-edit-index" value="-1">
             <div class="form-grid">
                 <div class="form-group">
                     <label>Socio</label>
@@ -278,13 +287,14 @@
                     <input type="text" id="multa-ingreso-concepto" required>
                 </div>
             </div>
-            <button type="submit" class="btn" style="background-color: #27ae60;">💾 Guardar Ingreso</button>
+            <button type="submit" class="btn btn-success"> 💾 Guardar Ingreso</button>
         </form>
     </div>
 
-    <div class="form-container" style="margin-top: 20px;">
-        <div class="form-title">📤 Registrar SALIDA (Gasto/Devolución)</div>
+    <div class="form-container" style="border-top: 4px solid #c0392b;">
+        <div class="form-title"> 📤 Registrar SALIDA (Gasto/Devolución)</div>
         <form id="multa-salida-form" onsubmit="procesarMultaMovimiento(event, 'salida')">
+            <input type="hidden" id="multa-salida-edit-index" value="-1">
             <div class="form-grid">
                 <div class="form-group">
                     <label>Socio (Responsable)</label>
@@ -303,9 +313,25 @@
                     <input type="text" id="multa-salida-concepto" required>
                 </div>
             </div>
-            <button type="submit" class="btn" style="background-color: #c0392b;">💾 Guardar Salida</button>
+            <button type="submit" class="btn btn-danger"> 💾 Guardar Salida</button>
         </form>
     </div>
+
+    <div class="section-header-flex">
+        <h3> 📋 Socios Activos en el Comité de Multas</h3>
+    </div>
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Socio</th>
+                <th>Documento</th>
+                <th>Total Ingresos (+)</th>
+                <th>Total Salidas (-)</th>
+                <th>Saldo Disponible</th>
+            </tr>
+        </thead>
+        <tbody id="tabla-multas-resumen-body"></tbody>
+    </table>
 </section>
 
         <section id="view-deportes" class="view-section">
@@ -958,7 +984,7 @@ if (viewId === 'estados') {
 
         // --- MULTAS ---
         function mostrarMultasEnTablas() {
-            const multas = obtenerMultas(); const socios = obtenerSocios();
+            const multas = obtenerMultas();
             const tbody = document.getElementById('tabla-multas-detallado-body'); if(!tbody) return;
             tbody.innerHTML = ''; let granTotal = 0; let contadorMostrados = 0;
 
@@ -982,18 +1008,41 @@ if (viewId === 'estados') {
             tbody.appendChild(ft);
         }
 
-        function procesarFormularioMulta(e) {
-            e.preventDefault(); const idx = parseInt(document.getElementById('multa-edit-index').value);
-            const selectSocio = document.getElementById('multa-socio-select'); const fecha = document.getElementById('multa-fecha').value;
-            const valor = parseFloat(document.getElementById('multa-valor').value); const concepto = document.getElementById('multa-concepto').value.trim();
-            let multas = obtenerMultas();
+function procesarFormularioMulta(e, tipo) {
+    e.preventDefault(); 
+    const idx = parseInt(document.getElementById('multa-edit-index').value);
+    
+    // Identificamos de qué formulario vienen los datos usando el 'tipo' (ingreso o salida)
+    const selectSocio = document.getElementById(`multa-${tipo}-socio`);
+    const fecha = document.getElementById(`multa-${tipo}-fecha`).value;
+    const valor = parseFloat(document.getElementById(`multa-${tipo}-valor`).value);
+    const concepto = document.getElementById(`multa-${tipo}-concepto`).value.trim();
+    
+    let multas = obtenerMultas();
 
-            if(idx === -1) {
-                const documento = selectSocio.value; const nombre = selectSocio.options[selectSocio.selectedIndex].text.split(' (')[0];
-                multas.push({ nombre, documento, fecha, valor, concepto });
-            } else { multas[idx].fecha = fecha; multas[idx].valor = valor; multas[idx].concepto = concepto; cancelarEdicionMulta(); }
-            guardarMultas(multas); document.getElementById('multa-form').reset(); establecerFechaHoy('multa-fecha');
-        }
+    if(idx === -1) {
+        const documento = selectSocio.value;
+        const nombre = selectSocio.options[selectSocio.selectedIndex].text.split(' (')[0];
+        
+        // Guardamos el objeto incluyendo el 'tipo' (ingreso o salida)
+        multas.push({ nombre, documento, fecha, valor, concepto, tipo });
+    } else {
+        // En caso de edición
+        multas[idx].fecha = fecha;
+        multas[idx].valor = valor;
+        multas[idx].concepto = concepto;
+        multas[idx].tipo = tipo;
+        cancelarEdicionMulta();
+    }
+    
+    guardarMultas(multas);
+    
+    // Reseteamos el formulario específico
+    document.getElementById(`multa-${tipo}-form`).reset();
+    
+    // Recargamos para refrescar la tabla y los totales
+    location.reload();
+}
         function prepararEdicionMulta(idx) {
             cerrarModal(); const multas = obtenerMultas();
             document.getElementById('multa-edit-index').value = idx; document.getElementById('multa-fecha').value = multas[idx].fecha;
