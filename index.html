@@ -635,6 +635,28 @@
 </section> 
         
         <section id="view-configuracion" class="view-section"><h2>⚙ Configuración del Sistema</h2><p style="margin-top:15px;">Sección para parámetros generales de la JAC.</p></section>
+    <h2>⚙ Configuración del Sistema</h2>
+    <p style="margin-top:15px; margin-bottom: 20px;">Sección para parámetros generales de la JAC.</p>
+
+    <div class="form-container">
+        <h3 class="form-title">💾 Gestión de Datos</h3>
+        <p style="margin-bottom: 15px; font-size: 0.9rem; color: #666;">
+            Puedes realizar un respaldo completo de toda la información del sistema para prevenir pérdidas de datos.
+        </p>
+        
+        <button onclick="descargarRespaldoGeneral()" class="btn" style="background-color: #2c3e50;">
+            📥 Descargar Respaldo Total (.json)
+        </button>
+
+        <hr style="margin: 20px 0; border: 0; border-top: 1px solid #eee;">
+        
+        <h3 class="form-title">🔄 Restaurar Datos</h3>
+        <p style="margin-bottom: 15px; font-size: 0.9rem; color: #666;">
+            Si necesitas recuperar información, puedes cargar un archivo de respaldo previo.
+        </p>
+        <input type="file" id="input-respaldo" accept=".json" style="padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
+    </div>
+</section>    
     </main>
 
     <div id="historial-modal" class="modal">
