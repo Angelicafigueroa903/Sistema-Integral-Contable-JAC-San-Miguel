@@ -645,6 +645,8 @@
         <button onclick="descargarModuloPDF('salud', 'Salud')" class="btn" style="background-color: #9b59b6;">📥 Salud (PDF)</button>
         <button onclick="descargarModuloPDF('gastos', 'Gastos')" class="btn" style="background-color: #7f8c8d;">📥 Gastos (PDF)</button>
         <button onclick="descargarModuloPDF('inventario', 'Inventario')" class="btn" style="background-color: #27ae60;">📥 Inventario (PDF)</button>        
+   
+    <button onclick="restaurarSistema()" class="btn" style="background-color: #c0392b; color: white;">⚠️ Restaurar Sistema (Borrar Todo)</button>
     </div>
   <p style="margin-top: 30px; font-size: 0.9em; color: #666;">
         * Nota: Para los reportes de <b>Caja</b> y <b>Estado Financiero</b>, dirígete a sus respectivos módulos para descargar el archivo en formato Excel.
@@ -1855,6 +1857,24 @@ function diagnosticarLlaves() {
 }
 diagnosticarLlaves();   
 
+   function restaurarSistema() {
+    // 1. Mostrar mensaje de confirmación
+    const confirmacion = confirm("¿ESTÁS SEGURO? Esta acción borrará permanentemente todos los datos del sistema (Aportes, Multas, Inventario, etc.) y no se puede deshacer.");
+    
+    if (confirmacion) {
+        // 2. Pedir una segunda confirmación para evitar errores
+        const segundaConfirmacion = confirm("¡Última advertencia! ¿Deseas borrar absolutamente todo?");
+        
+        if (segundaConfirmacion) {
+            // 3. Borrar todo el localStorage
+            localStorage.clear();
+            
+            // 4. Avisar y recargar la página
+            alert("El sistema ha sido restaurado a valores de fábrica.");
+            location.reload();
+        }
+    }
+}     
         
         // CIERRE POPUPS EXTERNOS
         window.onclick = function(e) {
