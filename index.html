@@ -1024,11 +1024,23 @@ function mostrarMultasEnTablas() {
                              <td style="color:#c0392b; text-align:right;">-$${sal.toLocaleString()}</td>
                              <td style="font-weight:bold; text-align:right;">$${(ing - sal).toLocaleString()}</td>
                              <td style="text-align:center;">
-                                <button class="btn btn-actions btn-view" onclick="verHistorialSocio('${socio.documento}', 'multas')">👁️ Ver</button>
+                                <button class="btn btn-actions btn-view" onclick="verHistorialSocio('${socio.documento}', 'multas')">👁️ Ver Historial</button>
                              </td>`;
             tbody.appendChild(fila);
         }
     });
+
+    // --- AQUÍ EMPIEZA LA FILA DE TOTALES ---
+    const filaTotal = document.createElement('tr');
+    filaTotal.className = "total-row"; 
+    filaTotal.innerHTML = `
+        <td colspan="2">TOTALES GENERALES:</td>
+        <td style="text-align:right; color:#27ae60;">+$${totalIngresos.toLocaleString()}</td>
+        <td style="text-align:right; color:#c0392b;">-$${totalSalidas.toLocaleString()}</td>
+        <td style="text-align:right; font-weight:bold;">$${(totalIngresos - totalSalidas).toLocaleString()} (Saldo Disponible)</td>
+        <td></td>
+    `;
+    tbody.appendChild(filaTotal);
 
     const saldoEl = document.getElementById('multas-saldo-disponible');
     if (saldoEl) saldoEl.innerText = `$${(totalIngresos - totalSalidas).toLocaleString()}`;
