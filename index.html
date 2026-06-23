@@ -1370,24 +1370,38 @@ if (viewId === 'estados') {
         // --- EXPORTACIONES A EXCEL CON FILTRO AVANZADO ---
         function exportarComiteBaseExcel(comite, arrDatos) {
             if (typeof XLSX === 'undefined') { alert("Función no disponible offline."); return; }
-            if(arrDatos.length === 0) { alert("No hay movimientos registrados para exportar."); return; }
+            if(!arrDatos || arrDatos.length === 0) { alert("No hay movimientos registrados para exportar."); return; }
 
             let totalIn = 0; let totalOut = 0;
             const filasExcel = arrDatos.map(mov => {
-                const esIn = mov.tipo === 'ingreso'; const v = parseFloat(mov.valor);
+                // Si el movimiento no tiene tipo (registros viejos), asumimos que es 'ingreso'
+                const tipoReal = mov.tipo ? mov.tipo : 'ingreso';
+                const esIn = tipoReal === 'ingreso'; 
+                const v = parseFloat(mov.valor) || 0;
+                
                 if(esIn) totalIn += v; else totalOut += v;
+                
                 return {
-                    "Fecha": mov.fecha, "Tipo": mov.tipo.toUpperCase(), "Socio Responsable": mov.nombre,
-                    "Documento": mov.documento, "Concepto / Motivo": mov.concepto,
-                    "Ingreso (+)": esIn ? v : 0, "Salida (-)": !esIn ? v : 0
+                    "Fecha": mov.fecha || 'N/A', 
+                    "Tipo": tipoReal.toUpperCase(), 
+                    "Socio Responsable": mov.nombre || 'N/A',
+                    "Documento": mov.documento || 'N/A', 
+                    "Concepto / Motivo": mov.concepto || 'Sin concepto',
+                    "Ingreso (+)": esIn ? v : 0, 
+                    "Salida (-)": !esIn ? v : 0
                 };
             });
+            
+            // Fila de resumen
             filasExcel.push({ "Fecha": "RESUMEN FINAL", "Tipo": "", "Socio Responsable": "", "Documento": "", "Concepto / Motivo": "VALOR RECAUDADO / GASTADO", "Ingreso (+)": totalIn, "Salida (-)": totalOut });
-            filasExcel.push({ "Fecha": `SALDO DISPONIBLE COMITÉ ${comite.toUpperCase()}`, "Tipo": "", "Socio Responsable": "", "Documento": "", "Concepto / Motivo": "", "Ingreso (+)": (totalIn - totalOut), "Salida (-)": "" });
+            filasExcel.push({ "Fecha": `SALDO DISPONIBLE ${comite.toUpperCase()}`, "Tipo": "", "Socio Responsable": "", "Documento": "", "Concepto / Motivo": "", "Ingreso (+)": (totalIn - totalOut), "Salida (-)": "" });
 
-            const hoja = XLSX.utils.json_to_sheet(filasExcel); const libro = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(libro, hoja, "Movimientos"); XLSX.writeFile(libro, `Libro_Contable_${comite}_San_Miguel.xlsx`);
+            const hoja = XLSX.utils.json_to_sheet(filasExcel); 
+            const libro = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(libro, hoja, "Movimientos"); 
+            XLSX.writeFile(libro, `Libro_Contable_${comite}_San_Miguel.xlsx`);
         }
+        
         function exportarDeportesExcel() { exportarComiteBaseExcel('Deportes', obtenerDeportes()); }
         function exportarSaludExcel() { exportarComiteBaseExcel('Salud', obtenerSalud()); }
 
