@@ -993,9 +993,8 @@ if (viewId === 'estados') {
 
         // --- MULTAS ---
 function mostrarMultasEnTablas() {
-    // 1. Obtener y limpiar datos
     let multas = JSON.parse(localStorage.getItem('jac_db_multas') || '[]');
-    // Filtramos solo objetos válidos y no nulos
+    // Limpieza de datos corruptos
     multas = multas.filter(m => m !== null && typeof m === 'object');
     
     const socios = obtenerSocios(); 
@@ -1008,7 +1007,7 @@ function mostrarMultasEnTablas() {
     let totalSalidas = 0;
 
     socios.forEach(socio => {
-        // 2. Definir la variable correctamente aquí
+        // Aquí usamos la variable 'movimientos' de forma segura
         const movimientos = multas.filter(m => m.documento === socio.documento);
         
         if (movimientos.length > 0) {
