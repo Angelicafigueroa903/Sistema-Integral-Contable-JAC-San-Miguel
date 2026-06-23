@@ -1732,7 +1732,7 @@ function calcularEstadoFinanciero() {
         <tbody>
             <tr style="background:#ecf0f1;"><td><b>INGRESOS</b></td><td></td></tr>
             <tr><td>Aportes <button onclick="verDetalle('aportes')" style="font-size:10px; cursor:pointer;">Ver</button></td><td>$${d.aportes.toLocaleString()}</td></tr>
-            <tr><td>Multas (Ing) <button onclick="verDetalle('multas')" style="font-size:10px; cursor:pointer;">Ver</button></td><td>$${d.multasIng.toLocaleString()}</td></tr>
+            <tr><td>Multas (Ing) <button onclick="verDetalle('multas')" style="font-size:10px; cursor:pointer;">Ver</button></td><td>$${(d.multasIng || 0).toLocaleString()}</td></tr>
             <tr><td>Deportes (Ing) <button onclick="verDetalle('deportes')" style="font-size:10px; cursor:pointer;">Ver</button></td><td>$${d.depIng.toLocaleString()}</td></tr>
             <tr><td>Salud (Ing) <button onclick="verDetalle('salud')" style="font-size:10px; cursor:pointer;">Ver</button></td><td>$${d.salIng.toLocaleString()}</td></tr>
             <tr style="border-top:2px solid #000;"><td><b>TOTAL INGRESOS</b></td><td><b>$${totIng.toLocaleString()}</b></td></tr>
