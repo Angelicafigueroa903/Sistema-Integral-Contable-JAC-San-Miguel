@@ -1015,41 +1015,40 @@ if (viewId === 'estados') {
 
 function procesarFormularioMulta(e, tipo) {
     e.preventDefault(); 
-    // Corregimos la obtención del índice (asegúrate de tener el input hidden en tu HTML)
-    const idx = parseInt(document.getElementById(`multa-${tipo}-edit-index`)?.value || -1);
     
+    // 1. Obtener datos del formulario
     const selectSocio = document.getElementById(`multa-${tipo}-socio`);
     const fecha = document.getElementById(`multa-${tipo}-fecha`).value;
     const valor = parseFloat(document.getElementById(`multa-${tipo}-valor`).value);
     const concepto = document.getElementById(`multa-${tipo}-concepto`).value.trim();
     
+    // 2. Validación básica
+    if (!selectSocio.value || isNaN(valor)) {
+        alert("Por favor, verifica los campos.");
+        return;
+    }
+
     let multas = obtenerMultas();
+    const idx = parseInt(document.getElementById('multa-edit-index')?.value || -1);
 
     if(idx === -1) {
-        // Nuevo registro
         const documento = selectSocio.value;
         const nombre = selectSocio.options[selectSocio.selectedIndex].text.split(' (')[0];
         multas.push({ nombre, documento, fecha, valor, concepto, tipo });
     } else {
-        // Edición
-        multas[idx].fecha = fecha;
-        multas[idx].valor = valor;
-        multas[idx].concepto = concepto;
-        multas[idx].tipo = tipo;
-        // Reiniciamos índice tras editar
-        document.getElementById(`multa-${tipo}-edit-index`).value = "-1";
+        multas[idx] = { ...multas[idx], fecha, valor, concepto, tipo };
+        document.getElementById('multa-edit-index').value = "-1";
     }
     
     guardarMultas(multas);
     
-    // Limpiar formulario específico
+    // 3. LIMPIEZA: Resetea el formulario sin recargar la página
     document.getElementById(`multa-${tipo}-form`).reset();
     
-    // --- AQUÍ ESTÁ EL CAMBIO CLAVE ---
-    // En lugar de recargar, refrescamos la tabla manualmente
+    // 4. REFRESCO: Llama solo a las funciones necesarias para actualizar la vista
     mostrarMultasEnTablas(); 
     
-    console.log("Multa guardada correctamente");
+    console.log("Multa guardada con éxito");
 }
         function prepararEdicionMulta(idx) {
             cerrarModal(); const multas = obtenerMultas();
