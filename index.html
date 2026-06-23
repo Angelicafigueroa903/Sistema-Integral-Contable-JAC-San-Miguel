@@ -1124,78 +1124,66 @@ function procesarFormularioMulta(e, tipo) {
         }
         function cerrarModal() { document.getElementById('historial-modal').style.display = "none"; }
 
-        function procesarMultaMovimiento(event, tipo) {
+// 1. PROCESAR (GUARDAR O ACTUALIZAR)
+function procesarMultaMovimiento(event, tipo) {
     event.preventDefault();
-       
-    // 1. Obtener elementos usando los IDs de tu HTML
+    
+    // Obtenemos el índice del formulario específico
+    const editIndex = document.getElementById(`multa-${tipo}-edit-index`).value;
     const socioSelect = document.getElementById(`multa-${tipo}-socio`);
-    const fecha = document.getElementById(`multa-${tipo}-fecha`).value;
-    const valor = parseFloat(document.getElementById(`multa-${tipo}-valor`).value);
-    const concepto = document.getElementById(`multa-${tipo}-concepto`).value;
-
-    // Validación: si el elemento no existe, el código se detiene aquí y no da error
-    if (!socioSelect) {
-        console.error("No se encontró el selector: multa-" + tipo + "-socio");
-        return;
-    }
+    let multas = JSON.parse(localStorage.getItem('jac_db_multas') || '[]');
 
     const nuevaMulta = {
-        nombre: socioSelect.options[socioSelect.selectedIndex].text,
+        nombre: socioSelect.options[socioSelect.selectedIndex].text.split(' (')[0],
         documento: socioSelect.value,
-        valor: valor,
-        concepto: concepto,
-        fecha: fecha,
+        fecha: document.getElementById(`multa-${tipo}-fecha`).value,
+        valor: parseFloat(document.getElementById(`multa-${tipo}-valor`).value),
+        concepto: document.getElementById(`multa-${tipo}-concepto`).value,
         tipo: tipo
     };
 
-    // 2. Guardar
-    let multas = JSON.parse(localStorage.getItem('jac_db_multas') || '[]');
-    multas.push(nuevaMulta);
-    localStorage.setItem('jac_db_multas', JSON.stringify(multas));
+    if (editIndex !== "-1") {
+        multas[parseInt(editIndex)] = nuevaMulta; // Edita
+    } else {
+        multas.push(nuevaMulta); // Crea nuevo
+    }
 
-    // 3. Limpiar y Refrescar
+    localStorage.setItem('jac_db_multas', JSON.stringify(multas));
     document.getElementById(`multa-${tipo}-form`).reset();
-    
-    // Llamamos a la función de visualización
+    document.getElementById(`multa-${tipo}-edit-index`).value = "-1";
     mostrarMultasEnTablas();
-    
-    console.log("Multa guardada:", nuevaMulta);
 }
 
-// --- VISUALIZADOR DE TABLA CORREGIDO ---
-function mostrarMultasEnTablas() {
+// 2. PREPARAR EDICIÓN (Al hacer clic en el lápiz del modal)
+function prepararEdicionMulta(index) {
+    cerrarModal(); // Cierra el historial
     const multas = JSON.parse(localStorage.getItem('jac_db_multas') || '[]');
-    const socios = obtenerSocios(); 
-    const tbody = document.getElementById('tabla-multas-resumen-body');
+    const item = multas[index];
     
-    if (!tbody) return;
-    tbody.innerHTML = '';
+    const tipo = item.tipo; // 'ingreso' o 'salida'
     
-    let totalIngresos = 0;
-    let totalSalidas = 0;
+    // Carga los datos al formulario correspondiente
+    document.getElementById(`multa-${tipo}-socio`).value = item.documento;
+    document.getElementById(`multa-${tipo}-fecha`).value = item.fecha;
+    document.getElementById(`multa-${tipo}-valor`).value = item.valor;
+    document.getElementById(`multa-${tipo}-concepto`).value = item.concepto;
+    
+    // Marca el índice para que procesarMultaMovimiento sepa que estamos editando
+    document.getElementById(`multa-${tipo}-edit-index`).value = index;
+    
+    // Lleva al usuario al formulario
+    document.getElementById(`multa-${tipo}-form`).scrollIntoView({ behavior: 'smooth' });
+}
 
-    socios.forEach(socio => {
-        const movimientos = multas.filter(m => m.documento === socio.documento);
-        if (movimientos.length > 0) {
-            const ing = movimientos.filter(m => m.tipo === 'ingreso').reduce((a, b) => a + parseFloat(b.valor), 0);
-            const sal = movimientos.filter(m => m.tipo === 'salida').reduce((a, b) => a + parseFloat(b.valor), 0);
-            
-            totalIngresos += ing;
-            totalSalidas += sal;
-            
-            const fila = document.createElement('tr');
-            fila.innerHTML = `<td>${socio.nombre}</td><td>${socio.documento}</td>
-                             <td style="color:green;">$${ing.toLocaleString()}</td>
-                             <td style="color:red;">$${sal.toLocaleString()}</td>
-                             <td>$${(ing - sal).toLocaleString()}</td>
-                             <td><button onclick="verHistorialSocio('${socio.documento}', 'multas')">Ver</button></td>`;
-            tbody.appendChild(fila);
-        }
-    });
-
-    // Actualizar saldo global
-    const saldoFinal = totalIngresos - totalSalidas;
-    document.getElementById('multas-saldo-disponible').innerText = `$${saldoFinal.toLocaleString()}`;
+// 3. ELIMINAR
+function eliminarMulta(index) {
+    if(confirm('¿Seguro que deseas eliminar este registro?')) {
+        let multas = JSON.parse(localStorage.getItem('jac_db_multas') || '[]');
+        multas.splice(index, 1);
+        localStorage.setItem('jac_db_multas', JSON.stringify(multas));
+        mostrarMultasEnTablas();
+        cerrarModal();
+    }
 }
         
         // --- COMITÉ DE DEPORTES ---
@@ -1416,8 +1404,8 @@ function mostrarMultasEnTablas() {
             document.getElementById('comite-modal-doc').innerText = docSocio;
 
             if (comite === 'multas') {
-    modalContainer.style.borderTopColor = '#c0392b'; // Color rojo para multas
-    document.getElementById('comite-modal-titulo').innerText = `📊 Historial de Multas: ${socio.nombre}`;
+    modalContainer.style.borderTopColor = '#c0392b'; 
+    document.getElementById('comite-modal-titulo').innerText = `📊 Historial de Multas: ${socio ? socio.nombre : 'Socio no encontrado'}`;
     headersTr.innerHTML = `<th>Fecha</th><th>Concepto</th><th>Valor</th><th>Acciones</th>`;
     
     const multas = obtenerMultas();
@@ -1427,7 +1415,9 @@ function mostrarMultasEnTablas() {
         if (item.documento === docSocio) {
             totalMultas += parseFloat(item.valor);
             const fila = document.createElement('tr');
-            fila.innerHTML = `<td>${item.fecha}</td><td>${item.concepto}</td>
+            fila.innerHTML = `
+                <td>${item.fecha}</td>
+                <td>${item.concepto}</td>
                 <td style="color:#c0392b; font-weight:bold;">$${parseFloat(item.valor).toLocaleString()}</td>
                 <td>
                     <button class="btn btn-actions btn-edit" onclick="prepararEdicionMulta(${indexOriginal})">✏️</button>
@@ -1436,7 +1426,14 @@ function mostrarMultasEnTablas() {
             tbody.appendChild(fila);
         }
     });
-    // Agrega la fila de total aquí...
+
+    // Fila del TOTAL ACUMULADO
+    const ft = document.createElement('tr');
+    ft.className = "total-row";
+    ft.innerHTML = `
+        <td colspan="2" style="text-align:right; font-weight:bold;">TOTAL ACUMULADO MULTAS:</td>
+        <td colspan="2" style="color:#c0392b; font-weight:bold;">$${totalMultas.toLocaleString()}</td>`;
+    tbody.appendChild(ft);
 }
             if (comite === 'gastos') {
                 modalContainer.style.borderTopColor = '#7f8c8d';
