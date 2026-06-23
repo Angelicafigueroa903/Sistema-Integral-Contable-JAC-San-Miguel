@@ -991,29 +991,56 @@ if (viewId === 'estados') {
 
         // --- MULTAS ---
         function mostrarMultasEnTablas() {
-            const multas = obtenerMultas();
-            const tbody = document.getElementById('tabla-multas-detallado-body'); if(!tbody) return;
-            tbody.innerHTML = ''; let granTotal = 0; let contadorMostrados = 0;
+    const multas = obtenerMultas();
+    const socios = obtenerSocios();
+    const tbody = document.getElementById('tabla-multas-resumen-body');
+    
+    console.log("Datos recuperados - Multas:", multas);
+    console.log("Datos recuperados - Socios:", socios);
+    
+    if (!tbody) {
+        console.error("ERROR: No encontré el elemento 'tabla-multas-resumen-body' en tu HTML");
+        return;
+    }
+    
+    tbody.innerHTML = '';
+    let totalIngresosGlobal = 0;
+    let totalSalidasGlobal = 0;
+    let contadorMostrados = 0;
 
-            socios.forEach(socio => {
-                const suma = multas.filter(m => m.documento === socio.documento).reduce((s, c) => s + parseFloat(c.valor), 0);
-                if (suma > 0) {
-                    granTotal += suma; contadorMostrados++;
-                    const fila = document.createElement('tr');
-                    fila.innerHTML = `<td><strong>${socio.nombre}</strong></td><td>${socio.documento}</td>
-                        <td><strong style="color:#e74c3c;">$${suma.toLocaleString()}</strong></td>
-                        <td><button class="btn btn-actions btn-view" style="background-color:#d35400;" onclick="verHistorialSocio('${socio.documento}', 'multas')">👁️ Ver Historial</button></td>`;
-                    tbody.appendChild(fila);
-                }
-            });
+    socios.forEach(socio => {
+        // MUY IMPORTANTE: Verifica que los documentos coincidan (String vs Number)
+        const movimientosSocio = multas.filter(m => String(m.documento).trim() === String(socio.documento).trim());
+        
+        console.log(`Buscando movimientos para: ${socio.nombre} (${socio.documento}). Encontrados: ${movimientosSocio.length}`);
 
-            if(contadorMostrados === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#999; padding:20px;">Ningún socio registra pagos de multas hasta el momento.</td></tr>`; return;
-            }
-            const ft = document.createElement('tr'); ft.className = "total-row";
-            ft.innerHTML = `<td colspan="2" style="text-align:right;">TOTAL RECAUDADO MULTAS:</td><td colspan="2" style="color:#e74c3c;">$${granTotal.toLocaleString()}</td>`;
-            tbody.appendChild(ft);
+        if (movimientosSocio.length > 0) {
+            contadorMostrados++;
+            const ingresos = movimientosSocio.filter(m => m.tipo === 'ingreso').reduce((s, c) => s + parseFloat(c.valor), 0);
+            const salidas = movimientosSocio.filter(m => m.tipo === 'salida').reduce((s, c) => s + parseFloat(c.valor), 0);
+            
+            totalIngresosGlobal += ingresos;
+            totalSalidasGlobal += salidas;
+
+            const fila = document.createElement('tr');
+            fila.innerHTML = `<td><strong>${socio.nombre}</strong></td><td>${socio.documento}</td>
+                <td style="color:#27ae60;">+$${ingresos.toLocaleString()}</td>
+                <td style="color:#c0392b;">-$${salidas.toLocaleString()}</td>
+                <td style="font-weight:bold;">$${(ingresos - salidas).toLocaleString()}</td>
+                <td><button class="btn btn-actions btn-view" onclick="verHistorialSocio('${socio.documento}', 'multas')">👁️ Ver Historial</button></td>`;
+            tbody.appendChild(fila);
         }
+    });
+
+    if (contadorMostrados === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;">No hay movimientos para mostrar.</td></tr>`;
+    }
+    
+    // Actualizar el saldo total
+    const saldoGlobal = totalIngresosGlobal - totalSalidasGlobal;
+    const elementoSaldo = document.getElementById('multas-saldo-disponible');
+    if(elementoSaldo) elementoSaldo.innerText = `$${saldoGlobal.toLocaleString()}`;
+}
 
 function procesarFormularioMulta(e, tipo) {
     e.preventDefault(); 
