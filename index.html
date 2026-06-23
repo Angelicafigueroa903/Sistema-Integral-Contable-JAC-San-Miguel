@@ -1101,31 +1101,41 @@ function procesarFormularioMulta(e, tipo) {
         function eliminarMulta(idx) { if(confirm('¿Eliminar esta multa?')) { let arr = obtenerMultas(); arr.splice(idx, 1); guardarMultas(arr); cerrarModal(); } }
 
         // POP-UP HISTORIAL (SOCIOS APORTES/MULTAS)
-        function verHistorialSocio(docSocio, tipo) {
-            const socios = obtenerSocios(); const socio = socios.find(s => s.documento === docSocio);
-            const data = tipo === 'aportes' ? obtenerAportes() : obtenerMultas();
-            const tbody = document.getElementById('modal-tabla-body'); tbody.innerHTML = '';
-            
-            document.getElementById('modal-socio-titulo').innerText = `📊 Expediente: ${socio ? socio.nombre : 'No Registrado'} (${tipo.toUpperCase()})`;
-            document.getElementById('modal-socio-doc').innerText = docSocio;
-            let total = 0;
+function verHistorialSocio(documento, tipo) {
+    // 1. Obtener y limpiar datos de forma segura
+    let todosLosDatos = JSON.parse(localStorage.getItem('jac_db_multas') || '[]');
+    // Eliminamos nulos o elementos corruptos inmediatamente
+    let movimientos = todosLosDatos.filter(m => m !== null && typeof m === 'object' && m.documento === documento);
 
-            data.forEach((item, indexOriginal) => {
-                if(item.documento === docSocio) {
-                    total += parseFloat(item.valor); const fila = document.createElement('tr');
-                    fila.innerHTML = `<td>${item.fecha}</td><td>${item.concepto}</td><td><strong>$${parseFloat(item.valor).toLocaleString()}</strong></td>
-                        <td>
-                            <button class="btn btn-actions btn-edit" onclick="${tipo === 'aportes' ? 'prepararEdicionAporte':'prepararEdicionMulta'}(${indexOriginal})">✏️</button>
-                            <button class="btn btn-actions btn-danger" onclick="${tipo === 'aportes' ? 'eliminarAporte':'eliminarMulta'}(${indexOriginal})">❌</button>
-                        </td>`;
-                    tbody.appendChild(fila);
-                }
-            });
-            const ft = document.createElement('tr'); ft.className = "total-row";
-            ft.innerHTML = `<td colspan="2" style="text-align:right;">TOTAL ACUMULADO:</td><td colspan="2">$${total.toLocaleString()}</td>`;
-            tbody.appendChild(ft);
-            document.getElementById('historial-modal').style.display = "flex";
-        }
+    const modal = document.getElementById('historial-modal'); // Asegúrate que este sea el ID de tu modal
+    const tbody = document.getElementById('historial-modal-body'); // Asegúrate que este sea el ID del cuerpo de la tabla en el modal
+
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    // 2. Llenar tabla del historial
+    movimientos.forEach((item, index) => {
+        // Encontrar el índice original en el arreglo completo (necesario para editar/borrar)
+        const indexOriginal = todosLosDatos.indexOf(item);
+
+        const fila = document.createElement('tr');
+        fila.innerHTML = `
+            <td>${item.fecha || 'N/A'}</td>
+            <td>${item.concepto || 'Sin concepto'}</td>
+            <td><strong>$${parseFloat(item.valor || 0).toLocaleString()}</strong></td>
+            <td>
+                <button class="btn btn-actions btn-edit" onclick="prepararEdicionMulta(${indexOriginal})">✏️</button>
+                <button class="btn btn-actions btn-danger" onclick="eliminarMulta(${indexOriginal})">❌</button>
+            </td>
+        `;
+        tbody.appendChild(fila);
+    });
+
+    // 3. Mostrar el modal
+    if (modal) {
+        modal.style.display = 'flex';
+    }
+}
         function cerrarModal() { document.getElementById('historial-modal').style.display = "none"; }
 
 // 1. PROCESAR (GUARDAR O ACTUALIZAR)
