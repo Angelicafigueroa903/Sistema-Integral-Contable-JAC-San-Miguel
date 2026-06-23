@@ -1015,9 +1015,9 @@ if (viewId === 'estados') {
 
 function procesarFormularioMulta(e, tipo) {
     e.preventDefault(); 
-    const idx = parseInt(document.getElementById('multa-edit-index').value);
+    // Corregimos la obtención del índice (asegúrate de tener el input hidden en tu HTML)
+    const idx = parseInt(document.getElementById(`multa-${tipo}-edit-index`)?.value || -1);
     
-    // Identificamos de qué formulario vienen los datos usando el 'tipo' (ingreso o salida)
     const selectSocio = document.getElementById(`multa-${tipo}-socio`);
     const fecha = document.getElementById(`multa-${tipo}-fecha`).value;
     const valor = parseFloat(document.getElementById(`multa-${tipo}-valor`).value);
@@ -1026,27 +1026,30 @@ function procesarFormularioMulta(e, tipo) {
     let multas = obtenerMultas();
 
     if(idx === -1) {
+        // Nuevo registro
         const documento = selectSocio.value;
         const nombre = selectSocio.options[selectSocio.selectedIndex].text.split(' (')[0];
-        
-        // Guardamos el objeto incluyendo el 'tipo' (ingreso o salida)
         multas.push({ nombre, documento, fecha, valor, concepto, tipo });
     } else {
-        // En caso de edición
+        // Edición
         multas[idx].fecha = fecha;
         multas[idx].valor = valor;
         multas[idx].concepto = concepto;
         multas[idx].tipo = tipo;
-        cancelarEdicionMulta();
+        // Reiniciamos índice tras editar
+        document.getElementById(`multa-${tipo}-edit-index`).value = "-1";
     }
     
     guardarMultas(multas);
     
-    // Reseteamos el formulario específico
+    // Limpiar formulario específico
     document.getElementById(`multa-${tipo}-form`).reset();
     
-    // Recargamos para refrescar la tabla y los totales
-    location.reload();
+    // --- AQUÍ ESTÁ EL CAMBIO CLAVE ---
+    // En lugar de recargar, refrescamos la tabla manualmente
+    mostrarMultasEnTablas(); 
+    
+    console.log("Multa guardada correctamente");
 }
         function prepararEdicionMulta(idx) {
             cerrarModal(); const multas = obtenerMultas();
@@ -1097,17 +1100,17 @@ function procesarFormularioMulta(e, tipo) {
     event.preventDefault();
        
     // Obtener valores según el tipo
-    const socio = document.getElementById(`multa-${tipo}-socio`).value;
+    const socioSelect = document.getElementById(`multa-${tipo}-socio`).value;
     const fecha = document.getElementById(`multa-${tipo}-fecha`).value;
     const valor = parseFloat(document.getElementById(`multa-${tipo}-valor`).value);
     const concepto = document.getElementById(`multa-${tipo}-concepto`).value;
 
     const nuevaMulta = {
-        nombre: socio,
+        nombre: socioSelect.options[socioSelect.selectedIndex].text,
         valor: valor,
         concepto: concepto,
         fecha: fecha,
-        tipo: tipo // Esto es clave para el reporte
+        tipo: tipo
     };
 
     // Aquí obtienes tus datos actuales y haces el .push(nuevaMulta)
