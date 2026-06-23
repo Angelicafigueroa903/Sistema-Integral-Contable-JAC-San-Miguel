@@ -1114,9 +1114,6 @@ function procesarFormularioMulta(e, tipo) {
     let multas = JSON.parse(localStorage.getItem('jac_db_multas') || '[]');
     multas.push(nuevaMulta);
     localStorage.setItem('jac_db_multas', JSON.stringify(multas));
-
-    alert("Movimiento de multa registrado correctamente.");
-    location.reload(); // Recargar para ver cambios
 }
         
         // --- COMITÉ DE DEPORTES ---
