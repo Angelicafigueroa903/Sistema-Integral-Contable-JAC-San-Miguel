@@ -1127,20 +1127,20 @@ function procesarFormularioMulta(e, tipo) {
         function procesarMultaMovimiento(event, tipo) {
     event.preventDefault();
        
-    // 1. Obtener valores
+    // 1. Obtener elementos usando los IDs de tu HTML
     const socioSelect = document.getElementById(`multa-${tipo}-socio`);
     const fecha = document.getElementById(`multa-${tipo}-fecha`).value;
     const valor = parseFloat(document.getElementById(`multa-${tipo}-valor`).value);
     const concepto = document.getElementById(`multa-${tipo}-concepto`).value;
 
-    // Validación básica para evitar errores
-    if (!socioSelect.value || isNaN(valor)) {
-        alert("Por favor, llena todos los campos correctamente.");
+    // Validación: si el elemento no existe, el código se detiene aquí y no da error
+    if (!socioSelect) {
+        console.error("No se encontró el selector: multa-" + tipo + "-socio");
         return;
     }
 
     const nuevaMulta = {
-        nombre: socioSelect.options[socioSelect.selectedIndex].text.split(' (')[0],
+        nombre: socioSelect.options[socioSelect.selectedIndex].text,
         documento: socioSelect.value,
         valor: valor,
         concepto: concepto,
@@ -1148,21 +1148,54 @@ function procesarFormularioMulta(e, tipo) {
         tipo: tipo
     };
 
-    // 2. Guardar en localStorage (usando tu función guardarMultas si existe)
+    // 2. Guardar
     let multas = JSON.parse(localStorage.getItem('jac_db_multas') || '[]');
     multas.push(nuevaMulta);
     localStorage.setItem('jac_db_multas', JSON.stringify(multas));
 
-    // 3. ¡ESTOS SON LOS PASOS QUE TE FALTABAN!
-    // Limpiar el formulario para que el usuario pueda ingresar otro dato
+    // 3. Limpiar y Refrescar
     document.getElementById(`multa-${tipo}-form`).reset();
+    
+    // Llamamos a la función de visualización
+    mostrarMultasEnTablas();
+    
+    console.log("Multa guardada:", nuevaMulta);
+}
 
-    // Actualizar la tabla en la pantalla sin recargar la página
-    if (typeof mostrarMultasEnTablas === 'function') {
-        mostrarMultasEnTablas();
-    }
+// --- VISUALIZADOR DE TABLA CORREGIDO ---
+function mostrarMultasEnTablas() {
+    const multas = JSON.parse(localStorage.getItem('jac_db_multas') || '[]');
+    const socios = obtenerSocios(); 
+    const tbody = document.getElementById('tabla-multas-resumen-body');
+    
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    
+    let totalIngresos = 0;
+    let totalSalidas = 0;
 
-    console.log("Multa guardada y tabla actualizada.");
+    socios.forEach(socio => {
+        const movimientos = multas.filter(m => m.documento === socio.documento);
+        if (movimientos.length > 0) {
+            const ing = movimientos.filter(m => m.tipo === 'ingreso').reduce((a, b) => a + parseFloat(b.valor), 0);
+            const sal = movimientos.filter(m => m.tipo === 'salida').reduce((a, b) => a + parseFloat(b.valor), 0);
+            
+            totalIngresos += ing;
+            totalSalidas += sal;
+            
+            const fila = document.createElement('tr');
+            fila.innerHTML = `<td>${socio.nombre}</td><td>${socio.documento}</td>
+                             <td style="color:green;">$${ing.toLocaleString()}</td>
+                             <td style="color:red;">$${sal.toLocaleString()}</td>
+                             <td>$${(ing - sal).toLocaleString()}</td>
+                             <td><button onclick="verHistorialSocio('${socio.documento}', 'multas')">Ver</button></td>`;
+            tbody.appendChild(fila);
+        }
+    });
+
+    // Actualizar saldo global
+    const saldoFinal = totalIngresos - totalSalidas;
+    document.getElementById('multas-saldo-disponible').innerText = `$${saldoFinal.toLocaleString()}`;
 }
         
         // --- COMITÉ DE DEPORTES ---
