@@ -1395,33 +1395,43 @@ function verHistorialComite(docSocio, comite) {
     document.getElementById('comite-modal-socio').innerText = socio ? socio.nombre : 'No Registrado';
     document.getElementById('comite-modal-doc').innerText = docSocio;
 
-    // --- BLOQUE PARA MULTAS ---
-    if (comite === 'multas') {
-        modalContainer.style.borderTopColor = '#c0392b'; 
-        document.getElementById('comite-modal-titulo').innerText = `📊 Historial de Multas: ${socio ? socio.nombre : 'Socio'}`;
-        headersTr.innerHTML = `<th>Fecha</th><th>Concepto</th><th>Valor</th><th>Acciones</th>`;
-        
-        const multas = obtenerMultas().filter(m => m !== null && typeof m === 'object');
-        let totalMultas = 0;
-        
-        multas.forEach((item, indexOriginal) => {
-            if (item && item.documento && item.documento === docSocio) { 
-                totalMultas += parseFloat(item.valor || 0);
-                const fila = document.createElement('tr');
-                fila.innerHTML = `<td>${item.fecha || 'N/A'}</td><td>${item.concepto || 'Sin concepto'}</td>
-                                  <td style="color:#c0392b; font-weight:bold;">$${parseFloat(item.valor || 0).toLocaleString()}</td>
-                                  <td><button class="btn btn-actions btn-edit" onclick="prepararEdicionMulta(${indexOriginal})">✏️</button>
-                                      <button class="btn btn-actions btn-danger" onclick="eliminarMulta(${indexOriginal})">❌</button></td>`;
-                tbody.appendChild(fila);
-            }
-        });
+   // --- BLOQUE PARA MULTAS CORREGIDO ---
+if (comite === 'multas') {
+    modalContainer.style.borderTopColor = '#c0392b'; 
+    document.getElementById('comite-modal-titulo').innerText = `📊 Historial de Multas: ${socio ? socio.nombre : 'Socio'}`;
+    
+    // 1. Aseguramos que los encabezados coincidan con las columnas de la fila
+    headersTr.innerHTML = `<th>Fecha</th><th>Concepto</th><th>Valor</th><th>Acciones</th>`;
+    
+    const multas = obtenerMultas().filter(m => m !== null && typeof m === 'object');
+    let totalMultas = 0;
+    
+    multas.forEach((item, indexOriginal) => {
+        if (item && item.documento && item.documento === docSocio) { 
+            totalMultas += parseFloat(item.valor || 0);
+            
+            const fila = document.createElement('tr');
+            // 2. Fila clara y ordenada
+            fila.innerHTML = `
+                <td>${item.fecha || 'N/A'}</td>
+                <td>${item.concepto || 'Sin concepto'}</td>
+                <td style="color:#c0392b; font-weight:bold;">$${parseFloat(item.valor || 0).toLocaleString()}</td>
+                <td>
+                    <button class="btn btn-actions btn-edit" onclick="prepararEdicionMulta(${indexOriginal})">✏️</button>
+                    <button class="btn btn-actions btn-danger" onclick="eliminarMulta(${indexOriginal})">❌</button>
+                </td>`;
+            tbody.appendChild(fila);
+        }
+    });
 
-        const ft = document.createElement('tr');
-        ft.className = "total-row";
-        ft.innerHTML = `<td colspan="2" style="text-align:right; font-weight:bold;">TOTAL ACUMULADO MULTAS:</td>
-                        <td colspan="2" style="color:#c0392b; font-weight:bold;">$${totalMultas.toLocaleString()}</td>`;
-        tbody.appendChild(ft);
-    } 
+    const ft = document.createElement('tr');
+    ft.className = "total-row";
+    // 3. El colspan debe ser 2 porque tienes 4 columnas totales
+    ft.innerHTML = `
+        <td colspan="2" style="text-align:right; font-weight:bold;">TOTAL ACUMULADO:</td>
+        <td colspan="2" style="color:#c0392b; font-weight:bold;">$${totalMultas.toLocaleString()}</td>`;
+    tbody.appendChild(ft);
+}
     // --- BLOQUE PARA GASTOS ---
     else if (comite === 'gastos') {
         modalContainer.style.borderTopColor = '#7f8c8d';
