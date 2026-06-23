@@ -268,7 +268,7 @@
     </div>
 
     <div class="form-container multas-mode">
-        <div class="form-title">📥 Registrar INGRESO / Multa Cobrada</div>
+        <div class="form-title" id="multa-ingreso-title">📥 Registrar INGRESO / Multa Cobrada</div>
         <form id="multa-ingreso-form" onsubmit="procesarMultaMovimiento(event, 'ingreso')">
             <input type="hidden" id="multa-ingreso-edit-index" value="-1">
             <div class="form-grid">
@@ -291,40 +291,14 @@
                     <input type="text" id="multa-ingreso-concepto" required>
                 </div>
             </div>
-            <button type="submit" class="btn btn-success">💾 Guardar Ingreso</button>
-        </form>
-    </div>
-
-    <div class="form-container" style="border-top: 4px solid #c0392b;">
-        <div class="form-title">📤 Registrar SALIDA / Gasto del Comité</div>
-        <form id="multa-salida-form" onsubmit="procesarMultaMovimiento(event, 'salida')">
-            <input type="hidden" id="multa-salida-edit-index" value="-1">
-            <div class="form-grid">
-                <div class="form-group">
-                    <label for="multa-salida-socio">Nombre del Socio</label>
-                    <select id="multa-salida-socio" required>
-                        <option value="">-- Seleccione un socio --</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="multa-salida-fecha">Fecha</label>
-                    <input type="date" id="multa-salida-fecha" required>
-                </div>
-                <div class="form-group">
-                    <label for="multa-salida-valor">Valor ($)</label>
-                    <input type="number" id="multa-salida-valor" required min="0">
-                </div>
-                <div class="form-group">
-                    <label for="multa-salida-concepto">Concepto</label>
-                    <input type="text" id="multa-salida-concepto" required>
-                </div>
-            </div>
-            <button type="submit" class="btn btn-danger">💾 Guardar Salida</button>
+            <button type="submit" class="btn btn-success" id="btn-submit-multa-ingreso">💾 Guardar Ingreso</button>
+            <button type="button" class="btn btn-danger btn-actions" id="btn-cancel-multa-ingreso" style="display:none;" onclick="cancelarEdicionMulta('ingreso')">Cancelar</button>
         </form>
     </div>
 
     <div class="section-header-flex">
         <h3>📋 Socios Activos en el Comité de Multas</h3>
+        <button class="btn btn-success" onclick="exportarMultasExcel()">📊 Descargar Libro de Multas a Excel</button>
     </div>
     <table class="data-table">
         <thead>
@@ -332,9 +306,8 @@
                 <th>Socio</th>
                 <th>Documento</th>
                 <th>Total Ingresos (+)</th>
-                <th>Total Salidas (-)</th>
-                <th>Saldo Disponible</th>
-                <th style="width: 150px;">Acciones</th>
+                <th>Saldo Pendiente</th>
+                <th>Acciones</th>
             </tr>
         </thead>
         <tbody id="tabla-multas-resumen-body"></tbody>
@@ -1411,38 +1384,49 @@ function eliminarMulta(index) {
 
 
         // LIBRO AUXILIAR HISTORIAL (MULTAS / DEPORTES / SALUD / GASTOS)
-        function verHistorialComite(docSocio, comite) {
-            const socios = obtenerSocios(); const socio = socios.find(s => s.documento === docSocio);
-            const tbody = document.getElementById('comite-modal-tabla-body'); tbody.innerHTML = '';
-            const modalContainer = document.getElementById('comite-modal-container');
-            const headersTr = document.getElementById('comite-modal-headers-tr');
+function verHistorialComite(docSocio, comite) {
+    const socios = obtenerSocios(); 
+    const socio = socios.find(s => s.documento === docSocio);
+    const tbody = document.getElementById('comite-modal-tabla-body'); 
+    tbody.innerHTML = '';
+    const modalContainer = document.getElementById('comite-modal-container');
+    const headersTr = document.getElementById('comite-modal-headers-tr');
 
-            document.getElementById('comite-modal-socio').innerText = socio ? socio.nombre : 'No Registrado';
-            document.getElementById('comite-modal-doc').innerText = docSocio;
+    document.getElementById('comite-modal-socio').innerText = socio ? socio.nombre : 'No Registrado';
+    document.getElementById('comite-modal-doc').innerText = docSocio;
 
-            if (comite === 'multas') {
-    modalContainer.style.borderTopColor = '#c0392b'; 
-    document.getElementById('comite-modal-titulo').innerText = `📊 Historial de Multas: ${socio ? socio.nombre : 'Socio no encontrado'}`;
-    headersTr.innerHTML = `<th>Fecha</th><th>Concepto</th><th>Valor</th><th>Acciones</th>`;
-    
-    const multas = obtenerMultas().filter(m => m !== null && typeof m === 'object');
-    let totalMultas = 0;
-    
-    multas.forEach((item, indexOriginal) => {
-        if (item.documento === docSocio) {
-            totalMultas += parseFloat(item.valor|| 0);
-            const fila = document.createElement('tr');
-            fila.innerHTML = `
-                <td>${item.fecha || 'N/A'}</td>
-                <td>${item.concepto || 'Sin concepto'}</td>
-                <td style="color:#c0392b; font-weight:bold;">$${parseFloat(item.valor || 0).toLocaleString()}</td>
-                <td>
-                    <button class="btn btn-actions btn-edit" onclick="prepararEdicionMulta(${indexOriginal})">✏️</button>
-                    <button class="btn btn-actions btn-danger" onclick="eliminarMulta(${indexOriginal})">❌</button>
-                </td>`;
-            tbody.appendChild(fila);
-        }
-    });
+    // --- BLOQUE PARA MULTAS ---
+    if (comite === 'multas') {
+        modalContainer.style.borderTopColor = '#c0392b'; 
+        document.getElementById('comite-modal-titulo').innerText = `📊 Historial de Multas: ${socio ? socio.nombre : 'Socio no encontrado'}`;
+        headersTr.innerHTML = `<th>Fecha</th><th>Concepto</th><th>Valor</th><th>Acciones</th>`;
+        
+        // Filtramos nulos para evitar errores
+        const multas = obtenerMultas().filter(m => m !== null && typeof m === 'object');
+        let totalMultas = 0;
+        
+        multas.forEach((item, indexOriginal) => {
+            if (item.documento === docSocio) {
+                totalMultas += parseFloat(item.valor || 0);
+                const fila = document.createElement('tr');
+                fila.innerHTML = `
+                    <td>${item.fecha || 'N/A'}</td>
+                    <td>${item.concepto || 'Sin concepto'}</td>
+                    <td style="color:#c0392b; font-weight:bold;">$${parseFloat(item.valor || 0).toLocaleString()}</td>
+                    <td>
+                        <button class="btn btn-actions btn-edit" onclick="prepararEdicionMulta(${indexOriginal})">✏️</button>
+                        <button class="btn btn-actions btn-danger" onclick="eliminarMulta(${indexOriginal})">❌</button>
+                    </td>`;
+                tbody.appendChild(fila);
+            }
+        });
+
+        const ft = document.createElement('tr');
+        ft.className = "total-row";
+        ft.innerHTML = `<td colspan="2" style="text-align:right; font-weight:bold;">TOTAL ACUMULADO MULTAS:</td>
+                        <td colspan="2" style="color:#c0392b; font-weight:bold;">$${totalMultas.toLocaleString()}</td>`;
+        tbody.appendChild(ft);
+    }
 
     // Fila del TOTAL ACUMULADO
     const ft = document.createElement('tr');
@@ -2081,6 +2065,16 @@ diagnosticarLlaves();
         }
     }
 }     
+        </script> <div id="comite-modal" class="modal">
+        <div class="modal-content" style="border-top-color: #2980b9;" id="comite-modal-container">
+            <div class="modal-header">
+                <div class="modal-title" id="comite-modal-titulo">Historial Detallado del Comité</div>
+                <span class="close-modal" onclick="cerrarModalComite()">&times;</span>
+            </div>
+            </div>
+    </div>
+
+    <script>
         
         // CIERRE POPUPS EXTERNOS
         window.onclick = function(e) {
