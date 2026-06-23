@@ -1099,13 +1099,14 @@ function procesarFormularioMulta(e, tipo) {
     event.preventDefault();
        
     // Obtener valores según el tipo
-    const socioSelect = document.getElementById(`multa-${tipo}-socio`).value;
+    const socioSelect = document.getElementById(`multa-${tipo}-socio`);
     const fecha = document.getElementById(`multa-${tipo}-fecha`).value;
     const valor = parseFloat(document.getElementById(`multa-${tipo}-valor`).value);
     const concepto = document.getElementById(`multa-${tipo}-concepto`).value;
 
     const nuevaMulta = {
         nombre: socioSelect.options[socioSelect.selectedIndex].text,
+        documento: socioSelect.value,
         valor: valor,
         concepto: concepto,
         fecha: fecha,
@@ -1576,7 +1577,7 @@ function descargarCajaExcel() {
     // 1. Preparamos los datos con sus respectivos saldos
     const data = [
         { Módulo: "Aportes y Gastos J.A.C.", Ingresos: c.ingAportes, Egresos: c.egrGastos, Saldo: (c.ingAportes - c.egrGastos) },
-        { Módulo: "Multas", Ingresos: c.ingMultas, Egresos: c.egrMultas, Saldo: (c.ingMultas - C.egrMultas},
+        { Módulo: "Multas", Ingresos: c.ingMultas, Egresos: c.egrMultas, Saldo: (c.ingMultas - c.egrMultas)},
         { Módulo: "Comité Deporte", Ingresos: c.ingDep, Egresos: c.egrDep, Saldo: (c.ingDep - c.egrDep) },
         { Módulo: "Comité Salud", Ingresos: c.ingSalud, Egresos: c.egrSalud, Saldo: (c.ingSalud - c.egrSalud) },
         // 2. Agregamos la fila de Totales Generales que hace falta
@@ -1586,7 +1587,8 @@ function descargarCajaExcel() {
           Saldo: (c.ingAportes - c.egrGastos) + (c.ingMultas - c.egrMultas) + (c.ingDep - c.egrDep) + (c.ingSalud - c.egrSalud) 
         }
     ];
-
+    }
+        
     // 3. Crear el archivo
     const wb = XLSX.utils.book_new();
     const ws = XLSX.utils.json_to_sheet(data);
