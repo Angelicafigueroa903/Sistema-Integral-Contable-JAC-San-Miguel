@@ -1406,7 +1406,8 @@ function verHistorialComite(docSocio, comite) {
         let totalMultas = 0;
         
         multas.forEach((item, indexOriginal) => {
-            if (item.documento === docSocio) {
+            // AÑADE 'item.documento' en el if para saltar registros corruptos
+            if (item && item.documento && item.documento === docSocio) { 
                 totalMultas += parseFloat(item.valor || 0);
                 const fila = document.createElement('tr');
                 fila.innerHTML = `
