@@ -1398,26 +1398,20 @@ function verHistorialComite(docSocio, comite) {
     // --- BLOQUE PARA MULTAS ---
     if (comite === 'multas') {
         modalContainer.style.borderTopColor = '#c0392b'; 
-        document.getElementById('comite-modal-titulo').innerText = `📊 Historial de Multas: ${socio ? socio.nombre : 'Socio no encontrado'}`;
+        document.getElementById('comite-modal-titulo').innerText = `📊 Historial de Multas: ${socio ? socio.nombre : 'Socio'}`;
         headersTr.innerHTML = `<th>Fecha</th><th>Concepto</th><th>Valor</th><th>Acciones</th>`;
         
-        // Filtramos nulos para evitar errores
         const multas = obtenerMultas().filter(m => m !== null && typeof m === 'object');
         let totalMultas = 0;
         
         multas.forEach((item, indexOriginal) => {
-            // AÑADE 'item.documento' en el if para saltar registros corruptos
             if (item && item.documento && item.documento === docSocio) { 
                 totalMultas += parseFloat(item.valor || 0);
                 const fila = document.createElement('tr');
-                fila.innerHTML = `
-                    <td>${item.fecha || 'N/A'}</td>
-                    <td>${item.concepto || 'Sin concepto'}</td>
-                    <td style="color:#c0392b; font-weight:bold;">$${parseFloat(item.valor || 0).toLocaleString()}</td>
-                    <td>
-                        <button class="btn btn-actions btn-edit" onclick="prepararEdicionMulta(${indexOriginal})">✏️</button>
-                        <button class="btn btn-actions btn-danger" onclick="eliminarMulta(${indexOriginal})">❌</button>
-                    </td>`;
+                fila.innerHTML = `<td>${item.fecha || 'N/A'}</td><td>${item.concepto || 'Sin concepto'}</td>
+                                  <td style="color:#c0392b; font-weight:bold;">$${parseFloat(item.valor || 0).toLocaleString()}</td>
+                                  <td><button class="btn btn-actions btn-edit" onclick="prepararEdicionMulta(${indexOriginal})">✏️</button>
+                                      <button class="btn btn-actions btn-danger" onclick="eliminarMulta(${indexOriginal})">❌</button></td>`;
                 tbody.appendChild(fila);
             }
         });
@@ -1427,65 +1421,61 @@ function verHistorialComite(docSocio, comite) {
         ft.innerHTML = `<td colspan="2" style="text-align:right; font-weight:bold;">TOTAL ACUMULADO MULTAS:</td>
                         <td colspan="2" style="color:#c0392b; font-weight:bold;">$${totalMultas.toLocaleString()}</td>`;
         tbody.appendChild(ft);
-    }
-
-    // Fila del TOTAL ACUMULADO
-    const ft = document.createElement('tr');
-    ft.className = "total-row";
-    ft.innerHTML = `
-        <td colspan="2" style="text-align:right; font-weight:bold;">TOTAL ACUMULADO MULTAS:</td>
-        <td colspan="2" style="color:#c0392b; font-weight:bold;">$${totalMultas.toLocaleString()}</td>`;
-    tbody.appendChild(ft);
-}
-            if (comite === 'gastos') {
-                modalContainer.style.borderTopColor = '#7f8c8d';
-                document.getElementById('comite-modal-titulo').innerText = `📊 Relación Auxiliar de Gastos Generales`;
-                headersTr.innerHTML = `<th>Fecha</th><th>Concepto / Descripción</th><th>Valor Retirado (-)</th><th>Acciones</th>`;
-                
-                const gastos = obtenerGastos(); let totalG = 0;
-                gastos.forEach((item, indexOriginal) => {
-                    if(item.documento === docSocio) {
-                        totalG += parseFloat(item.valor); const fila = document.createElement('tr');
-                        fila.innerHTML = `<td>${item.fecha}</td><td>${item.concepto}</td><td style="color:#c0392b; font-weight:bold;">-$${parseFloat(item.valor).toLocaleString()}</td>
-                            <td>
-                                <button class="btn btn-actions btn-edit" onclick="prepararEdicionGastos(${indexOriginal})">✏️</button>
-                                <button class="btn btn-actions btn-danger" onclick="eliminarMovimientoGastos(${indexOriginal})">❌</button>
-                            </td>`;
-                        tbody.appendChild(fila);
-                    }
-                });
-                const ft = document.createElement('tr'); ft.className = "total-row";
-                ft.innerHTML = `<td colspan="2" style="text-align:right;">TOTAL ACUMULADO GASTOS:</td><td colspan="2" style="color:#c0392b;">-$${totalG.toLocaleString()}</td>`;
-                tbody.appendChild(ft);
-            } else {
-                modalContainer.style.borderTopColor = comite === 'deportes' ? '#2980b9' : '#9b59b6';
-                document.getElementById('comite-modal-titulo').innerText = `📊 Libro Contable de Socio: Comité de ${comite.toUpperCase()}`;
-                headersTr.innerHTML = `<th>Fecha</th><th>Tipo</th><th>Concepto</th><th>Ingreso (+)</th><th>Salida (-)</th><th>Acciones</th>`;
-                
-                const data = comite === 'deportes' ? obtenerDeportes() : obtenerSalud(); let totalIn = 0; let totalOut = 0;
-                data.forEach((item, indexOriginal) => {
-                    if(item.documento === docSocio) {
-                        const esIn = item.tipo === 'ingreso'; if(esIn) totalIn += parseFloat(item.valor); else totalOut += parseFloat(item.valor);
-                        const fila = document.createElement('tr');
-                        fila.innerHTML = `<td>${item.fecha}</td>
-                            <td><span style="font-size:0.75rem; font-weight:bold; color:${esIn ? '#27ae60':'#c0392b'}">${item.tipo.toUpperCase()}</span></td>
-                            <td>${item.concepto}</td>
-                            <td style="color:#27ae60;">${esIn ? '+$'+parseFloat(item.valor).toLocaleString() : '-'}</td>
-                            <td style="color:#c0392b;">${!esIn ? '-$'+parseFloat(item.valor).toLocaleString() : '-'}</td>
-                            <td>
-                                <button class="btn btn-actions btn-edit" onclick="${comite === 'deportes' ? 'prepararEdicionDeporte':'prepararEdicionSalud'}(${indexOriginal}, '${item.tipo}')">✏️</button>
-                                <button class="btn btn-actions btn-danger" onclick="${comite === 'deportes' ? 'eliminarMovimientoDeporte':'eliminarMovimientoSalud'}(${indexOriginal})">❌</button>
-                            </td>`;
-                        tbody.appendChild(fila);
-                    }
-                });
-                const saldo = totalIn - totalOut; const ft = document.createElement('tr'); ft.className = "total-row";
-                ft.innerHTML = `<td colspan="3" style="text-align:right;">BALANCE INDIVIDUAL:</td>
-                    <td style="color:#27ae60;">+$${totalIn.toLocaleString()}</td><td style="color:#c0392b;">-$${totalOut.toLocaleString()}</td>
-                    <td style="background-color:${saldo >= 0 ? '#d4efdf':'#fadbd8'}; color:${saldo >= 0 ? '#196f3d':'#922b21'}; font-weight:bold;">$${saldo.toLocaleString()}</td>`;
-                tbody.appendChild(ft);
+    } 
+    // --- BLOQUE PARA GASTOS ---
+    else if (comite === 'gastos') {
+        modalContainer.style.borderTopColor = '#7f8c8d';
+        document.getElementById('comite-modal-titulo').innerText = `📊 Relación Auxiliar de Gastos Generales`;
+        headersTr.innerHTML = `<th>Fecha</th><th>Concepto / Descripción</th><th>Valor Retirado (-)</th><th>Acciones</th>`;
+        
+        const gastos = obtenerGastos(); let totalG = 0;
+        gastos.forEach((item, indexOriginal) => {
+            if(item.documento === docSocio) {
+                totalG += parseFloat(item.valor); 
+                const fila = document.createElement('tr');
+                fila.innerHTML = `<td>${item.fecha}</td><td>${item.concepto}</td>
+                                  <td style="color:#c0392b; font-weight:bold;">-$${parseFloat(item.valor).toLocaleString()}</td>
+                                  <td><button class="btn btn-actions btn-edit" onclick="prepararEdicionGastos(${indexOriginal})">✏️</button>
+                                      <button class="btn btn-actions btn-danger" onclick="eliminarMovimientoGastos(${indexOriginal})">❌</button></td>`;
+                tbody.appendChild(fila);
             }
-            document.getElementById('comite-modal').style.display = "flex";}
+        });
+        const ft = document.createElement('tr'); ft.className = "total-row";
+        ft.innerHTML = `<td colspan="2" style="text-align:right;">TOTAL ACUMULADO GASTOS:</td>
+                        <td colspan="2" style="color:#c0392b;">-$${totalG.toLocaleString()}</td>`;
+        tbody.appendChild(ft);
+    } 
+    // --- BLOQUE PARA DEPORTES Y SALUD ---
+    else {
+        modalContainer.style.borderTopColor = comite === 'deportes' ? '#2980b9' : '#9b59b6';
+        document.getElementById('comite-modal-titulo').innerText = `📊 Libro Contable: ${comite.toUpperCase()}`;
+        headersTr.innerHTML = `<th>Fecha</th><th>Tipo</th><th>Concepto</th><th>Ingreso (+)</th><th>Salida (-)</th><th>Acciones</th>`;
+        
+        const data = comite === 'deportes' ? obtenerDeportes() : obtenerSalud(); 
+        let totalIn = 0; let totalOut = 0;
+        data.forEach((item, indexOriginal) => {
+            if(item.documento === docSocio) {
+                const esIn = item.tipo === 'ingreso'; 
+                if(esIn) totalIn += parseFloat(item.valor); else totalOut += parseFloat(item.valor);
+                const fila = document.createElement('tr');
+                fila.innerHTML = `<td>${item.fecha}</td>
+                                  <td><span style="font-weight:bold; color:${esIn ? '#27ae60':'#c0392b'}">${item.tipo.toUpperCase()}</span></td>
+                                  <td>${item.concepto}</td>
+                                  <td style="color:#27ae60;">${esIn ? '+$'+parseFloat(item.valor).toLocaleString() : '-'}</td>
+                                  <td style="color:#c0392b;">${!esIn ? '-$'+parseFloat(item.valor).toLocaleString() : '-'}</td>
+                                  <td><button class="btn btn-actions btn-edit" onclick="${comite === 'deportes' ? 'prepararEdicionDeporte':'prepararEdicionSalud'}(${indexOriginal}, '${item.tipo}')">✏️</button>
+                                      <button class="btn btn-actions btn-danger" onclick="${comite === 'deportes' ? 'eliminarMovimientoDeporte':'eliminarMovimientoSalud'}(${indexOriginal})">❌</button></td>`;
+                tbody.appendChild(fila);
+            }
+        });
+        const saldo = totalIn - totalOut; const ft = document.createElement('tr'); ft.className = "total-row";
+        ft.innerHTML = `<td colspan="3" style="text-align:right;">BALANCE:</td>
+                        <td style="color:#27ae60;">+$${totalIn.toLocaleString()}</td><td style="color:#c0392b;">-$${totalOut.toLocaleString()}</td>
+                        <td style="background-color:${saldo >= 0 ? '#d4efdf':'#fadbd8'}; font-weight:bold;">$${saldo.toLocaleString()}</td>`;
+        tbody.appendChild(ft);
+    }
+    document.getElementById('comite-modal').style.display = "flex";
+}
         
         function cerrarModalComite() { document.getElementById('comite-modal').style.display = "none"; }
 
