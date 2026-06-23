@@ -1410,7 +1410,7 @@ function eliminarMulta(index) {
         function eliminarMovimientoGastos(idx) { if(confirm('¿Eliminar este registro de gasto?')) { let arr = obtenerGastos(); arr.splice(idx, 1); guardarGastos(arr); cerrarModalComite(); } }
 
 
-        // LIBRO AUXILIAR HISTORIAL (DEPORTES / SALUD / GASTOS)
+        // LIBRO AUXILIAR HISTORIAL (MULTAS / DEPORTES / SALUD / GASTOS)
         function verHistorialComite(docSocio, comite) {
             const socios = obtenerSocios(); const socio = socios.find(s => s.documento === docSocio);
             const tbody = document.getElementById('comite-modal-tabla-body'); tbody.innerHTML = '';
@@ -1425,17 +1425,17 @@ function eliminarMulta(index) {
     document.getElementById('comite-modal-titulo').innerText = `📊 Historial de Multas: ${socio ? socio.nombre : 'Socio no encontrado'}`;
     headersTr.innerHTML = `<th>Fecha</th><th>Concepto</th><th>Valor</th><th>Acciones</th>`;
     
-    const multas = obtenerMultas();
+    const multas = obtenerMultas().filter(m => m !== null && typeof m === 'object');
     let totalMultas = 0;
     
     multas.forEach((item, indexOriginal) => {
         if (item.documento === docSocio) {
-            totalMultas += parseFloat(item.valor);
+            totalMultas += parseFloat(item.valor|| 0);
             const fila = document.createElement('tr');
             fila.innerHTML = `
-                <td>${item.fecha}</td>
-                <td>${item.concepto}</td>
-                <td style="color:#c0392b; font-weight:bold;">$${parseFloat(item.valor).toLocaleString()}</td>
+                <td>${item.fecha || 'N/A'}</td>
+                <td>${item.concepto || 'Sin concepto'}</td>
+                <td style="color:#c0392b; font-weight:bold;">$${parseFloat(item.valor || 0).toLocaleString()}</td>
                 <td>
                     <button class="btn btn-actions btn-edit" onclick="prepararEdicionMulta(${indexOriginal})">✏️</button>
                     <button class="btn btn-actions btn-danger" onclick="eliminarMulta(${indexOriginal})">❌</button>
@@ -1525,6 +1525,7 @@ function eliminarMulta(index) {
             const hoja = XLSX.utils.json_to_sheet(filasExcel); const libro = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(libro, hoja, "Movimientos"); XLSX.writeFile(libro, `Libro_Contable_${comite}_San_Miguel.xlsx`);
         }
+        function exportarMultasExcel() { exportarComiteBaseExcel('Multas', obtenerMultas()); }
         function exportarDeportesExcel() { exportarComiteBaseExcel('Deportes', obtenerDeportes()); }
         function exportarSaludExcel() { exportarComiteBaseExcel('Salud', obtenerSalud()); }
 
