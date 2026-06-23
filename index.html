@@ -1485,8 +1485,8 @@ function verHistorialComite(docSocio, comite) {
                     <td style="background-color:${saldo >= 0 ? '#d4efdf':'#fadbd8'}; color:${saldo >= 0 ? '#196f3d':'#922b21'}; font-weight:bold;">$${saldo.toLocaleString()}</td>`;
                 tbody.appendChild(ft);
             }
-            document.getElementById('comite-modal').style.display = "flex";
-        }
+            document.getElementById('comite-modal').style.display = "flex";}
+        
         function cerrarModalComite() { document.getElementById('comite-modal').style.display = "none"; }
 
         // --- EXPORTACIONES A EXCEL CON FILTRO AVANZADO ---
