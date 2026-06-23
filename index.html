@@ -1667,84 +1667,37 @@ function descargarCajaExcel() {
 }
         
 function calcularEstadoFinanciero() {
+    // 1. Obtenemos el mes seleccionado
+    const mesSeleccionado = document.getElementById('ef-mes').value;
+    
+    // 2. Llamamos a la función que creamos (a la que pasamos el mes)
+    const d = calcularTotales(mesSeleccionado);
+    
+    // 3. Calculamos los totales generales
+    const totIng = (d.aportes || 0) + (d.multasIng || 0) + (d.depIng || 0) + (d.salIng || 0);
+    const totEgr = (d.gastosGen || 0) + (d.multasEgr || 0) + (d.depEgr || 0) + (d.salEgr || 0);
+
+    // 4. Pintamos la tabla (usando la variable 'tabla' que apunta a 'tabla-estado')
     const tabla = document.getElementById('tabla-estado');
-    if (!tabla) return;
-
-    // Obtenemos los valores de los selectores de forma segura
-    const tipo = document.getElementById('ef-tipo') ? document.getElementById('ef-tipo').value : 'general';
-    const mesSeleccionado = document.getElementById('ef-mes') ? document.getElementById('ef-mes').value : '';
-
-    // Función auxiliar para obtener datos de forma segura
-    const getDatos = (fn) => {
-        try {
-            const data = fn();
-            return Array.isArray(data) ? data : [];
-        } catch (e) {
-            return [];
-        }
-    };
-
-    // Función para filtrar y sumar
-    const procesar = (lista, esGasto, esModuloSimple) => {
-        let filtrada = lista;
-        
-        // 1. Filtrar solo si es tipo 'mensual' Y hay un mes seleccionado
-        if (tipo === 'mensual' && mesSeleccionado) {
-            filtrada = filtrada.filter(item => item.fecha && item.fecha.startsWith(mesSeleccionado));
-        }
-        // Si el tipo es 'general', no hacemos nada, por lo tanto 'filtrada' 
-        // contiene todos los registros (suma el acumulado total).
-
-        // 2. Sumar
-        return filtrada.reduce((sum, item) => {
-            const val = parseFloat(item.valor) || 0;
-            // Si es módulo simple (Aportes/Multas/Gastos), suma todo. Si es complejo, filtra por tipo.
-            if (esModuloSimple) return sum + val;
-            const esSalida = (item.tipo === 'salida' || item.tipo === 'gasto' || item.tipo === 'Gasto');
-            return esGasto ? (esSalida ? sum + val : sum) : (!esSalida ? sum + val : sum);
-        }, 0);
-    };
-
-    // Obtenemos listas
-    const aportes = getDatos(obtenerAportes);
-    const multas = getDatos(obtenerMultas);
-    const gastos = getDatos(obtenerGastos);
-    const dep = getDatos(obtenerDeportes);
-    const sal = getDatos(obtenerSalud);
-
-    // Cálculos
-    const d = {
-        aportes: procesar(aportes, false, true),
-        multas: procesar(multas, false, true),
-        gastosGen: procesar(gastos, true, true),
-        depIng: procesar(dep, false, false),
-        depEgr: procesar(dep, true, false),
-        salIng: procesar(sal, false, false),
-        salEgr: procesar(sal, true, false)
-    };
-
-    const totIng = d.aportes + d.multas + d.depIng + d.salIng;
-    const totEgr = d.gastosGen + d.multas + d.depEgr + d.salEgr;
-
-    // Pintar tabla
     tabla.innerHTML = `
-        <thead><tr style="background:#2c3e50; color:white;"><th>DESCRIPCIÓN</th><th>MONTO</th></tr></thead>
+        <thead><tr><th>Concepto</th><th>Valor</th></tr></thead>
         <tbody>
             <tr style="background:#ecf0f1;"><td><b>INGRESOS</b></td><td></td></tr>
-            <tr><td>Aportes <button onclick="verDetalle('aportes')" style="font-size:10px; cursor:pointer;">Ver</button></td><td>$${d.aportes.toLocaleString()}</td></tr>
-            <tr><td>Multas (Ing) <button onclick="verDetalle('multas')" style="font-size:10px; cursor:pointer;">Ver</button></td><td>$${(d.multasIng || 0).toLocaleString()}</td></tr>
-            <tr><td>Deportes (Ing) <button onclick="verDetalle('deportes')" style="font-size:10px; cursor:pointer;">Ver</button></td><td>$${d.depIng.toLocaleString()}</td></tr>
-            <tr><td>Salud (Ing) <button onclick="verDetalle('salud')" style="font-size:10px; cursor:pointer;">Ver</button></td><td>$${d.salIng.toLocaleString()}</td></tr>
+            <tr><td>Aportes <button onclick="verDetalle('aportes')" ...>Ver</button></td><td>$${(d.aportes || 0).toLocaleString()}</td></tr>
+            <tr><td>Multas (Ing) <button onclick="verDetalle('multas')" ...>Ver</button></td><td>$${(d.multasIng || 0).toLocaleString()}</td></tr>
+            <tr><td>Deportes (Ing) <button onclick="verDetalle('deportes')" ...>Ver</button></td><td>$${(d.depIng || 0).toLocaleString()}</td></tr>
+            <tr><td>Salud (Ing) <button onclick="verDetalle('salud')" ...>Ver</button></td><td>$${(d.salIng || 0).toLocaleString()}</td></tr>
             <tr style="border-top:2px solid #000;"><td><b>TOTAL INGRESOS</b></td><td><b>$${totIng.toLocaleString()}</b></td></tr>
             
             <tr style="background:#ecf0f1;"><td><b>GASTOS</b></td><td></td></tr>
-            <tr><td>Gastos Generales <button onclick="verDetalle('gastos')" style="font-size:10px; cursor:pointer;">Ver</button></td><td>$${d.gastosGen.toLocaleString()}</td></tr>
-            <tr><td>multas (Egr) <button onclick="verDetalle('multas')" style="font-size:10px; cursor:pointer;">Ver</button></td><td>$${d.multasEgr.toLocaleString()}</td></tr>
-            <tr><td>Deportes (Egr) <button onclick="verDetalle('deportes')" style="font-size:10px; cursor:pointer;">Ver</button></td><td>$${d.depEgr.toLocaleString()}</td></tr>
-            <tr><td>Salud (Egr) <button onclick="verDetalle('salud')" style="font-size:10px; cursor:pointer;">Ver</button></td><td>$${d.salEgr.toLocaleString()}</td></tr>
+            <tr><td>Gastos Generales <button onclick="verDetalle('gastos')" ...>Ver</button></td><td>$${(d.gastosGen || 0).toLocaleString()}</td></tr>
+            <tr><td>Multas (Egr) <button onclick="verDetalle('multas')" ...>Ver</button></td><td>$${(d.multasEgr || 0).toLocaleString()}</td></tr>
+            <tr><td>Deportes (Egr) <button onclick="verDetalle('deportes')" ...>Ver</button></td><td>$${(d.depEgr || 0).toLocaleString()}</td></tr>
+            <tr><td>Salud (Egr) <button onclick="verDetalle('salud')" ...>Ver</button></td><td>$${(d.salEgr || 0).toLocaleString()}</td></tr>
             <tr style="border-top:2px solid #000;"><td><b>TOTAL GASTOS</b></td><td><b>$${totEgr.toLocaleString()}</b></td></tr>
             <tr style="background:#27ae60; color:white;"><td><b>SALDO NETO</b></td><td><b>$${(totIng - totEgr).toLocaleString()}</b></td></tr>
-        </tbody>`;
+        </tbody>
+    `;
 }
         
     function verDetalle(categoria) {
@@ -2056,6 +2009,40 @@ diagnosticarLlaves();
         }
     }
 }     
+
+        function calcularTotales(mesFiltro) {
+    // 1. Obtenemos todas las listas de datos (asegúrate de que estas funciones existan en tu código)
+    const aportes = obtenerAportes();
+    const gastos = obtenerGastos();
+    const multas = obtenerMultas();
+    const deportes = obtenerDeportes();
+    const salud = obtenerSalud();
+
+    // 2. Función auxiliar para sumar valores por tipo
+    const sumar = (lista, tipoCampo) => {
+        return lista.reduce((total, item) => {
+            // Ajustamos según si el campo es de tipo 'ingreso'/'egreso' o es un gasto directo
+            const valor = parseFloat(item.valor || 0);
+            if (tipoCampo === 'ingreso' && item.tipo === 'ingreso') return total + valor;
+            if (tipoCampo === 'egreso' && item.tipo === 'egreso') return total + valor;
+            if (tipoCampo === 'gasto') return total + valor;
+            return total;
+        }, 0);
+    };
+
+    // 3. Calculamos los totales
+    return {
+        aportes: sumar(aportes, 'gasto'), // Los aportes suelen ser solo ingresos
+        gastosGen: sumar(gastos, 'gasto'),
+        multasIng: sumar(multas, 'ingreso'),
+        multasEgr: sumar(multas, 'egreso'),
+        depIng: sumar(deportes, 'ingreso'),
+        depEgr: sumar(deportes, 'egreso'),
+        salIng: sumar(salud, 'ingreso'),
+        salEgr: sumar(salud, 'egreso')
+    };
+}
+        
         </script> 
     
     <div id="comite-modal" class="modal">
