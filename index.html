@@ -92,8 +92,10 @@
         .btn-actions { padding: 6px 12px; font-size: 0.8rem; margin-top: 0; margin-right: 5px; font-weight: normal; }
         .btn-view { background-color: #8e44ad; }
         .btn-view:hover { background-color: #732d91; }
-        .btn-edit { background-color: #2980b9; }
-        .btn-edit:hover { background-color: #1f618d; }
+        .btn-edit { background-color: #8e44ad; color: white; }
+        .btn-edit:hover { background-color: #732d91; }
+        .btn-danger { background-color: #c0392b; color: white; }
+        .btn-danger:hover { background-color: #a93226; }
 
         /* TABLAS */
         .data-table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-top: 15px; margin-bottom: 30px; }
@@ -1023,7 +1025,9 @@ if (viewId === 'estados') {
             totalSalidasGlobal += salidas;
 
             const fila = document.createElement('tr');
-            fila.innerHTML = `<td><strong>${socio.nombre}</strong></td><td>${socio.documento}</td>
+            fila.innerHTML = `
+                <td><strong>${socio.nombre}</strong></td>
+                <td>${socio.documento}</td>
                 <td style="color:#27ae60;">+$${ingresos.toLocaleString()}</td>
                 <td style="color:#c0392b;">-$${salidas.toLocaleString()}</td>
                 <td style="font-weight:bold;">$${(ingresos - salidas).toLocaleString()}</td>
@@ -1156,26 +1160,29 @@ function procesarMultaMovimiento(event, tipo) {
 
 // 2. PREPARAR EDICIÓN (Al hacer clic en el lápiz del modal)
 function prepararEdicionMulta(index) {
-    cerrarModal(); // Cierra el historial
+    cerrarModal(); 
     const multas = JSON.parse(localStorage.getItem('jac_db_multas') || '[]');
     const item = multas[index];
-    
     const tipo = item.tipo; // 'ingreso' o 'salida'
     
-    // Carga los datos al formulario correspondiente
+    // Aquí está el secreto: usar el ID dinámico exacto
+    const idInput = `multa-${tipo}-edit-index`;
+    const inputEdit = document.getElementById(idInput);
+    
+    if (!inputEdit) {
+        console.error("No encontré el ID: " + idInput);
+        return;
+    }
+
     document.getElementById(`multa-${tipo}-socio`).value = item.documento;
     document.getElementById(`multa-${tipo}-fecha`).value = item.fecha;
     document.getElementById(`multa-${tipo}-valor`).value = item.valor;
     document.getElementById(`multa-${tipo}-concepto`).value = item.concepto;
     
-    // Marca el índice para que procesarMultaMovimiento sepa que estamos editando
-    document.getElementById(`multa-${tipo}-edit-index`).value = index;
-    
-    // Lleva al usuario al formulario
+    inputEdit.value = index; // Guardamos el índice donde corresponde
     document.getElementById(`multa-${tipo}-form`).scrollIntoView({ behavior: 'smooth' });
 }
-
-// 3. ELIMINAR
+        
 function eliminarMulta(index) {
     if(confirm('¿Seguro que deseas eliminar este registro?')) {
         let multas = JSON.parse(localStorage.getItem('jac_db_multas') || '[]');
