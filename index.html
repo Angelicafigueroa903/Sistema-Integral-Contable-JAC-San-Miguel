@@ -1100,14 +1100,20 @@ function procesarFormularioMulta(e, tipo) {
         function procesarMultaMovimiento(event, tipo) {
     event.preventDefault();
        
-    // Obtener valores según el tipo
+    // 1. Obtener valores
     const socioSelect = document.getElementById(`multa-${tipo}-socio`);
     const fecha = document.getElementById(`multa-${tipo}-fecha`).value;
     const valor = parseFloat(document.getElementById(`multa-${tipo}-valor`).value);
     const concepto = document.getElementById(`multa-${tipo}-concepto`).value;
 
+    // Validación básica para evitar errores
+    if (!socioSelect.value || isNaN(valor)) {
+        alert("Por favor, llena todos los campos correctamente.");
+        return;
+    }
+
     const nuevaMulta = {
-        nombre: socioSelect.options[socioSelect.selectedIndex].text,
+        nombre: socioSelect.options[socioSelect.selectedIndex].text.split(' (')[0],
         documento: socioSelect.value,
         valor: valor,
         concepto: concepto,
@@ -1115,10 +1121,21 @@ function procesarFormularioMulta(e, tipo) {
         tipo: tipo
     };
 
-    // Aquí obtienes tus datos actuales y haces el .push(nuevaMulta)
+    // 2. Guardar en localStorage (usando tu función guardarMultas si existe)
     let multas = JSON.parse(localStorage.getItem('jac_db_multas') || '[]');
     multas.push(nuevaMulta);
     localStorage.setItem('jac_db_multas', JSON.stringify(multas));
+
+    // 3. ¡ESTOS SON LOS PASOS QUE TE FALTABAN!
+    // Limpiar el formulario para que el usuario pueda ingresar otro dato
+    document.getElementById(`multa-${tipo}-form`).reset();
+
+    // Actualizar la tabla en la pantalla sin recargar la página
+    if (typeof mostrarMultasEnTablas === 'function') {
+        mostrarMultasEnTablas();
+    }
+
+    console.log("Multa guardada y tabla actualizada.");
 }
         
         // --- COMITÉ DE DEPORTES ---
