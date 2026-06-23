@@ -948,23 +948,27 @@ if (viewId === 'estados') {
         function mostrarAportesEnTablas() {
             const aportes = obtenerAportes(); const socios = obtenerSocios();
             const tbody = document.getElementById('tabla-aportes-detallado-body'); if(!tbody) return;
-            tbody.innerHTML = ''; let granTotal = 0;
-
-            if(socios.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#999; padding:15px;">No hay socios registrados.</td></tr>`; return;
-            }
+            tbody.innerHTML = ''; let granTotal = 0; let contadorMostrados = 0;
 
             socios.forEach(socio => {
                 const suma = aportes.filter(ap => ap.documento === socio.documento).reduce((s, c) => s + parseFloat(c.valor), 0);
-                granTotal += suma;
-                const fila = document.createElement('tr');
-                fila.innerHTML = `<td><strong>${socio.nombre}</strong></td><td>${socio.documento}</td>
-                    <td><strong style="color:#27ae60;">$${suma.toLocaleString()}</strong></td>
-                    <td><button class="btn btn-actions btn-view" onclick="verHistorialSocio('${socio.documento}', 'aportes')">👁️ Ver Historial</button></td>`;
-                tbody.appendChild(fila);
+                
+                // MEJORA: Solo mostrar si la suma es mayor a 0
+                if (suma > 0) {
+                    granTotal += suma; contadorMostrados++;
+                    const fila = document.createElement('tr');
+                    fila.innerHTML = `<td><strong>${socio.nombre}</strong></td><td>${socio.documento}</td>
+                        <td><strong style="color:#27ae60;">$${suma.toLocaleString()}</strong></td>
+                        <td><button class="btn btn-actions btn-view" onclick="verHistorialSocio('${socio.documento}', 'aportes')">👁️ Ver Historial</button></td>`;
+                    tbody.appendChild(fila);
+                }
             });
+
+            if(contadorMostrados === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#999; padding:20px;">Ningún socio registra aportes hasta el momento.</td></tr>`; return;
+            }
             const ft = document.createElement('tr'); ft.className = "total-row";
-            ft.innerHTML = `<td colspan="2" style="text-align:right;">TOTAL RECAUDADO JAC:</td><td colspan="2" style="color:#27ae60;">$${granTotal.toLocaleString()}</td>`;
+            ft.innerHTML = `<td colspan="2" style="text-align:right;">TOTAL RECAUDADO APORTES:</td><td colspan="2" style="color:#27ae60;">$${granTotal.toLocaleString()}</td>`;
             tbody.appendChild(ft);
         }
 
