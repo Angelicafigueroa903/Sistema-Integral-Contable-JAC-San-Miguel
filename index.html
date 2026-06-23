@@ -993,17 +993,15 @@ if (viewId === 'estados') {
 
         // --- MULTAS ---
         function mostrarMultasEnTablas() {
-    const multas = obtenerMultas();
+    const multas = JSON.parse(localStorage.getItem('jac_db_multas') || '[]');
     const socios = obtenerSocios();
     const tbody = document.getElementById('tabla-multas-resumen-body');
     
     console.log("Datos recuperados - Multas:", multas);
     console.log("Datos recuperados - Socios:", socios);
     
-    if (!tbody) {
-        console.error("ERROR: No encontré el elemento 'tabla-multas-resumen-body' en tu HTML");
-        return;
-    }
+    if (!tbody) return;
+    tbody.innerHTML = '';
     
     tbody.innerHTML = '';
     let totalIngresosGlobal = 0;
@@ -1012,7 +1010,7 @@ if (viewId === 'estados') {
 
     socios.forEach(socio => {
         // MUY IMPORTANTE: Verifica que los documentos coincidan (String vs Number)
-        const movimientosSocio = multas.filter(m => String(m.documento).trim() === String(socio.documento).trim());
+        const movimientos = multas.filter(m => m && m.documento === socio.documento);
         
         console.log(`Buscando movimientos para: ${socio.nombre} (${socio.documento}). Encontrados: ${movimientosSocio.length}`);
 
@@ -1031,6 +1029,7 @@ if (viewId === 'estados') {
                 <td style="color:#27ae60;">+$${ingresos.toLocaleString()}</td>
                 <td style="color:#c0392b;">-$${salidas.toLocaleString()}</td>
                 <td style="font-weight:bold;">$${(ingresos - salidas).toLocaleString()}</td>
+                <td style="text-align:center;">
                 <td><button class="btn btn-actions btn-view" onclick="verHistorialSocio('${socio.documento}', 'multas')">👁️ Ver Historial</button></td>`;
             tbody.appendChild(fila);
         }
