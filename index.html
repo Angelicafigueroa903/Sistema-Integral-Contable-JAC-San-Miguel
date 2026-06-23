@@ -794,10 +794,12 @@ if (viewId === 'estados') {
                 actualizarSelectorSocios();
                 mostrarAportesEnTablas();
                 establecerFechaHoy('aporte-fecha');
-            } else if(viewId === 'multas') {
+            } 
+            else if(viewId === 'multas') {
                 actualizarSelectorSociosMultas();
                 mostrarMultasEnTablas();
-                establecerFechaHoy('multa-fecha');
+                establecerFechaHoy('multa-ingreso-fecha');
+                establecerFechaHoy('multa-salida-fecha');
             } else if(viewId === 'deportes') {
                 actualizarSelectoresDeportes();
                 mostrarDeportesEnTabla();
