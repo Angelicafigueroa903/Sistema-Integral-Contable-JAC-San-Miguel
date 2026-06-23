@@ -992,57 +992,47 @@ if (viewId === 'estados') {
         function eliminarAporte(idx) { if(confirm('¿Eliminar este aporte?')) { let arr = obtenerAportes(); arr.splice(idx, 1); guardarAportes(arr); cerrarModal(); } }
 
         // --- MULTAS ---
-        function mostrarMultasEnTablas() {
-    const multas = JSON.parse(localStorage.getItem('jac_db_multas') || '[]');
-    const socios = obtenerSocios();
-    const tbody = document.getElementById('tabla-multas-resumen-body');
+function mostrarMultasEnTablas() {
+    // 1. Obtener y limpiar datos
+    let multas = JSON.parse(localStorage.getItem('jac_db_multas') || '[]');
+    // Filtramos solo objetos válidos y no nulos
+    multas = multas.filter(m => m !== null && typeof m === 'object');
     
-    console.log("Datos recuperados - Multas:", multas);
-    console.log("Datos recuperados - Socios:", socios);
+    const socios = obtenerSocios(); 
+    const tbody = document.getElementById('tabla-multas-resumen-body');
     
     if (!tbody) return;
     tbody.innerHTML = '';
     
-    tbody.innerHTML = '';
-    let totalIngresosGlobal = 0;
-    let totalSalidasGlobal = 0;
-    let contadorMostrados = 0;
+    let totalIngresos = 0;
+    let totalSalidas = 0;
 
     socios.forEach(socio => {
-        // MUY IMPORTANTE: Verifica que los documentos coincidan (String vs Number)
-        const movimientos = multas.filter(m => m && m.documento === socio.documento);
+        // 2. Definir la variable correctamente aquí
+        const movimientos = multas.filter(m => m.documento === socio.documento);
         
-        console.log(`Buscando movimientos para: ${socio.nombre} (${socio.documento}). Encontrados: ${movimientosSocio.length}`);
-
-        if (movimientosSocio.length > 0) {
-            contadorMostrados++;
-            const ingresos = movimientosSocio.filter(m => m.tipo === 'ingreso').reduce((s, c) => s + parseFloat(c.valor), 0);
-            const salidas = movimientosSocio.filter(m => m.tipo === 'salida').reduce((s, c) => s + parseFloat(c.valor), 0);
+        if (movimientos.length > 0) {
+            const ing = movimientos.filter(m => m.tipo === 'ingreso').reduce((a, b) => a + (parseFloat(b.valor) || 0), 0);
+            const sal = movimientos.filter(m => m.tipo === 'salida').reduce((a, b) => a + (parseFloat(b.valor) || 0), 0);
             
-            totalIngresosGlobal += ingresos;
-            totalSalidasGlobal += salidas;
-
+            totalIngresos += ing;
+            totalSalidas += sal;
+            
             const fila = document.createElement('tr');
-            fila.innerHTML = `
-                <td><strong>${socio.nombre}</strong></td>
-                <td>${socio.documento}</td>
-                <td style="color:#27ae60;">+$${ingresos.toLocaleString()}</td>
-                <td style="color:#c0392b;">-$${salidas.toLocaleString()}</td>
-                <td style="font-weight:bold;">$${(ingresos - salidas).toLocaleString()}</td>
-                <td style="text-align:center;">
-                <td><button class="btn btn-actions btn-view" onclick="verHistorialSocio('${socio.documento}', 'multas')">👁️ Ver Historial</button></td>`;
+            fila.innerHTML = `<td><strong>${socio.nombre}</strong></td>
+                             <td>${socio.documento}</td>
+                             <td style="color:#27ae60; text-align:right;">+$${ing.toLocaleString()}</td>
+                             <td style="color:#c0392b; text-align:right;">-$${sal.toLocaleString()}</td>
+                             <td style="font-weight:bold; text-align:right;">$${(ing - sal).toLocaleString()}</td>
+                             <td style="text-align:center;">
+                                <button class="btn btn-actions btn-view" onclick="verHistorialSocio('${socio.documento}', 'multas')">👁️ Ver</button>
+                             </td>`;
             tbody.appendChild(fila);
         }
     });
 
-    if (contadorMostrados === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;">No hay movimientos para mostrar.</td></tr>`;
-    }
-    
-    // Actualizar el saldo total
-    const saldoGlobal = totalIngresosGlobal - totalSalidasGlobal;
-    const elementoSaldo = document.getElementById('multas-saldo-disponible');
-    if(elementoSaldo) elementoSaldo.innerText = `$${saldoGlobal.toLocaleString()}`;
+    const saldoEl = document.getElementById('multas-saldo-disponible');
+    if (saldoEl) saldoEl.innerText = `$${(totalIngresos - totalSalidas).toLocaleString()}`;
 }
 
 function procesarFormularioMulta(e, tipo) {
