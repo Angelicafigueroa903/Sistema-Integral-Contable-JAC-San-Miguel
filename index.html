@@ -1605,9 +1605,9 @@ function obtenerCalculosCaja(mes) {
     const ingAportes = dataAportes.reduce((s, d) => s + parseFloat(d.valor || 0), 0);
     const egrGastos = dataGastos.reduce((s, d) => s + parseFloat(d.valor || 0), 0);
     
-     // En Multas, deportes y salud, usamos la lógica de ingreso/salida según el objeto
+     // En multas, deportes y salud, usamos la lógica de ingreso/salida según el objeto
     const ingMultas = dataDep.filter(d => d.tipo === 'ingreso').reduce((s, d) => s + parseFloat(d.valor || 0), 0);
-    const egrmultas = dataDep.filter(d => d.tipo === 'salida').reduce((s, d) => s + parseFloat(d.valor || 0), 0);
+    const egrMultas = dataDep.filter(d => d.tipo === 'salida').reduce((s, d) => s + parseFloat(d.valor || 0), 0);
     
     const ingDep = dataDep.filter(d => d.tipo === 'ingreso').reduce((s, d) => s + parseFloat(d.valor || 0), 0);
     const egrDep = dataDep.filter(d => d.tipo === 'salida').reduce((s, d) => s + parseFloat(d.valor || 0), 0);
