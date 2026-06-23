@@ -838,10 +838,13 @@ if (viewId === 'estados') {
         // BASE DE DATOS LOCAL
         function obtenerSocios() { return JSON.parse(localStorage.getItem('jac_db_socios')) || []; }
         function guardarSocios(arr) { 
+            // ORDENAR ALFABÉTICAMENTE POR NOMBRE ANTES DE GUARDAR
+            arr.sort((a, b) => a.nombre.localeCompare(b.nombre, 'es', { sensitivity: 'base' }));
+            
             localStorage.setItem('jac_db_socios', JSON.stringify(arr)); 
             mostrarSociosEnTabla(); 
             actualizarSelectorSocios(); 
-            actualizarSelectorSociosMultas();
+            actualizarSelectoresMultas();
             actualizarSelectoresDeportes();
             actualizarSelectoresSalud();
             actualizarSelectorGastos();
