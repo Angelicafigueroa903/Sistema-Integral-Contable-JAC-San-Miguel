@@ -139,8 +139,8 @@
             <span class="offline-badge">Local/Offline</span>
         </div>
         <ul class="sidebar-menu">
-            <li><a onclick="switchView('inicio')" id="btn-inicio"><span class="menu-icon">🏠</span> Inicio</a></li>
-            <li><a onclick="switchView('socios')" id="btn-socios" class="active"><span class="menu-icon">👥</span> Socios</a></li>
+            <li><a onclick="switchView('inicio')" id="btn-inicio" class="active"><span class="menu-icon">🏠</span> Inicio</a></li>
+            <li><a onclick="switchView('socios')" id="btn-socios"><span class="menu-icon">👥</span> Socios</a></li>
             <li><a onclick="switchView('aportes')" id="btn-aportes"><span class="menu-icon">💰</span> Aportes</a></li>
             <li><a onclick="switchView('multas')" id="btn-multas"><span class="menu-icon">⚠</span> Multas</a></li>
             <li><a onclick="switchView('deportes')" id="btn-deportes"><span class="menu-icon">🏆</span> Comité Deportes</a></li>
@@ -154,14 +154,14 @@
     </nav>
 
     <main class="main-content">
-        <div class="header-main" id="view-title">👥 Base de Datos de Socios</div>
+        <div class="header-main" id="view-title">🏠 Inicio</div>
 
-        <section id="view-inicio" class="view-section">
+        <section id="view-inicio" class="view-section active">
             <h2>🏠 Bienvenido al Sistema Integral Contable</h2>
             <p style="margin-top: 15px;">Seleccione una opción del menú lateral para gestionar las cuentas de la Junta de Acción Comunal Vereda San Miguel.</p>
         </section>
 
-        <section id="view-socios" class="view-section active">
+        <section id="view-socios" class="view-section">
             <div class="form-container">
                 <div class="form-title" id="form-action-title">Forma 1: Registro Individual de Socio</div>
                 <form id="socio-form" onsubmit="procesarFormularioSocio(event)">
