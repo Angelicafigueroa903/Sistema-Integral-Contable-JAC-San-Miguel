@@ -1304,7 +1304,7 @@ if (viewId === 'estados') {
 
 
         // LIBRO AUXILIAR HISTORIAL (DEPORTES / SALUD / GASTOS)
-        function verHistorialComite(docSocio, comite) {
+         function verHistorialComite(docSocio, comite) {
             const socios = obtenerSocios(); const socio = socios.find(s => s.documento === docSocio);
             const tbody = document.getElementById('comite-modal-tabla-body'); tbody.innerHTML = '';
             const modalContainer = document.getElementById('comite-modal-container');
@@ -1335,24 +1335,27 @@ if (viewId === 'estados') {
                 tbody.appendChild(ft);
             } else {
                 modalContainer.style.borderTopColor = comite === 'deportes' ? '#2980b9' : (comite === 'salud' ? '#9b59b6' : '#e74c3c');
-                document.getElementById('comite-modal-titulo').innerText = `📊 Libro Contable de Socio: Comité de ${comite.toUpperCase()}`;
+                document.getElementById('comite-modal-titulo').innerText = `📊 Libro Contable de Socio: Fondo de ${comite.toUpperCase()}`;
                 headersTr.innerHTML = `<th>Fecha</th><th>Tipo</th><th>Concepto</th><th>Ingreso (+)</th><th>Salida (-)</th><th>Acciones</th>`;
                 
-                const data = comite === 'deportes' ? obtenerDeportes() : (comite === 'salud' ? obtenerSalud() : obtenerMultas()); let totalIn = 0; let totalOut = 0;
+                const data = comite === 'deportes' ? obtenerDeportes() : (comite === 'salud' ? obtenerSalud() : obtenerMultas()); 
+                let totalIn = 0; let totalOut = 0;
+                
                 data.forEach((item, indexOriginal) => {
                     if(item.documento === docSocio) {
-                        const esIn = item.tipo === 'ingreso'; if(esIn) totalIn += parseFloat(item.valor); else totalOut += parseFloat(item.valor);
+                        const tipoReal = item.tipo || 'ingreso';
+                        const esIn = tipoReal === 'ingreso'; 
+                        if(esIn) totalIn += parseFloat(item.valor); else totalOut += parseFloat(item.valor);
+                        
                         const fila = document.createElement('tr');
                         fila.innerHTML = `<td>${item.fecha}</td>
-                            <td><span style="font-size:0.75rem; font-weight:bold; color:${esIn ? '#27ae60':'#c0392b'}">${item.tipo.toUpperCase()}</span></td>
+                            <td><span style="font-size:0.75rem; font-weight:bold; color:${esIn ? '#27ae60':'#c0392b'}">${tipoReal.toUpperCase()}</span></td>
                             <td>${item.concepto}</td>
                             <td style="color:#27ae60;">${esIn ? '+$'+parseFloat(item.valor).toLocaleString() : '-'}</td>
                             <td style="color:#c0392b;">${!esIn ? '-$'+parseFloat(item.valor).toLocaleString() : '-'}</td>
                             <td>
-                                <button class="btn btn-actions btn-edit" onclick="${comite === 'deportes' ? 'prepararEdicionDeporte':(comite === 'salud' ? 'prepararEdicionSalud' : 'prepararEdicionMulta')}(${indexOriginal}, '${item.tipo}')">✏️</button>
+                                <button class="btn btn-actions btn-edit" onclick="${comite === 'deportes' ? 'prepararEdicionDeporte':(comite === 'salud' ? 'prepararEdicionSalud' : 'prepararEdicionMulta')}(${indexOriginal}, '${tipoReal}')">✏️</button>
                                 <button class="btn btn-actions btn-danger" onclick="${comite === 'deportes' ? 'eliminarMovimientoDeporte':(comite === 'salud' ? 'eliminarMovimientoSalud' : 'eliminarMovimientoMulta')}(${indexOriginal})">❌</button>
-                            </td>
-                                <button class="btn btn-actions btn-danger" onclick="${comite === 'deportes' ? 'eliminarMovimientoDeporte':'eliminarMovimientoSalud'}(${indexOriginal})">❌</button>
                             </td>`;
                         tbody.appendChild(fila);
                     }
@@ -1365,6 +1368,7 @@ if (viewId === 'estados') {
             }
             document.getElementById('comite-modal').style.display = "flex";
         }
+
         function cerrarModalComite() { document.getElementById('comite-modal').style.display = "none"; }
 
         // --- EXPORTACIONES A EXCEL CON FILTRO AVANZADO ---
